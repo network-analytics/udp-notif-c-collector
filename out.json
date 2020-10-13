@@ -1,0 +1,977 @@
+{
+  "node_id_str": "ipf-zbl1843-r-daisy-81",
+  "subscription_id_str": "DAISY",
+  "sensor_path": "huawei-ifm:ifm/interfaces/interface",
+  "proto_path": "huawei_ifm.Ifm",
+  "collection_id": "769992",
+  "collection_start_time": "1601998358907",
+  "msg_timestamp": "1601998359014",
+  "collection_end_time": "1601998359014",
+  "current_period": 10000,
+  "except_desc": "OK",
+  "product_name": "NE40E",
+  "encoding": "Encoding_JSON",
+  "data_str": {
+    "row": [
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "Virtual-Template0",
+                  "class": "main-interface",
+                  "type": "Virtual-Template",
+                  "number": "0",
+                  "admin-status": "up",
+                  "link-protocol": "ppp",
+                  "router-type": "PtoP",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1492,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 1,
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "NULL0",
+                  "class": "main-interface",
+                  "type": "NULL",
+                  "number": "0",
+                  "admin-status": "up",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 2,
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/0/0",
+                  "class": "main-interface",
+                  "type": "MEth",
+                  "number": "0/0/0",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "__LOCAL_OAM_VPN__",
+                  "l2-mode-enable": false,
+                  "index": 4,
+                  "position": "0/0/0",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "100GE0/3/0",
+                  "class": "main-interface",
+                  "type": "100GE",
+                  "number": "0/3/0",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 6,
+                  "position": "0/3/0",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "100GE0/3/1",
+                  "class": "main-interface",
+                  "type": "100GE",
+                  "number": "0/3/1",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 7,
+                  "position": "0/3/1",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "100GE0/3/2",
+                  "class": "main-interface",
+                  "type": "100GE",
+                  "number": "0/3/2",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 8,
+                  "position": "0/3/2",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "100GE0/3/3",
+                  "class": "main-interface",
+                  "type": "100GE",
+                  "number": "0/3/3",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 9,
+                  "position": "0/3/3",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/4",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/4",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 10,
+                  "position": "0/3/4",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/5",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/5",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 11,
+                  "position": "0/3/5",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/6",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/6",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 12,
+                  "position": "0/3/6",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/7",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/7",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 13,
+                  "position": "0/3/7",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/8",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/8",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 14,
+                  "position": "0/3/8",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/9",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/9",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 15,
+                  "position": "0/3/9",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/10",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/10",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 16,
+                  "position": "0/3/10",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/11",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/11",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 17,
+                  "position": "0/3/11",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/12",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/12",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 18,
+                  "position": "0/3/12",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/13",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/13",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 19,
+                  "position": "0/3/13",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/14",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/14",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 20,
+                  "position": "0/3/14",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/15",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/15",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 21,
+                  "position": "0/3/15",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/16",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/16",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 22,
+                  "position": "0/3/16",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/17",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/17",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 23,
+                  "position": "0/3/17",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/18",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/18",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 24,
+                  "position": "0/3/18",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/19",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/19",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 25,
+                  "position": "0/3/19",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/20",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/20",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 26,
+                  "position": "0/3/20",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/21",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/21",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 27,
+                  "position": "0/3/21",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/22",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/22",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 28,
+                  "position": "0/3/22",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/23",
+                  "class": "main-interface",
+                  "type": "GigabitEthernet",
+                  "number": "0/3/23",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 29,
+                  "position": "0/3/23",
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/6.500",
+                  "class": "sub-interface",
+                  "type": "GigabitEthernet",
+                  "parent-name": "GigabitEthernet0/3/6",
+                  "number": "500",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": false,
+                  "statistic-mode": "interface-based",
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 43,
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "LoopBack0",
+                  "class": "main-interface",
+                  "type": "LoopBack",
+                  "number": "0",
+                  "admin-status": "up",
+                  "router-type": "PtoP",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": true,
+                  "statistic-mode": "interface-based",
+                  "mtu": 1500,
+                  "spread-mtu-flag": false,
+                  "vrf-name": "_public_",
+                  "l2-mode-enable": false,
+                  "index": 45,
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/6.503",
+                  "class": "sub-interface",
+                  "type": "GigabitEthernet",
+                  "parent-name": "GigabitEthernet0/3/6",
+                  "number": "503",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": false,
+                  "statistic-mode": "interface-based",
+                  "spread-mtu-flag": false,
+                  "vrf-name": "A30",
+                  "l2-mode-enable": false,
+                  "index": 48,
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "timestamp": "1601998358973",
+        "content": {
+          "ifm": {
+            "interfaces": {
+              "interface": [
+                {
+                  "name": "GigabitEthernet0/3/6.506",
+                  "class": "sub-interface",
+                  "type": "GigabitEthernet",
+                  "parent-name": "GigabitEthernet0/3/6",
+                  "number": "506",
+                  "admin-status": "up",
+                  "link-protocol": "ethernet",
+                  "router-type": "broadcast",
+                  "clear-ip-df": false,
+                  "link-up-down-trap-enable": true,
+                  "statistic-enable": false,
+                  "statistic-mode": "interface-based",
+                  "spread-mtu-flag": false,
+                  "vrf-name": "B30",
+                  "l2-mode-enable": false,
+                  "index": 49,
+                  "is-l2-switch": false
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "delete": [],
+    "generator": {
+      "generator_id": "0",
+      "generator_sn": "0",
+      "generator_sync": false
+    }
+  }
+}

@@ -7,14 +7,18 @@
 #define SPACE_MASK 0b00010000
 #define ET_MASK 0b00001111
 
-uint32_t deserialize_uint32(unsigned char *buffer) {
-    uint32_t res = *((uint32_t *) buffer);
-    return ntohl(res);
+uint32_t deserialize_uint32(char* c, int p)
+{
+  uint32_t u = 0;
+  memcpy(&u, (c+p), 4);
+  return u;
 }
 
-uint16_t deserialize_uint16(unsigned char *buffer) {
-    uint16_t res = *((uint16_t *) buffer);
-    return ntohl(res);
+uint16_t deserialize_uint16(char* c, int p)
+{
+  uint16_t u = 0;
+  memcpy(&u, (c+p), 2);
+  return u;
 }
 
 struct unyte_segment *parse(char *segment)
@@ -25,12 +29,14 @@ struct unyte_segment *parse(char *segment)
   header->space = (segment[0] & SPACE_MASK);
   header->encoding_type = (segment[0] & ET_MASK);
   header->header_length = segment[1];
-  header->message_length = deserialize_uint16((unsigned char *)(segment + 2));
-  header->generator_id = deserialize_uint32((unsigned char *)(segment + 4));
-  header->message_id = deserialize_uint32((unsigned char *)(segment + 8));
+  header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
+  header->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
+  header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
   
-  char *payload = malloc(sizeof(header->message_length - header->header_length));
-  *payload = segment[header->header_length];
+  int pSize = header->message_length - header->header_length;
+  char *payload = malloc(pSize);
+
+  memcpy(payload, (segment + header->header_length), pSize);
 
   struct unyte_segment *seg = malloc(sizeof(struct unyte_segment) + sizeof(payload));
   

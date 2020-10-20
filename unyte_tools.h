@@ -12,6 +12,12 @@ struct unyte_header
   uint16_t message_length;
   uint32_t generator_id;
   uint32_t message_id;
+  
+  /* Fragmentation options */
+  uint8_t f_type;
+  uint8_t f_len;
+  uint32_t f_num : 31;
+  uint8_t f_last : 1;
 };
 
 struct unyte_segment

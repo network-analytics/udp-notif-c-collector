@@ -6,6 +6,7 @@
 
 #define SPACE_MASK 0b00010000
 #define ET_MASK 0b00001111
+#define LAST_MASK 0b00000001
 
 uint32_t deserialize_uint32(char* c, int p)
 {
@@ -32,6 +33,27 @@ struct unyte_segment *parse(char *segment)
   header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
   header->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
   header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
+
+  /* Header contains options */
+  /* TODO handle something else than fragmentaion */
+
+  if (header->header_length > 12)
+  {
+    header->f_type = segment[12];
+    header->f_len = segment[13];
+    
+    /* WARN : Modifying directly segment, is it a pb ? + Not sure it works well*/
+    /* If last = TRUE */
+    
+    if ((uint8_t)(segment[17] & 0b00000001) == 1)
+    {
+      header->f_last = 1;
+    } else {
+      header->f_last = 0;
+    }
+    header->f_num = (ntohl(deserialize_uint32((char *)segment, 14)) >> 1);
+  }
+  
   
   int pSize = header->message_length - header->header_length;
   char *payload = malloc(pSize);
@@ -55,6 +77,17 @@ void printHeader(struct unyte_header *header, FILE* std) {
   fprintf(std, "Message length: %u\n", header->message_length);
   fprintf(std, "Generator ID: %u\n", header->generator_id);
   fprintf(std, "Mesage ID: %u\n", header->message_id);
+
+  /* Header contains options */
+
+  if (header->header_length > 12)
+  {
+    fprintf(std, "\nOptions: YES\n");
+    fprintf(std, "opt type: %u\n", header->f_type);
+    fprintf(std, "frag length: %u\n", header->f_len);
+    fprintf(std, "frag message number: %u\n", header->f_num);
+    fprintf(std, "frag last_flag: %u\n", header->f_last);
+  }
 
   if (std == stdout) {
       fflush(stdout);

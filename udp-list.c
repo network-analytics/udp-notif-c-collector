@@ -56,7 +56,7 @@ int app(int port)
   {
     int n;
 
-    memset(buffer, 0, RCVSIZE);
+    memset(buffer, 0, RCVSIZE);//PFR Do we need this?
 
     if ((n = recvfrom(server_desc, buffer, RCVSIZE - 1, 0, (struct sockaddr *)&from, &fromsize)) < 0)
     {

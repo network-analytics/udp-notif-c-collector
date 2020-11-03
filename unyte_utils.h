@@ -1,7 +1,7 @@
 #include <stdint.h>
 
-#ifndef UNYTE_TOOLS_H
-#define UNYTE_TOOLS_H
+#ifndef UNYTE_UTILS_H
+#define UNYTE_UTILS_H
 
 struct unyte_header
 {

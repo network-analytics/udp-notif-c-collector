@@ -1,27 +1,36 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <arpa/inet.h>  
+#include <arpa/inet.h>
 #include <string.h>
-#include "unyte_tools.h"
+#include "unyte_utils.h"
 
 #define SPACE_MASK 0b00010000
 #define ET_MASK 0b00001111
 #define LAST_MASK 0b00000001
 
-uint32_t deserialize_uint32(char* c, int p)
+/**
+ * Return 32 bits unsigned integer value out of *C+P char pointer value. 
+ */
+uint32_t deserialize_uint32(char *c, int p)
 {
   uint32_t u = 0;
-  memcpy(&u, (c+p), 4);
+  memcpy(&u, (c + p), 4);
   return u;
 }
 
-uint16_t deserialize_uint16(char* c, int p)
+/**
+ * Return 16 bits unsigned integer value out of *C+P char pointer value. 
+ */
+uint16_t deserialize_uint16(char *c, int p)
 {
   uint16_t u = 0;
-  memcpy(&u, (c+p), 2);
+  memcpy(&u, (c + p), 2);
   return u;
 }
 
+/**
+ * Parse udp-notif segment out of *SEGMENT char array.
+ */
 struct unyte_segment *parse(char *segment)
 {
   struct unyte_header *header = malloc(sizeof(struct unyte_header));
@@ -41,34 +50,39 @@ struct unyte_segment *parse(char *segment)
   {
     header->f_type = segment[12];
     header->f_len = segment[13];
-    
+
     /* WARN : Modifying directly segment, is it a pb ? + Not sure it works well*/
     /* If last = TRUE */
-    
+
     if ((uint8_t)(segment[17] & 0b00000001) == 1)
     {
       header->f_last = 1;
-    } else {
+    }
+    else
+    {
       header->f_last = 0;
     }
     header->f_num = (ntohl(deserialize_uint32((char *)segment, 14)) >> 1);
   }
-  
-  
+
   int pSize = header->message_length - header->header_length;
   char *payload = malloc(pSize);
 
   memcpy(payload, (segment + header->header_length), pSize);
 
   struct unyte_segment *seg = malloc(sizeof(struct unyte_segment) + sizeof(payload));
-  
+
   seg->header = *header;
   seg->payload = payload;
 
   return seg;
 }
 
-void printHeader(struct unyte_header *header, FILE* std) {
+/**
+ * Display *HEADER to *STD.
+ */
+void printHeader(struct unyte_header *header, FILE *std)
+{
   fprintf(std, "\n###### Unyte header ######\n");
   fprintf(std, "Version: %u\n", header->version);
   fprintf(std, "Space: %u\n", header->space);
@@ -89,20 +103,26 @@ void printHeader(struct unyte_header *header, FILE* std) {
     fprintf(std, "frag last_flag: %u\n", header->f_last);
   }
 
-  if (std == stdout) {
-      fflush(stdout);
+  if (std == stdout)
+  {
+    fflush(stdout);
   }
 }
-  
-void printPayload(char *p, int len, FILE* std) {
+
+/**
+ * Print LEN char from *P on *STD.
+ */
+void printPayload(char *p, int len, FILE *std)
+{
   int i;
   for (i = 0; i < len; i++)
-    {
-      fprintf(std, "%c", *(p + i));
-    }
-    fprintf(std, "\n");
+  {
+    fprintf(std, "%c", *(p + i));
+  }
+  fprintf(std, "\n");
 
-    if (std == stdout) {
-      fflush(stdout);
-    }
+  if (std == stdout)
+  {
+    fflush(stdout);
+  }
 }

@@ -26,6 +26,13 @@ struct unyte_segment
   char *payload;
 };
 
+struct unyte_minimal
+{
+  uint32_t generator_id;
+  uint32_t message_id;
+};
+
+struct unyte_minimal *minimal_parse(char *segment);
 struct unyte_segment *parse(char *segment);
 void printHeader(struct unyte_header *header, FILE *std);
 void printPayload(char *p, int len, FILE* std);

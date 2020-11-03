@@ -29,11 +29,36 @@ uint16_t deserialize_uint16(char *c, int p)
 }
 
 /**
+ * Return struct unyte_minimal data out of *SEGMENT.
+ */
+struct unyte_minimal *minimal_parse(char *segment)
+{
+  struct unyte_minimal *um = malloc(sizeof(struct unyte_header));
+
+  if (um == NULL)
+    {
+      printf("Malloc failed \n");
+      return NULL;
+    }
+
+  um->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
+  um->message_id = ntohl(deserialize_uint32((char *)segment, 8));
+
+  return um;
+}
+
+/**
  * Parse udp-notif segment out of *SEGMENT char array.
  */
 struct unyte_segment *parse(char *segment)
 {
   struct unyte_header *header = malloc(sizeof(struct unyte_header));
+
+  if (header == NULL)
+    {
+      printf("Malloc failed \n");
+      return NULL;
+    }
 
   header->version = segment[0] >> 5;
   header->space = (segment[0] & SPACE_MASK);
@@ -66,11 +91,24 @@ struct unyte_segment *parse(char *segment)
   }
 
   int pSize = header->message_length - header->header_length;
+  
   char *payload = malloc(pSize);
+
+  if (payload == NULL)
+    {
+      printf("Malloc failed \n");
+      return NULL;
+    }
 
   memcpy(payload, (segment + header->header_length), pSize);
 
   struct unyte_segment *seg = malloc(sizeof(struct unyte_segment) + sizeof(payload));
+
+  if (seg == NULL)
+    {
+      printf("Malloc failed \n");
+      return NULL;
+    }
 
   seg->header = *header;
   seg->payload = payload;

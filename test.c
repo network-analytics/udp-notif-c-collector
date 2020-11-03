@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include "listening_worker.h"
 #include "unyte_utils.h"
+
+#define PORT 10000
 
 int main()
 {
@@ -12,6 +15,27 @@ int main()
   struct unyte_segment *s = parse((char *)test);
   printHeader(&(s->header), stdout);
   printPayload(s->payload, 15, stdout);
+
+  printf("\nStruct minimal parsing :\n\n");
+
+  struct unyte_minimal *um = minimal_parse((char *) test);
+
+  printf("generator id : %d\n", um->generator_id);
+  printf("message id: %d\n", um->message_id);
+
+  /* Threaded tests */
+
+  int port = PORT;
+  pthread_t listener;
+
+  printf("\n######### Starting server #########\n\n");
+
+  printf("Port used %d\n", port);
+
+  /*Threaded UDP listener*/
+  pthread_create(&listener, NULL, t_app, &port);
+  pthread_join(listener, NULL);
+
   free(s);
   return 0;
 }

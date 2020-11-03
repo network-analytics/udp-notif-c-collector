@@ -10,11 +10,21 @@
 #include <ctype.h>
 #include <pthread.h>
 #include "listening_worker.h"
+#include "parsing_worker.h"
 #include "hexdump.h"
 #include "unyte_utils.h"
+#include "queue.h"
 
 #define RCVSIZE 65565
 #define RELEASE 1 /*Instant release of the socket on conn close*/
+#define PARSER_NUMBER 10
+#define QUEUE_SIZE 50
+
+struct parse_worker
+{
+  queue_t *queue;
+  pthread_t *worker;
+};
 
 /**
  * Udp listener worker on PORT port.
@@ -23,12 +33,66 @@ int app(int port)
 {
   int release = RELEASE;
   struct sockaddr_in adresse;
-  char buffer[RCVSIZE];
 
   struct sockaddr_in from = {0};
   unsigned int fromsize = sizeof from;
 
   int infinity = 1;
+
+  /* Create parsing workers */
+  struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * PARSER_NUMBER);
+
+  if (parsers == NULL)
+  {
+    printf("Malloc failed \n");
+    return -1;
+  }
+
+  int j[PARSER_NUMBER];
+
+  for (int i = 0; i < PARSER_NUMBER; i++)
+  {
+    printf("\nEntering the cycle i = %d\n", i);
+
+    (parsers + i)->queue = (queue_t *)malloc(sizeof(queue_t));
+
+    if ((parsers + i)->queue == NULL)
+    {
+      printf("Malloc failed \n");
+      return -1;
+    }
+
+    (parsers + i)->queue->head = 0;
+    (parsers + i)->queue->tail = 0;
+    (parsers + i)->queue->size = QUEUE_SIZE;
+    (parsers + i)->queue->data = malloc(sizeof(void *) * QUEUE_SIZE);
+    sem_init(&(parsers + i)->queue->empty, 0, QUEUE_SIZE);
+    sem_init(&(parsers + i)->queue->full, 0, 0);
+    pthread_mutex_init(&(parsers + i)->queue->lock, NULL);
+
+    if ((parsers + i)->queue->data == NULL)
+    {
+      printf("Malloc failed \n");
+      return -1;
+    }
+
+    (parsers + i)->worker = (pthread_t *)malloc(sizeof(pthread_t));
+
+    if ((parsers + i)->worker == NULL)
+    {
+      printf("Malloc failed \n");
+      return -1;
+    }
+
+    pthread_create((parsers+i)->worker, NULL, t_parser, (void *) (parsers+i)->queue);
+
+    j[i] = i;
+
+    queue_write((parsers+i)->queue, &j[i]);
+
+    printf("Queue pointer : %p\n", (parsers + i)->queue);
+    printf("Thread pointer: %p\n", (parsers + i)->worker);
+  }
 
   /*create socket on UDP protocol*/
   int server_desc = socket(AF_INET, SOCK_DGRAM, 0);
@@ -59,7 +123,13 @@ int app(int port)
   {
     int n;
 
-    memset(buffer, 0, RCVSIZE); /* PFR Do we need this? */
+    char *buffer = (char *)malloc(sizeof(char) * RCVSIZE);
+
+    if (buffer == NULL)
+    {
+      printf("Malloc failed \n");
+      return -1;
+    }
 
     if ((n = recvfrom(server_desc, buffer, RCVSIZE - 1, 0, (struct sockaddr *)&from, &fromsize)) < 0)
     {
@@ -70,9 +140,16 @@ int app(int port)
 
     hexdump(buffer, n);
     fflush(stdout);
+
     /* Parse and push to the unyte_segment queue */
-    struct unyte_segment *segment = parse((char *)buffer);
-    printHeader(&(segment->header), stdout);
+    /* struct unyte_segment *segment = parse((char *)buffer);
+    printHeader(&(segment->header), stdout); */
+
+    struct unyte_minimal *seg = minimal_parse(buffer);
+
+    /* Hashing on generator ID here */
+    printf("generator id : %d\n", seg->generator_id);
+    printf("message id: %d\n", seg->generator_id);
 
     /* Comment if infinity's wanted */
     infinity = 0;
@@ -85,7 +162,8 @@ int app(int port)
 /**
  * Threadified app functin listening on *P port.
  */
-void *t_app(void* p) {
-  app((int) *((int *) p));
+void *t_app(void *p)
+{
+  app((int)*((int *)p));
   pthread_exit(NULL);
 }

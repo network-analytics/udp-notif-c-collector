@@ -31,16 +31,12 @@ struct parse_worker
  */
 int app(int port)
 {
-  /* debug */
-  /* Sample of unyte_header */
-  char test[] = {0x02, 0x0c, 0x00, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x7b, 0x22, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x22, 0x3a, 0x22, 0x54, 0x6f, 0x6d, 0x22, 0x7d};
-
   int release = RELEASE;
   struct sockaddr_in adresse;
   struct sockaddr_in from = {0};
   unsigned int fromsize = sizeof from;
 
-  int infinity = 1;
+  int infinity = 40;
 
   /* Create parsing workers */
   struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * PARSER_NUMBER);
@@ -50,8 +46,6 @@ int app(int port)
     return -1;
   }
 
-  /* Debug */
-  char **j=malloc(sizeof(void *) * PARSER_NUMBER);
   for (int i = 0; i < PARSER_NUMBER; i++)
   {
     (parsers + i)->queue = (queue_t *)malloc(sizeof(queue_t));
@@ -83,9 +77,6 @@ int app(int port)
     }
 
     pthread_create((parsers+i)->worker, NULL, t_parser, (void *) (parsers+i)->queue);
-
-    *(j+i) = test;
-    queue_write((parsers + i)->queue, *(j+i));
   }
 
   /*create socket on UDP protocol*/
@@ -114,7 +105,7 @@ int app(int port)
   }
 
   /* Uncomment if no listening is wanted */
-  infinity = 0;
+  /* infinity = 0; */
 
   while (infinity)
   {
@@ -134,32 +125,27 @@ int app(int port)
       return -1;
     }
 
-    /* hexdump(buffer, n);
-    fflush(stdout); */
-
-    /* Parse and push to the unyte_segment queue */
-    /* struct unyte_segment *segment = parse((char *)buffer);
-    printHeader(&(segment->header), stdout); */
-
     struct unyte_minimal *seg = minimal_parse(buffer);
-
-    /* printf("generator id : %d\n", seg->generator_id);
-    printf("message id: %d\n", seg->generator_id); */
 
     /* Dispatching by modulo on threads */
     queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
 
     /* Comment if infinity is required */
-    /* infinity = 0; */
+    infinity--;
   }
+
   /* Exit threads */
   char *end = "exit";
   for (int i = 0; i < PARSER_NUMBER; i++)
   {
     queue_write((parsers + i)->queue, end);
     pthread_join(*(parsers + i)->worker, NULL);
+    free((parsers + i)->worker);
+    free((parsers + i)->queue->data);
+    free((parsers + i)->queue);
   }
-  
+
+  free(parsers);
 
   close(server_desc);
   return 0;

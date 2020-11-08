@@ -128,10 +128,12 @@ int app(int port)
     struct unyte_minimal *seg = minimal_parse(buffer);
 
     /* Dispatching by modulo on threads */
-    queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
-
+    queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, buffer);
+	
+    free(seg);
+    
     /* Comment if infinity is required */
-    infinity--;
+    infinity = infinity - 1;
   }
 
   /* Exit threads */

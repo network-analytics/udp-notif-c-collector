@@ -17,8 +17,13 @@ int parser(queue_t *q)
       return 0;
     }
     struct unyte_segment *parsed_segment = parse(segment);
+    
     printHeader(&parsed_segment->header, stdout);
     printPayload(parsed_segment->payload, parsed_segment->header.message_length - parsed_segment->header.header_length, stdout);
+    
+    free(parsed_segment->payload);
+    free(&parsed_segment->header);
+    free(segment);
   }
   return 0;
 }

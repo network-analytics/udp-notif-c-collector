@@ -110,8 +110,11 @@ struct unyte_segment *parse(char *segment)
       return NULL;
     }
 
+  /* not optimal - pass pointer instead */
   seg->header = *header;
   seg->payload = payload;
+
+  free(header);
 
   return seg;
 }

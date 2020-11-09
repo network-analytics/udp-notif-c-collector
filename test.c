@@ -19,7 +19,7 @@ int main()
   printf("Port used %d\n", port);
 
   /*Threaded UDP listener*/
-  pthread_create(&listener, NULL, t_app, &port);
+  pthread_create(&listener, NULL, t_listener, &port);
   pthread_join(listener, NULL);
 
   return 0;

@@ -13,11 +13,11 @@
 #include "parsing_worker.h"
 #include "hexdump.h"
 #include "unyte_utils.h"
+#include "unyte.h"
 #include "queue.h"
 
 #define RCVSIZE 65565
 #define RELEASE 1 /*Instant release of the socket on conn close*/
-#define PARSER_NUMBER 10
 #define QUEUE_SIZE 50
 
 struct parse_worker
@@ -29,15 +29,15 @@ struct parse_worker
 /**
  * Udp listener worker on PORT port.
  */
-int app(int port)
+int listener(struct listener_thread_input *in)
 {
   int release = RELEASE;
   struct sockaddr_in adresse;
   struct sockaddr_in from = {0};
   unsigned int fromsize = sizeof from;
 
-  /* Iterations number if not commented in the while */
-  int infinity = 1;
+  /* Iterations number if not commented in the while loop */
+  int infinity = 10;
 
   /* Create parsing workers */
   struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * PARSER_NUMBER);
@@ -56,6 +56,7 @@ int app(int port)
       return -1;
     }
 
+    /* Filling queue and creating thread mem protections. */
     (parsers + i)->queue->head = 0;
     (parsers + i)->queue->tail = 0;
     (parsers + i)->queue->size = QUEUE_SIZE;
@@ -77,7 +78,20 @@ int app(int port)
       return -1;
     }
 
-    pthread_create((parsers + i)->worker, NULL, t_parser, (void *)(parsers + i)->queue);
+    /* Define the struct passed to the next parser */
+    struct parser_thread_input *parser_input = (struct parser_thread_input *) malloc(sizeof(struct parser_thread_input));
+    if (parser_input == NULL)
+    {
+      printf("Malloc failed.\n");
+      exit(-1);
+    }
+
+    /* Fill the struct */
+    parser_input->input = (parsers + i)->queue;
+    parser_input->output = in->output_queue;
+
+    /* Create the thread */
+    pthread_create((parsers + i)->worker, NULL, t_parser, (void *)parser_input);
   }
 
   /*create socket on UDP protocol*/
@@ -93,7 +107,7 @@ int app(int port)
   setsockopt(server_desc, SOL_SOCKET, SO_REUSEADDR, &release, sizeof(int));
 
   adresse.sin_family = AF_INET;
-  adresse.sin_port = htons((uint16_t)port);
+  adresse.sin_port = htons(in->port);
   /* adresse.sin_addr.s_addr = inet_addr("192.0.2.2"); */
   adresse.sin_addr.s_addr = htonl(INADDR_ANY);
 
@@ -130,8 +144,6 @@ int app(int port)
 
     /* Dispatching by modulo on threads */
     queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
-
-    /* free(seg); */
 
     /* Comment if infinity is required */
     infinity = infinity - 1;
@@ -170,8 +182,9 @@ int app(int port)
 /**
  * Threadified app functin listening on *P port.
  */
-void *t_app(void *p)
+void *t_listener(void *in)
 {
-  app((int)*((int *)p));
+  listener((struct listener_thread_input *)in);
+  free(in);
   pthread_exit(NULL);
 }

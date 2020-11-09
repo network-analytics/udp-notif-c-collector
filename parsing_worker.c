@@ -5,13 +5,18 @@
 #include <netinet/in.h>
 #include "queue.h"
 #include "unyte_utils.h"
+#include "parsing_worker.h"
 
-int parser(queue_t *q)
+/**
+ * Parser that receive unyte_minimal structs stream from the Q queue.
+ * It transforms it into unyte_segment_with_metadata structs and push theses to the OUTPUT queue.
+ */
+int parser(struct parser_thread_input *in)
 {
   while (1)
   {
     /* char *segment = (char *)queue_read(q); */
-    struct unyte_minimal *queue_data = (struct unyte_minimal *)queue_read(q);
+    struct unyte_minimal *queue_data = (struct unyte_minimal *)queue_read(in->input);
 
     /* Process segment */
     if (strcmp(queue_data->buffer, "exit") == 0)
@@ -20,21 +25,36 @@ int parser(queue_t *q)
       fflush(stdout);
       return 0;
     }
-    struct unyte_segment *parsed_segment = parse(queue_data->buffer);
-    
-    printHeader(&parsed_segment->header, stdout);
-    printPayload(parsed_segment->payload, parsed_segment->header.message_length - parsed_segment->header.header_length, stdout);
-    
-    free(parsed_segment->payload);
-    free(&parsed_segment->header);
+
+    /* Can do better */
+    struct unyte_segment_with_metadata *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
+
+    /* Not useful anymore */
     free(queue_data->buffer);
     free(queue_data);
+
+    /* Check about fragmentation */
+
+    if (parsed_segment->header.header_length <= 12)
+    {
+      queue_write(in->output, parsed_segment);
+    }
+    else
+    {
+      /* Discarding the segment while fragmentation is not fully implemented.
+         Must add frees 
+      */
+    }
   }
   return 0;
 }
 
-void *t_parser(void *q)
+/**
+ * Threaded parser function
+ */
+void *t_parser(void *in)
 {
-  parser((queue_t *)q);
+  parser((struct parser_thread_input *)in);
+  free(in);
   pthread_exit(NULL);
 }

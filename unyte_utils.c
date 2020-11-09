@@ -202,7 +202,7 @@ struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct un
   seg->src_port = um->src_port;
   seg->collector_addr = um->collector_addr;
 
-
+  /* not optimal - pass pointer instead */
   free(header);
 
   return seg;

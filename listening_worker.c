@@ -36,7 +36,8 @@ int app(int port)
   struct sockaddr_in from = {0};
   unsigned int fromsize = sizeof from;
 
-  int infinity = 40;
+  /* Iterations number if not commented in the while */
+  int infinity = 1;
 
   /* Create parsing workers */
   struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * PARSER_NUMBER);
@@ -76,7 +77,7 @@ int app(int port)
       return -1;
     }
 
-    pthread_create((parsers+i)->worker, NULL, t_parser, (void *) (parsers+i)->queue);
+    pthread_create((parsers + i)->worker, NULL, t_parser, (void *)(parsers + i)->queue);
   }
 
   /*create socket on UDP protocol*/
@@ -125,22 +126,34 @@ int app(int port)
       return -1;
     }
 
-    struct unyte_minimal *seg = minimal_parse(buffer);
+    struct unyte_minimal *seg = minimal_parse(buffer, &from, &adresse);
 
     /* Dispatching by modulo on threads */
-    queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, buffer);
-	
-    free(seg);
-    
+    queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
+
+    /* free(seg); */
+
     /* Comment if infinity is required */
     infinity = infinity - 1;
   }
 
   /* Exit threads */
+
+  struct unyte_minimal *um = (struct unyte_minimal *)malloc(sizeof(struct unyte_minimal));
+  if (um == NULL)
+  {
+    printf("Malloc failed.\n");
+    exit(-1);
+  }
+
+  /* Not sure if this memory slot can't be overwrited somewhere after while I still want to use it */
   char *end = "exit";
+
+  um->buffer = end;
+
   for (int i = 0; i < PARSER_NUMBER; i++)
   {
-    queue_write((parsers + i)->queue, end);
+    queue_write((parsers + i)->queue, um);
     pthread_join(*(parsers + i)->worker, NULL);
     free((parsers + i)->worker);
     free((parsers + i)->queue->data);
@@ -148,6 +161,7 @@ int app(int port)
   }
 
   free(parsers);
+  free(um);
 
   close(server_desc);
   return 0;

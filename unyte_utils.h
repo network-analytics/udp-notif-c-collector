@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #ifndef UNYTE_UTILS_H
 #define UNYTE_UTILS_H
@@ -26,14 +28,37 @@ struct unyte_segment
   char *payload;
 };
 
-struct unyte_minimal
+struct unyte_segment_with_metadata
 {
-  uint32_t generator_id;
-  uint32_t message_id;
+  /* Metadatas */
+  uint16_t src_port;                 /* Source port */
+  unsigned long src_addr;            /* Source interface IPv4*/
+  unsigned long collector_addr;      /* Collector interface IPv4*/
+
+  struct unyte_header header;
+  char *payload;
 };
 
-struct unyte_minimal *minimal_parse(char *segment);
+
+struct unyte_minimal
+{
+  /* Dispatching informations */
+  uint32_t generator_id;
+  uint32_t message_id;
+
+  /* Serialized datas */
+  char * buffer;
+
+  /* Metadatas */
+  uint16_t src_port;                  /* Source port */
+  unsigned long src_addr;            /* Source interface IPv4*/
+  unsigned long collector_addr;      /* Collector interface IPv4*/
+  
+};
+
+struct unyte_minimal *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector);
 struct unyte_segment *parse(char *segment);
+struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct unyte_minimal *um);
 void printHeader(struct unyte_header *header, FILE *std);
 void printPayload(char *p, int len, FILE* std);
 

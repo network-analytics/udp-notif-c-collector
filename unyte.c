@@ -44,7 +44,7 @@ queue_t *start_unyte_collector(uint16_t port)
   pthread_create(&udpListener, NULL, t_listener,(void *) listener_input);
 
   /* Waiting for the listener to finish */
-  pthread_join(udpListener, NULL);
+  /* pthread_join(udpListener, NULL); */
 
   return output_queue;
 }

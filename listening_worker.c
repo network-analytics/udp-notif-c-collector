@@ -122,7 +122,7 @@ int listener(struct listener_thread_input *in)
   /* Uncomment if no listening is wanted */
   /* infinity = 0; */
 
-  while (infinity)
+  while (infinity > 0)
   {
     int n;
 
@@ -140,13 +140,18 @@ int listener(struct listener_thread_input *in)
       return -1;
     }
 
+    printf("Received something on listener.\n");
+    fflush(stdout);
+
     struct unyte_minimal *seg = minimal_parse(buffer, &from, &adresse);
+
+    printf("seg->generator_id %u\n", seg->generator_id);
 
     /* Dispatching by modulo on threads */
     queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
 
     /* Comment if infinity is required */
-    infinity = infinity - 1;
+    /* infinity = infinity - 1; */
   }
 
   /* Exit threads */

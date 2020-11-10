@@ -7,19 +7,22 @@
 #include "unyte_utils.h"
 #include "queue.h"
 
-#define PORT 10000
+#define PORT 9341
 
 int main()
 {
   queue_t *in_msg = start_unyte_collector((uint16_t) PORT);
+  int recv_count = 0;
 
   while (1)
   {
     /* Read queue */
     struct unyte_segment_with_metadata *seg = (struct unyte_segment_with_metadata *)queue_read(in_msg);
 
+    recv_count++;
     printHeader(&seg->header, stdout);
-    printPayload(seg->payload, seg->header.message_length - seg->header.header_length, stdout);
+    printf("counter : %d", recv_count);
+    fflush(stdout);
 
     free(seg->payload);
     free(seg);

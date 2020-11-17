@@ -59,6 +59,7 @@ struct unyte_minimal *minimal_parse(char *segment, struct sockaddr_in *source, s
 
 /**
  * Parse udp-notif segment out of *SEGMENT char array.
+ * DEPRECATED use unyte_segment_with_metadata instead 
  */
 struct unyte_segment *parse(char *segment)
 {
@@ -121,7 +122,7 @@ struct unyte_segment *parse(char *segment)
   }
 
   /* not optimal - pass pointer instead */
-  seg->header = *header;
+  seg->header = header;
   seg->payload = payload;
 
   free(header);
@@ -175,6 +176,12 @@ struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct un
   int pSize = header->message_length - header->header_length;
 
   char *payload = malloc(pSize);
+  if (payload == NULL)
+  {
+    printf("Malloc failed.\n");
+    exit(-1);
+  }
+  
 
   if (payload == NULL)
   {
@@ -184,6 +191,20 @@ struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct un
 
   memcpy(payload, (segment + header->header_length), pSize);
 
+  /* Passing metadatas */
+  struct unyte_metadata *meta = (struct unyte_metadata *)malloc(sizeof(struct unyte_metadata));
+  if (meta == NULL)
+  {
+    printf("Malloc failed.\n");
+    exit(-1);
+  }
+  
+  /*Filling the struct */
+  meta->src_addr = um->src_addr;
+  meta->src_port = um->src_port;
+  meta->collector_addr = um->collector_addr;
+
+  /* The global segment container */
   struct unyte_segment_with_metadata *seg = malloc(sizeof(struct unyte_segment_with_metadata) + sizeof(payload));
 
   if (seg == NULL)
@@ -192,18 +213,9 @@ struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct un
     return NULL;
   }
 
-  /* not optimal - pass pointer instead */
-  seg->header = *header;
+  seg->header = header;
   seg->payload = payload;
-
-  /* Passing metadatas */
-
-  seg->src_addr = um->src_addr;
-  seg->src_port = um->src_port;
-  seg->collector_addr = um->collector_addr;
-
-  /* not optimal - pass pointer instead */
-  free(header);
+  seg->metadata = meta;
 
   return seg;
 }

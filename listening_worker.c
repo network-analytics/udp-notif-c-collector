@@ -17,7 +17,6 @@
 #include "queue.h"
 
 #define RCVSIZE 65565
-#define RELEASE 1 /*Instant release of the socket on conn close*/
 #define QUEUE_SIZE 50
 
 struct parse_worker
@@ -31,8 +30,6 @@ struct parse_worker
  */
 int listener(struct listener_thread_input *in)
 {
-  int release = RELEASE;
-  struct sockaddr_in adresse;
   struct sockaddr_in from = {0};
   unsigned int fromsize = sizeof from;
   
@@ -97,31 +94,6 @@ int listener(struct listener_thread_input *in)
     pthread_create((parsers + i)->worker, NULL, t_parser, (void *)parser_input);
   }
 
-  /*create socket on UDP protocol*/
-  int server_desc = socket(AF_INET, SOCK_DGRAM, 0);
-
-  /*handle error*/
-  if (server_desc < 0)
-  {
-    perror("Cannot create socket\n");
-    return -1;
-  }
-
-  setsockopt(server_desc, SOL_SOCKET, SO_REUSEADDR, &release, sizeof(int));
-
-  adresse.sin_family = AF_INET;
-  adresse.sin_port = htons(in->port);
-  /* adresse.sin_addr.s_addr = inet_addr("192.0.2.2"); */
-  adresse.sin_addr.s_addr = htonl(INADDR_ANY);
-
-  /*initialize socket*/
-  if (bind(server_desc, (struct sockaddr *)&adresse, sizeof(adresse)) == -1)
-  {
-    perror("Bind failed\n");
-    close(server_desc);
-    return -1;
-  }
-
   /* Uncomment if no listening is wanted */
   /* infinity = 0; */
 
@@ -135,20 +107,15 @@ int listener(struct listener_thread_input *in)
       printf("Malloc failed \n");
       return -1;
     }
-
-    if ((n = recvfrom(server_desc, buffer, RCVSIZE - 1, 0, (struct sockaddr *)&from, &fromsize)) < 0)
+    
+    if ((n = recvfrom(*in->conn->sockfd, buffer, RCVSIZE - 1, 0, (struct sockaddr *)&from, &fromsize)) < 0)
     {
-      perror("recvfrom failed\n");
-      close(server_desc);
+      perror("Recvfrom failed");
+      close(*in->conn->sockfd);
       return -1;
     }
 
-    printf("Received something on listener.\n");
-    fflush(stdout);
-
-    struct unyte_minimal *seg = minimal_parse(buffer, &from, &adresse);
-
-    printf("seg->generator_id %u\n", seg->generator_id);
+    struct unyte_minimal *seg = minimal_parse(buffer, &from, in->conn->addr);
 
     /* Dispatching by modulo on threads */
     queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);

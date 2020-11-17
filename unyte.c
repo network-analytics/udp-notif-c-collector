@@ -19,33 +19,33 @@ unytesock_t *init_socket(uint16_t port)
     printf("Malloc failed.\n");
     exit(EXIT_FAILURE);
   }
-  
+
   /* TODO put in constant */
   int release = 1;
-  struct sockaddr_in *adresse = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
+  struct sockaddr_in *adresse = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
 
   /*create socket on UDP protocol*/
-  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+  int *sock = (int *)malloc(sizeof(int));
+  *sock = socket(AF_INET, SOCK_DGRAM, 0);
 
   /*handle error*/
-  if (sock < 0)
+  if (*sock < 0)
   {
     perror("Cannot create socket\n");
     exit(EXIT_FAILURE);
   }
 
-  setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &release, sizeof(int));
+  setsockopt(*sock, SOL_SOCKET, SO_REUSEADDR, &release, sizeof(int));
 
   adresse->sin_family = AF_INET;
   adresse->sin_port = htons(port);
   /* adresse.sin_addr.s_addr = inet_addr("192.0.2.2"); */
   adresse->sin_addr.s_addr = htonl(INADDR_ANY);
 
-  /*initialize socket*/
-  if (bind(sock, (struct sockaddr *) adresse, sizeof(*adresse)) == -1)
+  if (bind(*sock, (struct sockaddr *)adresse, sizeof(*adresse)) == -1)
   {
     perror("Bind failed\n");
-    close(sock);
+    close(*sock);
     exit(EXIT_FAILURE);
   }
 
@@ -78,7 +78,15 @@ collector_t *start_unyte_collector(uint16_t port)
   sem_init(&output_queue->full, 0, 0);
   pthread_mutex_init(&output_queue->lock, NULL);
 
-  pthread_t udpListener;
+  pthread_t *udpListener = (pthread_t*)malloc(sizeof(pthread_t));
+  if (udpListener == NULL)
+  {
+    printf("Malloc failed.\n");
+    exit(EXIT_FAILURE);
+  }
+  
+
+  unytesock_t *conn = init_socket(port);
 
   struct listener_thread_input *listener_input = (struct listener_thread_input *)malloc(sizeof(struct listener_thread_input));
   if (listener_input == NULL)
@@ -89,15 +97,13 @@ collector_t *start_unyte_collector(uint16_t port)
 
   listener_input->port = port;
   listener_input->output_queue = output_queue;
+  listener_input->conn = conn;
 
   /*Threaded UDP listener*/
-  pthread_create(&udpListener, NULL, t_listener, (void *)listener_input);
-
-  /* Waiting for the listener to finish */
-  /* pthread_join(udpListener, NULL); */
+  pthread_create(udpListener, NULL, t_listener, (void *)listener_input);
 
   /* Return struct */
-  collector_t *collector = (collector_t*)malloc((sizeof(collector_t)));
+  collector_t *collector = (collector_t *)malloc((sizeof(collector_t)));
   if (collector == NULL)
   {
     printf("Malloc failed.\n");
@@ -105,7 +111,8 @@ collector_t *start_unyte_collector(uint16_t port)
   }
 
   collector->queue = output_queue;
-  collector->sockfd = 6;
+  collector->sockfd = conn->sockfd;
+  collector->main_thread = udpListener;
 
   return collector;
 }

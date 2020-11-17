@@ -64,7 +64,7 @@ struct unyte_minimal
 typedef struct unyte_socket
 {
   struct sockaddr_in *addr;          /* The socket addr */
-  int sockfd;                        /* The socket file descriptor */
+  int *sockfd;                        /* The socket file descriptor */
 } unytesock_t;
 
 struct unyte_minimal *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector);

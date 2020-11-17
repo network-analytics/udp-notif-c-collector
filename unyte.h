@@ -1,3 +1,4 @@
+#include <pthread.h>
 #include "queue.h"
 #include "unyte_utils.h"
 
@@ -5,11 +6,12 @@
 #define H_UNYTE
 
 /**
- * Struct to use to pass information to the lib user 
+ * Struct to use to pass information to the user 
  */
 typedef struct {
   queue_t *queue;
-  int sockfd;
+  pthread_t *main_thread;
+  int *sockfd;
 } collector_t;
 
 #define OUTPUT_QUEUE_SIZE 100

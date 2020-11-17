@@ -45,8 +45,7 @@ struct unyte_minimal *minimal_parse(char *segment, struct sockaddr_in *source, s
 
   um->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
   um->message_id = ntohl(deserialize_uint32((char *)segment, 8));
-
-  /*Does it copy just the address ?*/
+  
   um->buffer = segment;
 
   /* Do I need to reverse all theses ? */

@@ -6,6 +6,7 @@
 #include "queue.h"
 #include "unyte_utils.h"
 #include "parsing_worker.h"
+#include "unyte.h"
 
 /**
  * Parser that receive unyte_minimal structs stream from the Q queue.
@@ -29,10 +30,9 @@ int parser(struct parser_thread_input *in)
     /* Can do better */
     struct unyte_segment_with_metadata *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
 
-    /* Not useful anymore */
-    free(queue_data->buffer);
+    /* Unyte_minimal struct is not useful anymore */
     free(queue_data);
-
+    free(queue_data->buffer);
     /* Check about fragmentation */
 
     if (parsed_segment->header->header_length <= 12)
@@ -43,9 +43,8 @@ int parser(struct parser_thread_input *in)
     {
       printf("segmented, not pushed");
       fflush(stdout);
-      /* Discarding the segment while fragmentation is not fully implemented.
-         Must add frees 
-      */
+      /* Discarding the segment while fragmentation is not fully implemented.*/
+      unyte_free_all(parsed_segment);
     }
   }
   return 0;

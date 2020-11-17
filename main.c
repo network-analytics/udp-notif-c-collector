@@ -33,18 +33,18 @@ int main()
 
 
     /* Struct frees */
-    free(seg->payload);
-    free(seg);
+    unyte_free_all(seg);
   }
 
   /* Unreachable until interruption handling */
-
-  sleep(3);
 
   printf("Shutdown the socket\n");
   shutdown(*collector->sockfd, SHUT_RDWR);
   close(*collector->sockfd);
   pthread_join(*collector->main_thread, NULL);
+
+  free(collector->queue);
+  free(collector);
 
   return 0;
 }

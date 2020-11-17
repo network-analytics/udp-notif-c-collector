@@ -37,11 +37,7 @@ int parser(struct parser_thread_input *in)
 
     if (parsed_segment->header->header_length <= 12)
     {
-      printf("parser pushed \n");
-      printf("parsed_segment : %p\n", parsed_segment);
-      printf("on queue : %p\n", in->input);
       queue_write(in->output, parsed_segment);
-      printf("done.\n");
     }
     else
     {

@@ -23,7 +23,7 @@ int main()
 
     /* Processing sample */
     recv_count++;
-    printHeader(&seg->header, stdout);
+    printHeader(seg->header, stdout);
     printf("counter : %d", recv_count);
     fflush(stdout);
 

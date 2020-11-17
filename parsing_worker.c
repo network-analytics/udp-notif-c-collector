@@ -35,7 +35,7 @@ int parser(struct parser_thread_input *in)
 
     /* Check about fragmentation */
 
-    if (parsed_segment->header.header_length <= 12)
+    if (parsed_segment->header->header_length <= 12)
     {
       printf("parser pushed \n");
       printf("parsed_segment : %p\n", parsed_segment);

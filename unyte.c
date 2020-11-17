@@ -1,22 +1,72 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
 #include "queue.h"
 #include "unyte.h"
 #include "unyte_utils.h"
 #include "listening_worker.h"
 
 /**
+ * Not exposed function used to initialize the socket and return unyte_socket struct
+ */
+unytesock_t *init_socket(uint16_t port)
+{
+  unytesock_t *conn = (unytesock_t *)malloc(sizeof(unytesock_t));
+  if (conn == NULL)
+  {
+    printf("Malloc failed.\n");
+    exit(EXIT_FAILURE);
+  }
+  
+  /* TODO put in constant */
+  int release = 1;
+  struct sockaddr_in *adresse = (struct sockaddr_in *) malloc(sizeof(struct sockaddr_in));
+
+  /*create socket on UDP protocol*/
+  int sock = socket(AF_INET, SOCK_DGRAM, 0);
+
+  /*handle error*/
+  if (sock < 0)
+  {
+    perror("Cannot create socket\n");
+    exit(EXIT_FAILURE);
+  }
+
+  setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &release, sizeof(int));
+
+  adresse->sin_family = AF_INET;
+  adresse->sin_port = htons(port);
+  /* adresse.sin_addr.s_addr = inet_addr("192.0.2.2"); */
+  adresse->sin_addr.s_addr = htonl(INADDR_ANY);
+
+  /*initialize socket*/
+  if (bind(sock, (struct sockaddr *) adresse, sizeof(*adresse)) == -1)
+  {
+    perror("Bind failed\n");
+    close(sock);
+    exit(EXIT_FAILURE);
+  }
+
+  conn->addr = adresse;
+  conn->sockfd = sock;
+
+  return conn;
+}
+
+/**
  * Start all the subprocesses of the collector on the given port and return the output segment queue.
  * Messages in the queues are structured in structs unyte_segment_with_metadata like defined in the 
  * unyte_utils.h file.
  */
-queue_t *start_unyte_collector(uint16_t port)
+collector_t *start_unyte_collector(uint16_t port)
 {
   queue_t *output_queue = (queue_t *)malloc(sizeof(queue_t));
   if (output_queue == NULL)
   {
     printf("Malloc failed.\n");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   /* Filling queue and creating thread mem protections. */
@@ -46,5 +96,16 @@ queue_t *start_unyte_collector(uint16_t port)
   /* Waiting for the listener to finish */
   /* pthread_join(udpListener, NULL); */
 
-  return output_queue;
+  /* Return struct */
+  collector_t *collector = (collector_t*)malloc((sizeof(collector_t)));
+  if (collector == NULL)
+  {
+    printf("Malloc failed.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  collector->queue = output_queue;
+  collector->sockfd = 6;
+
+  return collector;
 }

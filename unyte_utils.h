@@ -50,11 +50,17 @@ struct unyte_minimal
   char * buffer;
 
   /* Metadatas */
-  uint16_t src_port;                  /* Source port */
+  uint16_t src_port;                 /* Source port */
   unsigned long src_addr;            /* Source interface IPv4*/
   unsigned long collector_addr;      /* Collector interface IPv4*/
   
 };
+
+typedef struct unyte_socket
+{
+  struct sockaddr_in *addr;          /* The socket addr */
+  int sockfd;                        /* The socket file descriptor */
+} unytesock_t;
 
 struct unyte_minimal *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector);
 struct unyte_segment *parse(char *segment);

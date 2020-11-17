@@ -35,6 +35,9 @@ int listener(struct listener_thread_input *in)
   struct sockaddr_in adresse;
   struct sockaddr_in from = {0};
   unsigned int fromsize = sizeof from;
+  
+  /* errno used to handle socket read errors */
+  errno = 0;
 
   /* Iterations number if not commented in the while loop */
   int infinity = 10;
@@ -154,33 +157,6 @@ int listener(struct listener_thread_input *in)
     /* infinity = infinity - 1; */
   }
 
-  /* Exit threads */
-
-  struct unyte_minimal *um = (struct unyte_minimal *)malloc(sizeof(struct unyte_minimal));
-  if (um == NULL)
-  {
-    printf("Malloc failed.\n");
-    exit(-1);
-  }
-
-  /* Not sure if this memory slot can't be overwrited somewhere after while I still want to use it */
-  char *end = "exit";
-
-  um->buffer = end;
-
-  for (int i = 0; i < PARSER_NUMBER; i++)
-  {
-    queue_write((parsers + i)->queue, um);
-    pthread_join(*(parsers + i)->worker, NULL);
-    free((parsers + i)->worker);
-    free((parsers + i)->queue->data);
-    free((parsers + i)->queue);
-  }
-
-  free(parsers);
-  free(um);
-
-  close(server_desc);
   return 0;
 }
 

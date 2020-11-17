@@ -13,13 +13,13 @@ int main()
 {
 
   /* Initialize collector */
-  queue_t *in_msg = start_unyte_collector((uint16_t) PORT);
+  collector_t *collector = start_unyte_collector((uint16_t) PORT);
   int recv_count = 0;
 
   while (1)
   {
     /* Read queue */
-    struct unyte_segment_with_metadata *seg = (struct unyte_segment_with_metadata *)queue_read(in_msg);
+    struct unyte_segment_with_metadata *seg = (struct unyte_segment_with_metadata *)queue_read(collector->queue);
 
     /* Processing sample */
     recv_count++;
@@ -34,9 +34,6 @@ int main()
   }
 
   /* Unreachable until interruption handling */
-
-  free(in_msg->data);
-  free(in_msg);
 
   return 0;
 }

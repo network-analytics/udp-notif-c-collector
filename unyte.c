@@ -20,13 +20,13 @@ queue_t *start_unyte_collector(uint16_t port)
   }
 
   /* Filling queue and creating thread mem protections. */
-    output_queue->head = 0;
-    output_queue->tail = 0;
-    output_queue->size = OUTPUT_QUEUE_SIZE;
-    output_queue->data = malloc(sizeof(void *) * OUTPUT_QUEUE_SIZE);
-    sem_init(&output_queue->empty, 0, OUTPUT_QUEUE_SIZE);
-    sem_init(&output_queue->full, 0, 0);
-    pthread_mutex_init(&output_queue->lock, NULL);
+  output_queue->head = 0;
+  output_queue->tail = 0;
+  output_queue->size = OUTPUT_QUEUE_SIZE;
+  output_queue->data = malloc(sizeof(void *) * OUTPUT_QUEUE_SIZE);
+  sem_init(&output_queue->empty, 0, OUTPUT_QUEUE_SIZE);
+  sem_init(&output_queue->full, 0, 0);
+  pthread_mutex_init(&output_queue->lock, NULL);
 
   pthread_t udpListener;
 
@@ -41,10 +41,58 @@ queue_t *start_unyte_collector(uint16_t port)
   listener_input->output_queue = output_queue;
 
   /*Threaded UDP listener*/
-  pthread_create(&udpListener, NULL, t_listener,(void *) listener_input);
+  pthread_create(&udpListener, NULL, t_listener, (void *)listener_input);
 
   /* Waiting for the listener to finish */
   /* pthread_join(udpListener, NULL); */
 
   return output_queue;
+}
+
+/**
+ * Free all the mem related to the segment
+ */
+int unyte_free_all(struct unyte_segment_with_metadata *seg)
+{
+  /* Free all the sub modules */
+
+  free(seg->payload);
+  free(seg->header);
+  free(seg->metadata);
+
+  /* Free the struct itself */
+
+  free(seg);
+
+  return 0;
+}
+
+/**
+ * Free only the payload
+ * pointer still exist but is NULL
+ */
+int unyte_free_payload(struct unyte_segment_with_metadata *seg)
+{
+  free(seg->payload);
+  return 0;
+}
+
+/**
+ * Free only the header
+ * pointer still exist but is NULL
+ */
+int unyte_free_header(struct unyte_segment_with_metadata *seg)
+{
+  free(seg->header);
+  return 0;
+}
+
+/**
+ * Free only the metadata
+ * pointer still exist but is NULL
+ */
+int unyte_free_metadata(struct unyte_segment_with_metadata *seg)
+{
+  free(seg->metadata);
+  return 0;
 }

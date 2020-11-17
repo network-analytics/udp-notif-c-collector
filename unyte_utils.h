@@ -14,7 +14,7 @@ struct unyte_header
   uint16_t message_length;
   uint32_t generator_id;
   uint32_t message_id;
-  
+
   /* Fragmentation options */
   uint8_t f_type;
   uint8_t f_len;
@@ -24,21 +24,27 @@ struct unyte_header
 
 struct unyte_segment
 {
-  struct unyte_header header;
+  struct unyte_header *header;
   char *payload;
 };
 
-struct unyte_segment_with_metadata
+struct unyte_metadata
 {
   /* Metadatas */
-  uint16_t src_port;                 /* Source port */
-  unsigned long src_addr;            /* Source interface IPv4*/
-  unsigned long collector_addr;      /* Collector interface IPv4*/
-
-  struct unyte_header header;
-  char *payload;
+  uint16_t src_port;            /* Source port */
+  unsigned long src_addr;       /* Source interface IPv4*/
+  unsigned long collector_addr; /* Collector interface IPv4*/
 };
 
+/**
+ * The complete segment structure
+ */
+struct unyte_segment_with_metadata
+{
+  struct unyte_metadata *metadata;
+  struct unyte_header *header;
+  char *payload;
+};
 
 struct unyte_minimal
 {
@@ -47,13 +53,12 @@ struct unyte_minimal
   uint32_t message_id;
 
   /* Serialized datas */
-  char * buffer;
+  char *buffer;
 
   /* Metadatas */
-  uint16_t src_port;                 /* Source port */
-  unsigned long src_addr;            /* Source interface IPv4*/
-  unsigned long collector_addr;      /* Collector interface IPv4*/
-  
+  uint16_t src_port;            /* Source port */
+  unsigned long src_addr;       /* Source interface IPv4*/
+  unsigned long collector_addr; /* Collector interface IPv4*/
 };
 
 typedef struct unyte_socket
@@ -66,6 +71,6 @@ struct unyte_minimal *minimal_parse(char *segment, struct sockaddr_in *source, s
 struct unyte_segment *parse(char *segment);
 struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct unyte_minimal *um);
 void printHeader(struct unyte_header *header, FILE *std);
-void printPayload(char *p, int len, FILE* std);
+void printPayload(char *p, int len, FILE *std);
 
 #endif

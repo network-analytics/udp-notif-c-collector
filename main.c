@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <string.h>
+#include "hexdump.h"
 #include "unyte.h"
 #include "unyte_utils.h"
 #include "queue.h"
@@ -23,7 +24,8 @@ int main()
 
     /* Processing sample */
     recv_count++;
-    printHeader(&seg->header, stdout);
+    printHeader(seg->header, stdout);
+    hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
     printf("counter : %d", recv_count);
     fflush(stdout);
 

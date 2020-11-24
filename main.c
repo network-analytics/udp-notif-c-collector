@@ -10,7 +10,7 @@
 #include "unyte_utils.h"
 #include "queue.h"
 
-#define PORT 10000
+#define PORT 9341
 
 int main()
 {
@@ -18,7 +18,7 @@ int main()
   /* Initialize collector */
   collector_t *collector = start_unyte_collector((uint16_t) PORT);
   int recv_count = 0;
-  int max = 100;
+  int max = 10;
 
   while (recv_count < max)
   {
@@ -27,9 +27,9 @@ int main()
 
     /* Processing sample */
     recv_count++;
-    printHeader(seg->header, stdout);
+    /* printHeader(seg->header, stdout); */
     /* hexdump(seg->payload, seg->header->message_length - seg->header->header_length);*/
-    printf("counter : %d\n", recv_count);
+    /* printf("counter : %d\n", recv_count); */
     fflush(stdout);
 
 
@@ -37,13 +37,21 @@ int main()
     unyte_free_all(seg);
   }
 
-
   printf("Shutdown the socket\n");
   shutdown(*collector->sockfd, SHUT_RDWR);
   close(*collector->sockfd);
   pthread_join(*collector->main_thread, NULL);
 
+   /* Free last packets in the queue */
+  while (is_queue_empty(collector->queue) != 0)
+  {
+    struct unyte_segment_with_metadata *seg = (struct unyte_segment_with_metadata *)queue_read(collector->queue);
+    unyte_free_all(seg);
+  }
+
+  free(collector->queue->data);
   free(collector->queue);
+  free(collector->main_thread);
   free(collector);
 
   return 0;

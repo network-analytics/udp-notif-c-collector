@@ -31,8 +31,8 @@ int parser(struct parser_thread_input *in)
     struct unyte_segment_with_metadata *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
 
     /* Unyte_minimal struct is not useful anymore */
-    free(queue_data);
     free(queue_data->buffer);
+    free(queue_data);
     /* Check about fragmentation */
 
     if (parsed_segment->header->header_length <= 12)
@@ -41,7 +41,7 @@ int parser(struct parser_thread_input *in)
     }
     else
     {
-      printf("segmented, not pushed");
+      printf("segmented packet, discarding.\n");
       fflush(stdout);
       /* Discarding the segment while fragmentation is not fully implemented.*/
       unyte_free_all(parsed_segment);
@@ -51,7 +51,7 @@ int parser(struct parser_thread_input *in)
 }
 
 /**
- * Threaded parser function
+ * Threaded parser function.
  */
 void *t_parser(void *in)
 {

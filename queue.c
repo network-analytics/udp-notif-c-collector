@@ -5,6 +5,7 @@ Demonstrated with void pointers and no memory management.
 Note that empty is head==tail, thus only QUEUE_SIZE-1 entries may be used. */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 #include <semaphore.h>
 #include "queue.h"
@@ -34,4 +35,24 @@ int queue_write(queue_t *queue, void* handle) {
     pthread_mutex_unlock(&queue->lock);
     sem_post(&queue->full);
     return 0;
+}
+
+/**
+ * Check wether or not the queue is empty and return 1 for not empty 0 for empty
+ */
+int is_queue_empty(queue_t *queue)
+{
+    int val;
+    int n = sem_getvalue(&queue->full, &val);
+    if (n < 0)
+    {
+        printf("Semaphore get_value failed.\n");
+        exit(EXIT_FAILURE);
+    }
+    if (val == 0)
+    {
+        return 0;
+    }
+    return 1;   
+    
 }

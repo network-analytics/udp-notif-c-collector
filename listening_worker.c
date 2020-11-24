@@ -23,6 +23,7 @@ struct parse_worker
 {
   queue_t *queue;
   pthread_t *worker;
+  struct parser_thread_input *input;
 };
 
 /**
@@ -92,6 +93,9 @@ int listener(struct listener_thread_input *in)
 
     /* Create the thread */
     pthread_create((parsers + i)->worker, NULL, t_parser, (void *)parser_input);
+
+    /* Store the pointer to be able to free it at the end */
+    (parsers+i)->input = parser_input;
   }
 
   /* Uncomment if no listening is wanted */
@@ -112,6 +116,24 @@ int listener(struct listener_thread_input *in)
     {
       perror("Recvfrom failed");
       close(*in->conn->sockfd);
+
+      /* Kill every workers here */
+      for (int i = 0; i < PARSER_NUMBER; i++)
+      {
+        pthread_cancel(*(parsers+i)->worker);
+        pthread_join(*(parsers+i)->worker, NULL);
+        free((parsers+i)->queue->data);
+        free((parsers+i)->worker);
+        free((parsers+i)->queue);
+        free((parsers+i)->input);
+      }
+
+      free(parsers);
+
+      free(in->conn->sockfd);
+      free(in->conn->addr);
+      free(in->conn);
+      free(buffer);
       return -1;
     }
 

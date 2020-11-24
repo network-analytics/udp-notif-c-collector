@@ -1,0 +1,28 @@
+==2116536== Memcheck, a memory error detector
+==2116536== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==2116536== Using Valgrind-3.16.1 and LibVEX; rerun with -h for copyright info
+==2116536== Command: ./main
+==2116536== Parent PID: 2116166
+==2116536== 
+==2116536== 
+==2116536== HEAP SUMMARY:
+==2116536==     in use at exit: 7,070 bytes in 4 blocks
+==2116536==   total heap usage: 600,075 allocs, 600,071 frees, 7,267,652,316 bytes allocated
+==2116536== 
+==2116536== 7,070 (32 direct, 7,038 indirect) bytes in 1 blocks are definitely lost in loss record 4 of 4
+==2116536==    at 0x4C30DE7: malloc (vg_replace_malloc.c:307)
+==2116536==    by 0x401EC1: parse_with_metadata (unyte_utils.c:207)
+==2116536==    by 0x40237F: parser (parsing_worker.c:31)
+==2116536==    by 0x40240F: t_parser (parsing_worker.c:58)
+==2116536==    by 0x4E452DD: start_thread (in /usr/lib64/libpthread-2.28.so)
+==2116536==    by 0x5158E82: clone (in /usr/lib64/libc-2.28.so)
+==2116536== 
+==2116536== LEAK SUMMARY:
+==2116536==    definitely lost: 32 bytes in 1 blocks
+==2116536==    indirectly lost: 7,038 bytes in 3 blocks
+==2116536==      possibly lost: 0 bytes in 0 blocks
+==2116536==    still reachable: 0 bytes in 0 blocks
+==2116536==         suppressed: 0 bytes in 0 blocks
+==2116536== 
+==2116536== For lists of detected and suppressed errors, rerun with: -s
+==2116536== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)

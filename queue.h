@@ -17,5 +17,6 @@ typedef struct {
 
 void* queue_read(queue_t *queue);
 int queue_write(queue_t *queue, void* handle);
+int is_queue_empty(queue_t *queue);
 
 #endif

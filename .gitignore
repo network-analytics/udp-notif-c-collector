@@ -4,5 +4,7 @@
 
 !Makefile
 *.o
+/.vscode
 /download
 vgcore.*
+*.txt

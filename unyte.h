@@ -28,6 +28,7 @@ typedef struct
 #define PARSER_NUMBER 10
 
 unyte_collector_t *unyte_start_collector(unyte_options_t *options);
+//TODO: Move signature doc in here
 int unyte_free_all(unyte_seg_met_t *seg);
 int unyte_free_payload(unyte_seg_met_t *seg);
 int unyte_free_header(unyte_seg_met_t *seg);

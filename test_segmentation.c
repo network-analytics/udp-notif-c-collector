@@ -10,11 +10,11 @@ void test_segment_lists(){
     uint32_t gid = 1;
     uint32_t mid = 2;
     struct message_segment_list_cell* seglist = create_message_segment_list(gid, mid);
-    printf("Seglist @ %d\n", seglist);
+    printf("Seglist @ %p\n", seglist);
 
     printf("Clearing\n");
     clear_msl(seglist);
-    printf("Done %d\n", seglist);
+    printf("Done %p\n", seglist);
 
     seglist = create_message_segment_list(gid, mid);
 
@@ -29,14 +29,14 @@ void test_segment_lists(){
 
     printf("Clearing\n");
     clear_msl(seglist);
-    printf("Done %d\n", seglist);
+    printf("Done %p\n", seglist);
 
 
     gid =3;
     mid =4;
 
     struct message_segment_list_cell* seglist2 = create_message_segment_list(gid, mid);
-    printf("Seglist @ %d\n", seglist2);
+    printf("Seglist @ %p\n", seglist2);
 
     //Add a new cell that is not last in an empty list, seqnum 0
     int cont2 = 1;
@@ -76,14 +76,14 @@ void test_segment_lists(){
 
     printf("Clearing\n");
     clear_msl(seglist2);
-    printf("Done %d\n", seglist2);
+    printf("Done %p\n", seglist2);
 
 
     printf("\n");
 
     struct message_segment_list_cell* seglist3 = create_message_segment_list(gid, mid);
 
-    printf("Seglist @ %d\n", seglist3);
+    printf("Seglist @ %p\n", seglist3);
     int cont10 = 0;
     int cont11 = 1;
     int cont12 = 2;
@@ -99,7 +99,7 @@ void test_segment_lists(){
 
     printf("Clearing\n");
     clear_msl(seglist3);
-    printf("Done %d\n", seglist3);
+    printf("Done %p\n", seglist3);
 
 
 }

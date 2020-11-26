@@ -40,7 +40,7 @@ struct segment_buffer* create_segment_buffer();
 
 /*segment buffer management*/
 /*Retrieve the header cell of a segment list for a given message */
-int get_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t  mid);
+struct message_segment_list_cell* get_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t  mid);
 /*clear a list of segments*/
 int clear_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t  mid);
 /*insert a message segment inside a segment buffer */

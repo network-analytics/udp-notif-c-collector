@@ -153,7 +153,7 @@ int insert_into_msl(struct message_segment_list_cell* head, uint32_t seqnum, int
         }
     }
 }
-int get_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t  mid){
+struct message_segment_list_cell* get_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t  mid){
     uint32_t hk = hashKey(gid, mid);
     /*If there is no message at the request hashvalue, we don't have that segment list*/
     if (buf->hash_array[hk] == NULL){
@@ -170,7 +170,7 @@ int get_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t  mid){
         return NULL;
     }else{
     /*if we stopped before cur->next is NULL, the next cell has the requested gid and mid value */
-        return cur->next;
+        return cur->next->head;
     }
 }
 
@@ -245,8 +245,7 @@ int clear_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t mid){
     cur->next=next->next;
     clear_msl(next->head);
     free(next);
-    
-
+    return 0;
 
 }
 

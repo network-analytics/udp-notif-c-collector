@@ -11,12 +11,13 @@
 #include "queue.h"
 
 #define PORT 9341
+#define ADDR 0
 
 int main()
 {
 
   /* Initialize collector */
-  collector_t *collector = start_unyte_collector((uint16_t) PORT);
+  collector_t *collector = start_unyte_collector((uint16_t)PORT, (uint32_t)ADDR);
   int recv_count = 0;
   int max = 10;
 
@@ -32,7 +33,6 @@ int main()
     /* printf("counter : %d\n", recv_count); */
     fflush(stdout);
 
-
     /* Struct frees */
     unyte_free_all(seg);
   }
@@ -42,7 +42,7 @@ int main()
   close(*collector->sockfd);
   pthread_join(*collector->main_thread, NULL);
 
-   /* Free last packets in the queue */
+  /* Free last packets in the queue */
   while (is_queue_empty(collector->queue) != 0)
   {
     struct unyte_segment_with_metadata *seg = (struct unyte_segment_with_metadata *)queue_read(collector->queue);

@@ -11,7 +11,7 @@
 /**
  * Not exposed function used to initialize the socket and return unyte_socket struct
  */
-unytesock_t *init_socket(uint16_t port)
+unytesock_t *init_socket(uint16_t port, uint32_t addr)
 {
   unytesock_t *conn = (unytesock_t *)malloc(sizeof(unytesock_t));
   if (conn == NULL)
@@ -39,8 +39,7 @@ unytesock_t *init_socket(uint16_t port)
 
   adresse->sin_family = AF_INET;
   adresse->sin_port = htons(port);
-  /* adresse.sin_addr.s_addr = inet_addr("192.0.2.2"); */
-  adresse->sin_addr.s_addr = htonl(INADDR_ANY);
+  adresse->sin_addr.s_addr = htonl(addr);
 
   if (bind(*sock, (struct sockaddr *)adresse, sizeof(*adresse)) == -1)
   {
@@ -57,10 +56,10 @@ unytesock_t *init_socket(uint16_t port)
 
 /**
  * Start all the subprocesses of the collector on the given port and return the output segment queue.
- * Messages in the queues are structured in structs unyte_segment_with_metadata like defined in the 
+ * Messages in the queues are structured in structs unyte_segment_with_metadata like defined in the
  * unyte_utils.h file.
  */
-collector_t *start_unyte_collector(uint16_t port)
+collector_t *start_unyte_collector(uint16_t port, uint32_t addr)
 {
   queue_t *output_queue = (queue_t *)malloc(sizeof(queue_t));
   if (output_queue == NULL)
@@ -78,15 +77,14 @@ collector_t *start_unyte_collector(uint16_t port)
   sem_init(&output_queue->full, 0, 0);
   pthread_mutex_init(&output_queue->lock, NULL);
 
-  pthread_t *udpListener = (pthread_t*)malloc(sizeof(pthread_t));
+  pthread_t *udpListener = (pthread_t *)malloc(sizeof(pthread_t));
   if (udpListener == NULL)
   {
     printf("Malloc failed.\n");
     exit(EXIT_FAILURE);
   }
-  
 
-  unytesock_t *conn = init_socket(port);
+  unytesock_t *conn = init_socket(port, addr);
 
   struct listener_thread_input *listener_input = (struct listener_thread_input *)malloc(sizeof(struct listener_thread_input));
   if (listener_input == NULL)

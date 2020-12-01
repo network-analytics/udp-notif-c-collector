@@ -137,6 +137,9 @@ void test_segment_buffers(){
     }
     print_segment_buffer_int(buf);
 
+    int resclear = clear_buffer(buf);
+
+    printf("Cleared buffer from %d entries\n", resclear);
 
 
 }

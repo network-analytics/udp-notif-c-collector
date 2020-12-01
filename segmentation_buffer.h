@@ -13,6 +13,7 @@ seqnum, content only relevant for non header cell
 struct message_segment_list_cell {
     uint32_t total_size;
     uint32_t current_size;
+    uint32_t total_payload_byte_size;
     uint32_t gid;
     uint32_t mid;
     uint32_t seqnum;
@@ -40,14 +41,27 @@ struct segment_buffer* create_segment_buffer();
 //Clear a buffer of any collision list, collision list header, and clear the buffer itself
 int clear_buffer(struct segment_buffer* buf);
 
+/*insert a message segment inside a segment buffer */
+/**
+inserts a content in a message segment list, maintaining order among the content based on seqnum
+head must be the empty header cell of a message_segment_list, cannot be NULL
+seqnum is the sequence number of that segment
+last is 1 if the segment is the last one of the content, 0 otherwise
+content is the value to be added at the corresponding seqnum
+returns 0 if the content was added and message is not complete yet
+returns 1 if the content was added and message is complete
+(a message was stored with last 1, and the length of the list is equal to the total number of segments)
+returns -1 if a content was already present for this seqnum
+returns -2 if a content was already present and message is complete
+returns -3 if a memory allocation failed
+*/
+int insert_segment(struct segment_buffer* buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void* content);
+
 /*segment buffer management*/
 /*Retrieve the header cell of a segment list for a given message */
 struct message_segment_list_cell* get_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t  mid);
 /*clear a list of segments*/
 int clear_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t  mid);
-/*insert a message segment inside a segment buffer */
-int insert_segment(struct segment_buffer* buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, void* content);
-
 uint32_t hashKey(uint32_t gid, uint32_t mid);
 
 void print_segment_list_header(struct message_segment_list_cell* head);

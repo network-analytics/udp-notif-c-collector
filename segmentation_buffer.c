@@ -73,7 +73,7 @@ uint32_t hashKey(uint32_t gid, uint32_t mid){
 /**
 
 */
-int insert_segment(struct segment_buffer* buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, void* content){
+int insert_segment(struct segment_buffer* buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void* content){
     uint32_t hk = hashKey(gid, mid);
     if (buf->hash_array[hk] == NULL){
         buf->hash_array[hk] = malloc(sizeof(struct collision_list_cell));
@@ -92,7 +92,8 @@ int insert_segment(struct segment_buffer* buf, uint32_t gid, uint32_t mid, uint3
         cur->next->head= create_message_segment_list(gid, mid);
         cur->next->next = NULL;
     }
-    return insert_into_msl(cur->next->head, seqnum, last, content);
+    int res = insert_into_msl(cur->next->head, seqnum, last, payload_size, content);
+    return res;
     
 }
 
@@ -110,7 +111,7 @@ returns -1 if a content was already present for this seqnum
 returns -2 if a content was already present and message is complete
 returns -3 if a memory allocation failed
 */
-int insert_into_msl(struct message_segment_list_cell* head, uint32_t seqnum, int last, void* content){
+int insert_into_msl(struct message_segment_list_cell* head, uint32_t seqnum, int last, uint32_t payload_size, void* content){
     //If the segment is the last, we now know the total size of the message.
     if(last == 1) head->total_size = seqnum +1;
     //Search for insert location
@@ -131,6 +132,7 @@ int insert_into_msl(struct message_segment_list_cell* head, uint32_t seqnum, int
         cur->next->next = NULL;
         cur->next->content= content;
         head->current_size++;
+        head->total_payload_byte_size += payload_size;
         //return value based on message completeness
         if(head->total_size>0 && head->current_size ==head->total_size) return 1; else return 0;
     }else{
@@ -148,6 +150,7 @@ int insert_into_msl(struct message_segment_list_cell* head, uint32_t seqnum, int
             cur->next->next = temp;
             cur->next->content= content;
             head->current_size++;
+            head->total_payload_byte_size += payload_size;
             //return value based on message completeness
             if(head->total_size>0 && head->current_size ==head->total_size) return 1; else return 0;
         }
@@ -194,6 +197,7 @@ struct message_segment_list_cell* create_message_segment_list(uint32_t gid, uint
     res->mid = mid;
     res->current_size = 0;
     res->total_size = 0;
+    res->total_payload_byte_size = 0;
     res->next = NULL;
     return res;
 }

@@ -198,13 +198,20 @@ struct message_segment_list_cell* create_message_segment_list(uint32_t gid, uint
     return res;
 }
 
+/**
+head -> NOTNULL
+cur : head (->NOTNULL)
+next: NULL
+tant que cur->next!=NULL
+    next 
+*/
 void clear_msl(struct message_segment_list_cell* head){
-    struct message_segment_list_cell* cur = head;
-    struct message_segment_list_cell* next;
-    while(cur->next != NULL){
-        next = cur->next;
-        cur = cur->next;
-        free(next); 
+    struct message_segment_list_cell* cur = head->next;
+    struct message_segment_list_cell* temp;     
+    while(cur != NULL){
+        temp = cur->next;
+        free(cur);
+        cur = temp;
     }
     free(head);
 }

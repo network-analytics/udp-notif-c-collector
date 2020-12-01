@@ -16,8 +16,8 @@ int parser(struct parser_thread_input *in)
 {
   while (1)
   {
-    /* char *segment = (char *)queue_read(q); */
-    unyte_min_t *queue_data = (unyte_min_t *)queue_read(in->input);
+    /* char *segment = (char *)unyte_queue_read(q); */
+    unyte_min_t *queue_data = (unyte_min_t *)unyte_queue_read(in->input);
 
     /* Process segment */
     if (strcmp(queue_data->buffer, "exit") == 0)
@@ -37,7 +37,7 @@ int parser(struct parser_thread_input *in)
 
     if (parsed_segment->header->header_length <= 12)
     {
-      queue_write(in->output, parsed_segment);
+      unyte_queue_write(in->output, parsed_segment);
     }
     else
     {

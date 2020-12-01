@@ -140,7 +140,7 @@ int listener(struct listener_thread_input *in)
     unyte_min_t *seg = minimal_parse(buffer, &from, in->conn->addr);
 
     /* Dispatching by modulo on threads */
-    queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
+    unyte_queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
 
     /* Comment if infinity is required */
     /* infinity = infinity - 1; */

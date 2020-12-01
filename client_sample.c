@@ -24,7 +24,7 @@ int main()
   while (recv_count < max)
   {
     /* Read queue */
-    unyte_seg_met_t *seg = (unyte_seg_met_t *)queue_read(collector->queue);
+    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
 
     /* Processing sample */
     recv_count++;
@@ -45,7 +45,7 @@ int main()
   /* Free last packets in the queue */
   while (is_queue_empty(collector->queue) != 0)
   {
-    unyte_seg_met_t *seg = (unyte_seg_met_t *)queue_read(collector->queue);
+    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
     unyte_free_all(seg);
   }
 

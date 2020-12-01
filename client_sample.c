@@ -17,14 +17,14 @@ int main()
 {
 
   /* Initialize collector */
-  collector_t *collector = start_unyte_collector((uint16_t)PORT, (uint32_t)ADDR);
+  unyte_collector_t *collector = unyte_start_collector((uint16_t)PORT, (uint32_t)ADDR);
   int recv_count = 0;
   int max = 10;
 
   while (recv_count < max)
   {
     /* Read queue */
-    struct unyte_segment_with_metadata *seg = (struct unyte_segment_with_metadata *)queue_read(collector->queue);
+    unyte_seg_met_t *seg = (unyte_seg_met_t *)queue_read(collector->queue);
 
     /* Processing sample */
     recv_count++;
@@ -45,7 +45,7 @@ int main()
   /* Free last packets in the queue */
   while (is_queue_empty(collector->queue) != 0)
   {
-    struct unyte_segment_with_metadata *seg = (struct unyte_segment_with_metadata *)queue_read(collector->queue);
+    unyte_seg_met_t *seg = (unyte_seg_met_t *)queue_read(collector->queue);
     unyte_free_all(seg);
   }
 

@@ -17,7 +17,7 @@ int parser(struct parser_thread_input *in)
   while (1)
   {
     /* char *segment = (char *)queue_read(q); */
-    struct unyte_minimal *queue_data = (struct unyte_minimal *)queue_read(in->input);
+    unyte_min_t *queue_data = (unyte_min_t *)queue_read(in->input);
 
     /* Process segment */
     if (strcmp(queue_data->buffer, "exit") == 0)
@@ -28,7 +28,7 @@ int parser(struct parser_thread_input *in)
     }
 
     /* Can do better */
-    struct unyte_segment_with_metadata *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
+    unyte_seg_met_t *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
 
     /* Unyte_minimal struct is not useful anymore */
     free(queue_data->buffer);

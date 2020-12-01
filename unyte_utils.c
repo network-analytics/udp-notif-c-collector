@@ -31,11 +31,11 @@ uint16_t deserialize_uint16(char *c, int p)
 }
 
 /**
- * Return struct unyte_minimal data out of *SEGMENT.
+ * Return unyte_min_t data out of *SEGMENT.
  */
-struct unyte_minimal *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector)
+unyte_min_t *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector)
 {
-  struct unyte_minimal *um = malloc(sizeof(struct unyte_minimal));
+  unyte_min_t *um = malloc(sizeof(unyte_min_t));
 
   if (um == NULL)
   {
@@ -60,9 +60,9 @@ struct unyte_minimal *minimal_parse(char *segment, struct sockaddr_in *source, s
  * Parse udp-notif segment out of *SEGMENT char array.
  * DEPRECATED use unyte_segment_with_metadata instead
  */
-struct unyte_segment *parse(char *segment)
+unyte_segment_t *parse(char *segment)
 {
-  struct unyte_header *header = malloc(sizeof(struct unyte_header));
+  unyte_header_t *header = malloc(sizeof(unyte_header_t));
 
   if (header == NULL)
   {
@@ -112,7 +112,7 @@ struct unyte_segment *parse(char *segment)
 
   memcpy(payload, (segment + header->header_length), pSize);
 
-  struct unyte_segment *seg = malloc(sizeof(struct unyte_segment) + sizeof(payload));
+  unyte_segment_t *seg = malloc(sizeof(unyte_segment_t) + sizeof(payload));
 
   if (seg == NULL)
   {
@@ -132,9 +132,9 @@ struct unyte_segment *parse(char *segment)
 /**
  * Parse udp-notif segment out of *SEGMENT char array.
  */
-struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct unyte_minimal *um)
+unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 {
-  struct unyte_header *header = malloc(sizeof(struct unyte_header));
+  unyte_header_t *header = malloc(sizeof(unyte_header_t));
 
   if (header == NULL)
   {
@@ -190,7 +190,7 @@ struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct un
   memcpy(payload, (segment + header->header_length), pSize);
 
   /* Passing metadatas */
-  struct unyte_metadata *meta = (struct unyte_metadata *)malloc(sizeof(struct unyte_metadata));
+  unyte_metadata_t *meta = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
   if (meta == NULL)
   {
     printf("Malloc failed.\n");
@@ -203,7 +203,7 @@ struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct un
   meta->collector_addr = um->collector_addr;
 
   /* The global segment container */
-  struct unyte_segment_with_metadata *seg = malloc(sizeof(struct unyte_segment_with_metadata) + sizeof(payload));
+  unyte_seg_met_t *seg = malloc(sizeof(unyte_seg_met_t) + sizeof(payload));
 
   if (seg == NULL)
   {
@@ -221,7 +221,7 @@ struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct un
 /**
  * Display *HEADER to *STD.
  */
-void printHeader(struct unyte_header *header, FILE *std)
+void printHeader(unyte_header_t *header, FILE *std)
 {
   fprintf(std, "\n###### Unyte header ######\n");
   fprintf(std, "Version: %u\n", header->version);

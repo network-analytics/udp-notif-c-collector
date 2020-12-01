@@ -5,7 +5,7 @@
 #ifndef UNYTE_UTILS_H
 #define UNYTE_UTILS_H
 
-struct unyte_header
+typedef struct unyte_header
 {
   uint8_t version : 3;
   uint8_t space : 1;
@@ -20,33 +20,33 @@ struct unyte_header
   uint8_t f_len;
   uint32_t f_num : 31;
   uint8_t f_last : 1;
-};
+} unyte_header_t;
 
-struct unyte_segment
+typedef struct unyte_segment
 {
-  struct unyte_header *header;
+  unyte_header_t *header;
   char *payload;
-};
+} unyte_segment_t;
 
-struct unyte_metadata
+typedef struct unyte_metadata
 {
   /* Metadatas */
   uint16_t src_port;       /* Source port */
   uint32_t src_addr;       /* Source interface IPv4*/
   uint32_t collector_addr; /* Collector interface IPv4*/
-};
+} unyte_metadata_t;
 
 /**
  * The complete segment structure
  */
-struct unyte_segment_with_metadata
+typedef struct unyte_segment_with_metadata
 {
-  struct unyte_metadata *metadata;
-  struct unyte_header *header;
+  unyte_metadata_t *metadata;
+  unyte_header_t *header;
   char *payload;
-};
+} unyte_seg_met_t;
 
-struct unyte_minimal
+typedef struct unyte_minimal
 {
   /* Dispatching informations */
   uint32_t generator_id;
@@ -59,18 +59,18 @@ struct unyte_minimal
   uint16_t src_port;       /* Source port */
   uint32_t src_addr;       /* Source interface IPv4*/
   uint32_t collector_addr; /* Collector interface IPv4*/
-};
+} unyte_min_t;
 
 typedef struct unyte_socket
 {
   struct sockaddr_in *addr; /* The socket addr */
   int *sockfd;              /* The socket file descriptor */
-} unytesock_t;
+} unyte_sock_t;
 
-struct unyte_minimal *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector);
-struct unyte_segment *parse(char *segment);
-struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct unyte_minimal *um);
-void printHeader(struct unyte_header *header, FILE *std);
+unyte_min_t *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector);
+unyte_segment_t *parse(char *segment);
+unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um);
+void printHeader(unyte_header_t *header, FILE *std);
 void printPayload(char *p, int len, FILE *std);
 
 #endif

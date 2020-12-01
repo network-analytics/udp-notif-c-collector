@@ -10,9 +10,9 @@
  */
 struct listener_thread_input
 {
-  queue_t *output_queue;      /* The queue used to push the segments outside. */
-  uint16_t port;              /* The port to initialize the interface on. */
-  unytesock_t *conn;           /* Connection with addr, sockfd */
+  queue_t *output_queue; /* The queue used to push the segments outside. */
+  uint16_t port;         /* The port to initialize the interface on. */
+  unyte_sock_t *conn;    /* Connection with addr, sockfd */
 };
 
 int listener(struct listener_thread_input *in);

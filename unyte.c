@@ -11,9 +11,9 @@
 /**
  * Not exposed function used to initialize the socket and return unyte_socket struct
  */
-unytesock_t *init_socket(uint16_t port, uint32_t addr)
+unyte_sock_t *unyte_init_socket(uint16_t port, uint32_t addr)
 {
-  unytesock_t *conn = (unytesock_t *)malloc(sizeof(unytesock_t));
+  unyte_sock_t *conn = (unyte_sock_t *)malloc(sizeof(unyte_sock_t));
   if (conn == NULL)
   {
     printf("Malloc failed.\n");
@@ -59,7 +59,7 @@ unytesock_t *init_socket(uint16_t port, uint32_t addr)
  * Messages in the queues are structured in structs unyte_segment_with_metadata like defined in the
  * unyte_utils.h file.
  */
-collector_t *start_unyte_collector(uint16_t port, uint32_t addr)
+unyte_collector_t *unyte_start_collector(uint16_t port, uint32_t addr)
 {
   queue_t *output_queue = (queue_t *)malloc(sizeof(queue_t));
   if (output_queue == NULL)
@@ -84,7 +84,7 @@ collector_t *start_unyte_collector(uint16_t port, uint32_t addr)
     exit(EXIT_FAILURE);
   }
 
-  unytesock_t *conn = init_socket(port, addr);
+  unyte_sock_t *conn = unyte_init_socket(port, addr);
 
   struct listener_thread_input *listener_input = (struct listener_thread_input *)malloc(sizeof(struct listener_thread_input));
   if (listener_input == NULL)
@@ -101,7 +101,7 @@ collector_t *start_unyte_collector(uint16_t port, uint32_t addr)
   pthread_create(udpListener, NULL, t_listener, (void *)listener_input);
 
   /* Return struct */
-  collector_t *collector = (collector_t *)malloc((sizeof(collector_t)));
+  unyte_collector_t *collector = (unyte_collector_t *)malloc((sizeof(unyte_collector_t)));
   if (collector == NULL)
   {
     printf("Malloc failed.\n");
@@ -118,7 +118,7 @@ collector_t *start_unyte_collector(uint16_t port, uint32_t addr)
 /**
  * Free all the mem related to the segment
  */
-int unyte_free_all(struct unyte_segment_with_metadata *seg)
+int unyte_free_all(unyte_seg_met_t *seg)
 {
   /* Free all the sub modules */
 
@@ -137,7 +137,7 @@ int unyte_free_all(struct unyte_segment_with_metadata *seg)
  * Free only the payload
  * pointer still exist but is NULL
  */
-int unyte_free_payload(struct unyte_segment_with_metadata *seg)
+int unyte_free_payload(unyte_seg_met_t *seg)
 {
   free(seg->payload);
   return 0;
@@ -147,7 +147,7 @@ int unyte_free_payload(struct unyte_segment_with_metadata *seg)
  * Free only the header
  * pointer still exist but is NULL
  */
-int unyte_free_header(struct unyte_segment_with_metadata *seg)
+int unyte_free_header(unyte_seg_met_t *seg)
 {
   free(seg->header);
   return 0;
@@ -157,7 +157,7 @@ int unyte_free_header(struct unyte_segment_with_metadata *seg)
  * Free only the metadata
  * pointer still exist but is NULL
  */
-int unyte_free_metadata(struct unyte_segment_with_metadata *seg)
+int unyte_free_metadata(unyte_seg_met_t *seg)
 {
   free(seg->metadata);
   return 0;

@@ -13,15 +13,15 @@ typedef struct
   queue_t *queue;
   pthread_t *main_thread;
   int *sockfd;
-} collector_t;
+} unyte_collector_t;
 
 #define OUTPUT_QUEUE_SIZE 100
 #define PARSER_NUMBER 10
 
-collector_t *start_unyte_collector(uint16_t port, uint32_t addr);
-int unyte_free_all(struct unyte_segment_with_metadata *seg);
-int unyte_free_payload(struct unyte_segment_with_metadata *seg);
-int unyte_free_header(struct unyte_segment_with_metadata *seg);
-int unyte_free_metadata(struct unyte_segment_with_metadata *seg);
+unyte_collector_t *unyte_start_collector(uint16_t port, uint32_t addr);
+int unyte_free_all(unyte_seg_met_t *seg);
+int unyte_free_payload(unyte_seg_met_t *seg);
+int unyte_free_header(unyte_seg_met_t *seg);
+int unyte_free_metadata(unyte_seg_met_t *seg);
 
 #endif

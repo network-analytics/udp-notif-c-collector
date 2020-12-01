@@ -33,7 +33,7 @@ int listener(struct listener_thread_input *in)
 {
   struct sockaddr_in from = {0};
   unsigned int fromsize = sizeof from;
-  
+
   /* errno used to handle socket read errors */
   errno = 0;
 
@@ -80,7 +80,7 @@ int listener(struct listener_thread_input *in)
     }
 
     /* Define the struct passed to the next parser */
-    struct parser_thread_input *parser_input = (struct parser_thread_input *) malloc(sizeof(struct parser_thread_input));
+    struct parser_thread_input *parser_input = (struct parser_thread_input *)malloc(sizeof(struct parser_thread_input));
     if (parser_input == NULL)
     {
       printf("Malloc failed.\n");
@@ -95,7 +95,7 @@ int listener(struct listener_thread_input *in)
     pthread_create((parsers + i)->worker, NULL, t_parser, (void *)parser_input);
 
     /* Store the pointer to be able to free it at the end */
-    (parsers+i)->input = parser_input;
+    (parsers + i)->input = parser_input;
   }
 
   /* Uncomment if no listening is wanted */
@@ -111,7 +111,7 @@ int listener(struct listener_thread_input *in)
       printf("Malloc failed \n");
       return -1;
     }
-    
+
     if ((n = recvfrom(*in->conn->sockfd, buffer, RCVSIZE - 1, 0, (struct sockaddr *)&from, &fromsize)) < 0)
     {
       perror("Recvfrom failed");
@@ -120,12 +120,12 @@ int listener(struct listener_thread_input *in)
       /* Kill every workers here */
       for (int i = 0; i < PARSER_NUMBER; i++)
       {
-        pthread_cancel(*(parsers+i)->worker);
-        pthread_join(*(parsers+i)->worker, NULL);
-        free((parsers+i)->queue->data);
-        free((parsers+i)->worker);
-        free((parsers+i)->queue);
-        free((parsers+i)->input);
+        pthread_cancel(*(parsers + i)->worker);
+        pthread_join(*(parsers + i)->worker, NULL);
+        free((parsers + i)->queue->data);
+        free((parsers + i)->worker);
+        free((parsers + i)->queue);
+        free((parsers + i)->input);
       }
 
       free(parsers);
@@ -137,7 +137,7 @@ int listener(struct listener_thread_input *in)
       return -1;
     }
 
-    struct unyte_minimal *seg = minimal_parse(buffer, &from, in->conn->addr);
+    unyte_min_t *seg = minimal_parse(buffer, &from, in->conn->addr);
 
     /* Dispatching by modulo on threads */
     queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);

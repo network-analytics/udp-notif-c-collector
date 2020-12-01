@@ -121,7 +121,22 @@ void test_segment_buffers(){
     /*int insert_segment(struct segment_buffer* buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, void* content);*/
     clear_segment_list(buf, 1,2);
     printf("Cleared list from 1,2\n");
+
+    clear_segment_list(buf, 2,1);
+    printf("Cleared list from 1,2\n");
     print_segment_buffer_int(buf);
+
+    for (i = 0; i < 10; i++) {
+        int* val = malloc(sizeof(int));
+        *val = i+10;
+        insert_segment(buf, 1, 2, i, 0, val);
+        val = malloc(sizeof(int));
+        *val = i;
+        *val = (*val**val)*(*val);
+        insert_segment(buf, 2, 1, i, 0, val);
+    }
+    print_segment_buffer_int(buf);
+
 
 
 }
@@ -130,10 +145,12 @@ void test_hashes(){
     uint32_t coucou1 = 1;
     uint32_t coucou2 = 2;
     uint32_t hashed = hashKey(coucou1, coucou2);
-    printf("Coucou %d\n", hashed);
+    uint32_t hashed2 = hashKey(coucou2, coucou1);
+    printf("Coucou %d %d\n", hashed, hashed2);
 }
 int main()
 {
+    test_hashes();
 /*    test_segment_lists();*/
     test_segment_buffers();
     return 0;

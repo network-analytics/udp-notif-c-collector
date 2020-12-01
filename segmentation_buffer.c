@@ -216,6 +216,20 @@ void clear_msl(struct message_segment_list_cell* head){
     free(head);
 }
 
+void clear_collision_list(struct segment_buffer* buf, struct collision_list_cell* head){
+    struct collision_list_cell* cur = head->next;
+    struct collision_list_cell* temp;     
+    while(cur != NULL){
+        temp = cur->next;
+        clear_segment_list(buf,cur->head->gid, cur->head->mid);
+        cur = temp;
+    }
+    free(head);
+}
+
+
+
+
 
 struct segment_buffer* create_segment_buffer(){
     struct segment_buffer* res = malloc(sizeof(struct segment_buffer));
@@ -223,6 +237,17 @@ struct segment_buffer* create_segment_buffer(){
         res->hash_array[i] = NULL;
     }
     return res;
+}
+
+int clear_buffer(struct segment_buffer* buf){
+
+    for (int i = 0; i < SIZE_BUF; i++){
+        if(buf->hash_array[i] !=NULL){
+            //There is a collision list header cell at hasharray[i]
+            //The collision list is not empty. Clear it. 
+            clear_collision_list(buf, buf->hash_array[i]);
+        }
+    }
 }
 
 void print_collision_list_int(struct collision_list_cell* cell){

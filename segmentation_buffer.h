@@ -37,6 +37,8 @@ struct segment_buffer {
 
 //Create a segment buffer to store UDP-notif message segments
 struct segment_buffer* create_segment_buffer();
+//Clear a buffer of any collision list, collision list header, and clear the buffer itself
+int clear_buffer(struct segment_buffer* buf);
 
 /*segment buffer management*/
 /*Retrieve the header cell of a segment list for a given message */

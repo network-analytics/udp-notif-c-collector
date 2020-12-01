@@ -11,7 +11,7 @@
 #define LAST_MASK 0b00000001
 
 /**
- * Return 32 bits unsigned integer value out of *C+P char pointer value. 
+ * Return 32 bits unsigned integer value out of *C+P char pointer value.
  */
 uint32_t deserialize_uint32(char *c, int p)
 {
@@ -21,7 +21,7 @@ uint32_t deserialize_uint32(char *c, int p)
 }
 
 /**
- * Return 16 bits unsigned integer value out of *C+P char pointer value. 
+ * Return 16 bits unsigned integer value out of *C+P char pointer value.
  */
 uint16_t deserialize_uint16(char *c, int p)
 {
@@ -45,7 +45,7 @@ struct unyte_minimal *minimal_parse(char *segment, struct sockaddr_in *source, s
 
   um->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
   um->message_id = ntohl(deserialize_uint32((char *)segment, 8));
-  
+
   um->buffer = segment;
 
   /* Do I need to reverse all theses ? */
@@ -58,7 +58,7 @@ struct unyte_minimal *minimal_parse(char *segment, struct sockaddr_in *source, s
 
 /**
  * Parse udp-notif segment out of *SEGMENT char array.
- * DEPRECATED use unyte_segment_with_metadata instead 
+ * DEPRECATED use unyte_segment_with_metadata instead
  */
 struct unyte_segment *parse(char *segment)
 {
@@ -89,7 +89,7 @@ struct unyte_segment *parse(char *segment)
     /* WARN : Modifying directly segment, is it a pb ? + Not sure it works well*/
     /* If last = TRUE */
 
-    if ((uint8_t)(segment[17] & 0b00000001) == 1)
+    if ((uint8_t)(segment[15] & 0b00000001) == 1)
     {
       header->f_last = 1;
     }
@@ -97,7 +97,7 @@ struct unyte_segment *parse(char *segment)
     {
       header->f_last = 0;
     }
-    header->f_num = (ntohl(deserialize_uint32((char *)segment, 14)) >> 1);
+    header->f_num = (ntohs(deserialize_uint16((char *)segment, 14)) >> 1);
   }
 
   int pSize = header->message_length - header->header_length;
@@ -161,7 +161,7 @@ struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct un
     /* WARN : Modifying directly segment, is it a pb ? + Not sure it works well*/
     /* If last = TRUE */
 
-    if ((uint8_t)(segment[17] & 0b00000001) == 1)
+    if ((uint8_t)(segment[15] & 0b00000001) == 1)
     {
       header->f_last = 1;
     }
@@ -169,7 +169,7 @@ struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct un
     {
       header->f_last = 0;
     }
-    header->f_num = (ntohl(deserialize_uint32((char *)segment, 14)) >> 1);
+    header->f_num = (ntohs(deserialize_uint16((char *)segment, 14)) >> 1);
   }
 
   int pSize = header->message_length - header->header_length;
@@ -180,7 +180,6 @@ struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct un
     printf("Malloc failed.\n");
     exit(-1);
   }
-  
 
   if (payload == NULL)
   {
@@ -197,7 +196,7 @@ struct unyte_segment_with_metadata *parse_with_metadata(char *segment, struct un
     printf("Malloc failed.\n");
     exit(-1);
   }
-  
+
   /*Filling the struct */
   meta->src_addr = um->src_addr;
   meta->src_port = um->src_port;

@@ -3,6 +3,7 @@ client_sample
 client_performance
 test
 client_loss
+test_seg
 
 !**/*.sh
 !Dockerfile

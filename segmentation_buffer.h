@@ -69,7 +69,7 @@ void print_segment_list_int(struct message_segment_list_cell* head);
 void print_segment_buffer_int(struct segment_buffer* buf);
 
 /*adds a message segment in a list of segments of a given message*/
-int insert_into_msl(struct message_segment_list_cell* head, uint32_t seqnum, int last, void* content);
+int insert_into_msl(struct message_segment_list_cell* head, uint32_t seqnum, int last, uint32_t payload_size, void* content);
 /*destroys a message*/
 void clear_msl(struct message_segment_list_cell* head);
 

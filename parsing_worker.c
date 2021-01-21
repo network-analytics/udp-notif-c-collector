@@ -19,14 +19,6 @@ int parser(struct parser_thread_input *in)
     /* char *segment = (char *)unyte_queue_read(q); */
     unyte_min_t *queue_data = (unyte_min_t *)unyte_queue_read(in->input);
 
-    /* Process segment */
-    if (strcmp(queue_data->buffer, "exit") == 0)
-    {
-      printf("Exit parsing thread\n");
-      fflush(stdout);
-      return 0;
-    }
-
     /* Can do better */
     unyte_seg_met_t *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
 

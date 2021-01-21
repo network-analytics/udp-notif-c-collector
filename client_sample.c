@@ -38,7 +38,7 @@ int main()
   }
 
   printf("Shutdown the socket\n");
-  shutdown(*collector->sockfd, SHUT_RDWR);
+  shutdown(*collector->sockfd, SHUT_RDWR); //TODO: à valider/force empty queue (?)
   close(*collector->sockfd);
   pthread_join(*collector->main_thread, NULL);
 

@@ -1,6 +1,6 @@
 CC=gcc
 LDFLAGS=-g
-CFLAGS= -Wextra -Wall -ansi -g -std=c99
+CFLAGS= -Wextra -Wall -ansi -g -std=c99 -D_GNU_SOURCE
 DEPS= listening_worker.h hexdump.h unyte_utils.h queue.h parsing_worker.h unyte.h
 OBJ= listening_worker.o hexdump.o unyte_utils.o queue.o parsing_worker.o unyte.o
 
@@ -16,4 +16,4 @@ test: test.o $(OBJ)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm *.o
+	rm *.o client_sample test 

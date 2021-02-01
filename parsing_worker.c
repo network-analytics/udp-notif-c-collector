@@ -21,6 +21,7 @@ int parser(struct parser_thread_input *in)
 
     /* Can do better */
     unyte_seg_met_t *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
+    // printf("From %d | %d\n", parsed_segment->metadata->src_addr, parsed_segment->metadata->src_port);
 
     /* Unyte_minimal struct is not useful anymore */
     free(queue_data->buffer);

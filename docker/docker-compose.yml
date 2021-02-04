@@ -1,0 +1,11 @@
+version: "3"
+services:
+  c_collector:
+    image: unyte/c-collector:latest
+    working_dir: /home/unyte/src
+    ports:
+      - "8081:8081/udp"
+    volumes:
+      - ./logs:/home/unyte/logs
+    command: >
+      bash -c "./launch.sh"

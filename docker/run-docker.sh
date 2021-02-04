@@ -1,7 +1,12 @@
 #!/bin/bash
 
-## Use docker-compose to have logs volume
-docker-compose up -d
+ENGINE=docker
 
-## Another command to launch the container
-# docker run -d -p 8081:8081/udp unyte/c-collector:latest /home/unyte/src/client_sample
+if [ -z "$1" ] || [ "$1" == "docker" ] || [[ "$1" != "docker" && "$1" != "podman" ]]; then
+    echo -e "Using default \e[1m\e[32mdocker \e[0mengine"
+elif [ "$1" == "podman" ]; then
+    echo -e "Using \e[1m\e[32mpodman \e[0mengine"
+    ENGINE=podman
+fi
+
+$ENGINE run -d -p 8081:8081/udp -v "$(pwd)"/logs:/home/unyte/logs unyte/c-collector:latest /home/unyte/src/launch.sh

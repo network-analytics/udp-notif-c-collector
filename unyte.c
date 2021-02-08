@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 #include "queue.h"
 #include "unyte.h"
 #include "unyte_utils.h"
@@ -11,7 +12,7 @@
 /**
  * Not exposed function used to initialize the socket and return unyte_socket struct
  */
-unyte_sock_t *unyte_init_socket(uint16_t port, uint32_t addr)
+unyte_sock_t *unyte_init_socket(char *addr, uint16_t port)
 {
   unyte_sock_t *conn = (unyte_sock_t *)malloc(sizeof(unyte_sock_t));
   if (conn == NULL)
@@ -40,7 +41,7 @@ unyte_sock_t *unyte_init_socket(uint16_t port, uint32_t addr)
 
   adresse->sin_family = AF_INET;
   adresse->sin_port = htons(port);
-  adresse->sin_addr.s_addr = htonl(addr);
+  inet_pton(AF_INET, addr, &adresse->sin_addr);
 
   if (bind(*sock, (struct sockaddr *)adresse, sizeof(*adresse)) == -1)
   {
@@ -60,7 +61,7 @@ unyte_sock_t *unyte_init_socket(uint16_t port, uint32_t addr)
  * Messages in the queues are structured in structs unyte_segment_with_metadata like defined in the
  * unyte_utils.h file.
  */
-unyte_collector_t *unyte_start_collector(uint16_t port, uint32_t addr)
+unyte_collector_t *unyte_start_collector(char *addr, uint16_t port)
 {
   queue_t *output_queue = (queue_t *)malloc(sizeof(queue_t));
   if (output_queue == NULL)
@@ -85,7 +86,7 @@ unyte_collector_t *unyte_start_collector(uint16_t port, uint32_t addr)
     exit(EXIT_FAILURE);
   }
 
-  unyte_sock_t *conn = unyte_init_socket(port, addr);
+  unyte_sock_t *conn = unyte_init_socket(addr, port);
 
   struct listener_thread_input *listener_input = (struct listener_thread_input *)malloc(sizeof(struct listener_thread_input));
   if (listener_input == NULL)

@@ -18,7 +18,7 @@ typedef struct
 #define OUTPUT_QUEUE_SIZE 100
 #define PARSER_NUMBER 10
 
-unyte_collector_t *unyte_start_collector(uint16_t port, uint32_t addr);
+unyte_collector_t *unyte_start_collector(char *addr, uint16_t port);
 int unyte_free_all(unyte_seg_met_t *seg);
 int unyte_free_payload(unyte_seg_met_t *seg);
 int unyte_free_header(unyte_seg_met_t *seg);

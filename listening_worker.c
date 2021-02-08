@@ -146,7 +146,7 @@ int listener(struct listener_thread_input *in)
     int read_count = recvmmsg(*in->conn->sockfd, messages, in->recvmmsg_vlen, 0, NULL);
     //TODO: check messages[i].msg_hdr.msg_flags & MSG_TRUNC --> if true datagram.len>buffer
 
-    printf("%d messages read\n", read_count);
+    // printf("%d messages read\n", read_count);
     for (long int i = 0; i < read_count; i++)
     {
       // hexdump(messages[i].msg_hdr.msg_iov->iov_base, 10000);

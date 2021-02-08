@@ -1,5 +1,5 @@
 Copyright (c) 2020 Unyte Project members 
-Authors Tom Sampic, Axel Rosensthiel, Pierre Francois, Stéphane Frénot
+Authors Tom Sampic, Axel Rosensthiel, Alex Huang, Pierre Francois, Stéphane Frénot
 WIRED Team 
 Telecommunications Department
 INSA Lyon

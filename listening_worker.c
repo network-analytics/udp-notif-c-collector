@@ -16,7 +16,7 @@
 #include "unyte.h"
 #include "queue.h"
 
-#define RCVSIZE 65565
+#define RCVSIZE 65535
 #define QUEUE_SIZE 50
 
 struct parse_worker
@@ -26,14 +26,40 @@ struct parse_worker
   struct parser_thread_input *input;
 };
 
+void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in, struct mmsghdr *messages)
+{
+
+  /* Kill every workers here */
+  for (int i = 0; i < PARSER_NUMBER; i++)
+  {
+    pthread_cancel(*(parsers + i)->worker);
+    pthread_join(*(parsers + i)->worker, NULL);
+    free((parsers + i)->queue->data);
+    free((parsers + i)->worker);
+    free((parsers + i)->queue);
+    free((parsers + i)->input);
+  }
+
+  free(parsers);
+
+  free(in->conn->sockfd);
+  free(in->conn->addr);
+  free(in->conn);
+
+  for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+  {
+    free(messages[i].msg_hdr.msg_iov->iov_base);
+    free(messages[i].msg_hdr.msg_iov);
+    free(messages[i].msg_hdr.msg_name);
+  }
+  free(messages);
+}
+
 /**
  * Udp listener worker on PORT port.
  */
 int listener(struct listener_thread_input *in)
 {
-  struct sockaddr_in from = {0};
-  unsigned int fromsize = sizeof from;
-
   /* errno used to handle socket read errors */
   errno = 0;
 
@@ -103,44 +129,51 @@ int listener(struct listener_thread_input *in)
 
   while (infinity > 0)
   {
-    int n;
-
-    char *buffer = (char *)malloc(sizeof(char) * RCVSIZE);
-    if (buffer == NULL)
+    // TODO: init only once
+    struct mmsghdr *messages = (struct mmsghdr *)malloc(in->recvmmsg_vlen * sizeof(struct mmsghdr));
+    for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
     {
-      printf("Malloc failed \n");
-      return -1;
+      messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
+      messages[i].msg_hdr.msg_iovlen = 1;
+      messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(RCVSIZE * sizeof(char));
+      messages[i].msg_hdr.msg_iov->iov_len = RCVSIZE;
+      messages[i].msg_hdr.msg_control = 0;
+      messages[i].msg_hdr.msg_controllen = 0;
+      messages[i].msg_hdr.msg_name = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+      messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_in);
     }
 
-    if ((n = recvfrom(*in->conn->sockfd, buffer, RCVSIZE - 1, 0, (struct sockaddr *)&from, &fromsize)) < 0)
-    {
-      perror("Recvfrom failed");
-      close(*in->conn->sockfd);
+    int read_count = recvmmsg(*in->conn->sockfd, messages, in->recvmmsg_vlen, 0, NULL);
+    //TODO: check messages[i].msg_hdr.msg_flags & MSG_TRUNC --> if true datagram.len>buffer
 
-      /* Kill every workers here */
-      for (int i = 0; i < PARSER_NUMBER; i++)
-      {
-        pthread_cancel(*(parsers + i)->worker);
-        pthread_join(*(parsers + i)->worker, NULL);
-        free((parsers + i)->queue->data);
-        free((parsers + i)->worker);
-        free((parsers + i)->queue);
-        free((parsers + i)->input);
+    printf("%d messages read\n", read_count);
+    for (long int i = 0; i < read_count; i++)
+    {
+      // hexdump(messages[i].msg_hdr.msg_iov->iov_base, 10000);
+
+      // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
+      if (messages[i].msg_len > 0) {
+        unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_in *)messages[i].msg_hdr.msg_name), in->conn->addr);
+        /* Dispatching by modulo on threads */
+        unyte_queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
+      } else {
+        free(messages[i].msg_hdr.msg_iov->iov_base);
       }
-
-      free(parsers);
-
-      free(in->conn->sockfd);
-      free(in->conn->addr);
-      free(in->conn);
-      free(buffer);
+    }
+    if (read_count == -1)
+    {
+      perror("recvmmsg failed");
+      close(*in->conn->sockfd);
+      free_parsers(parsers, in, messages);
       return -1;
     }
 
-    unyte_min_t *seg = minimal_parse(buffer, &from, in->conn->addr);
-
-    /* Dispatching by modulo on threads */
-    unyte_queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
+    for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+    {
+      free(messages[i].msg_hdr.msg_iov);
+      free(messages[i].msg_hdr.msg_name);
+    }
+    free(messages);
 
     /* Comment if infinity is required */
     /* infinity = infinity - 1; */

@@ -10,14 +10,21 @@
 #include "unyte_utils.h"
 #include "queue.h"
 
-#define PORT 9341
-#define ADDR 0
+#define PORT 8081
+#define ADDR "192.168.0.17"
+#define USED_VLEN 10
 
 int main()
 {
+  printf("Listening on port %d\n", PORT);
+  // Initialize collector options
+  unyte_options_t options = {0};
+  options.address = ADDR;
+  options.port = PORT;
+  options.recvmmsg_vlen = USED_VLEN;
 
   /* Initialize collector */
-  unyte_collector_t *collector = unyte_start_collector((uint16_t)PORT, (uint32_t)ADDR);
+  unyte_collector_t *collector = unyte_start_collector(&options);
   int recv_count = 0;
   int max = 10;
 
@@ -28,9 +35,9 @@ int main()
 
     /* Processing sample */
     recv_count++;
-    /* printHeader(seg->header, stdout); */
-    /* hexdump(seg->payload, seg->header->message_length - seg->header->header_length);*/
-    /* printf("counter : %d\n", recv_count); */
+    // printHeader(seg->header, stdout);
+    // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
+    printf("counter : %d\n", recv_count);
     fflush(stdout);
 
     /* Struct frees */

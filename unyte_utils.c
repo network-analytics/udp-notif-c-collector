@@ -151,8 +151,8 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
 
   /* Header contains options */
-  /* TODO handle something else than fragmentaion */
-
+  /* TODO: handle something else than fragmentaion ? */
+  // TODO: constantes à le mettre dans headers
   if (header->header_length > 12)
   {
     header->f_type = segment[12];

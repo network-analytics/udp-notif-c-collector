@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <signal.h>
-#include <arpa/inet.h>
 #include "unistd.h"
 #include "hexdump.h"
 #include "unyte.h"
@@ -13,13 +12,19 @@
 
 #define PORT 8081
 #define ADDR "192.168.0.17"
+#define USED_VLEN 10
 
 int main()
 {
   printf("Listening on port %d\n", PORT);
-  // TODO: change other unyte_start_collector(uint16_t,uint32_t) interface --> addr and port inversed
+  // Initialize collector options
+  unyte_options_t options = {0};
+  options.address = ADDR;
+  options.port = PORT;
+  options.recvmmsg_vlen = USED_VLEN;
+
   /* Initialize collector */
-  unyte_collector_t *collector = unyte_start_collector(ADDR, (uint16_t)PORT);
+  unyte_collector_t *collector = unyte_start_collector(&options);
   int recv_count = 0;
   int max = 10;
 

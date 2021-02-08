@@ -56,13 +56,34 @@ unyte_sock_t *unyte_init_socket(char *addr, uint16_t port)
   return conn;
 }
 
+void set_default_options(unyte_options_t *options)
+{
+  if (options == NULL)
+  {
+    printf("Invalid options.\n");
+    exit(EXIT_FAILURE);
+  }
+  if (options->address == NULL)
+  {
+    printf("Invalid address.\n");
+    exit(EXIT_FAILURE);
+  }
+  if (options->recvmmsg_vlen == 0)
+  {
+    options->recvmmsg_vlen = DEFAULT_VLEN;
+  }
+  printf("Options: %s:%d | vlen: %d\n", options->address, options->port, options->recvmmsg_vlen);
+}
+
 /**
  * Start all the subprocesses of the collector on the given port and return the output segment queue.
  * Messages in the queues are structured in structs unyte_segment_with_metadata like defined in the
  * unyte_utils.h file.
  */
-unyte_collector_t *unyte_start_collector(char *addr, uint16_t port)
+unyte_collector_t *unyte_start_collector(unyte_options_t *options)
 {
+  set_default_options(options);
+
   queue_t *output_queue = (queue_t *)malloc(sizeof(queue_t));
   if (output_queue == NULL)
   {
@@ -86,7 +107,7 @@ unyte_collector_t *unyte_start_collector(char *addr, uint16_t port)
     exit(EXIT_FAILURE);
   }
 
-  unyte_sock_t *conn = unyte_init_socket(addr, port);
+  unyte_sock_t *conn = unyte_init_socket(options->address, options->port);
 
   struct listener_thread_input *listener_input = (struct listener_thread_input *)malloc(sizeof(struct listener_thread_input));
   if (listener_input == NULL)
@@ -95,9 +116,10 @@ unyte_collector_t *unyte_start_collector(char *addr, uint16_t port)
     exit(-1);
   }
 
-  listener_input->port = port;
+  listener_input->port = options->port;
   listener_input->output_queue = output_queue;
   listener_input->conn = conn;
+  listener_input->recvmmsg_vlen = options->recvmmsg_vlen;
 
   /*Threaded UDP listener*/
   pthread_create(udpListener, NULL, t_listener, (void *)listener_input);

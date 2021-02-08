@@ -18,7 +18,6 @@
 
 #define RCVSIZE 65535
 #define QUEUE_SIZE 50
-#define PACKETS_VLEN 10
 
 struct parse_worker
 {
@@ -47,7 +46,7 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
   free(in->conn->addr);
   free(in->conn);
 
-  for (int i = 0; i < PACKETS_VLEN; i++)
+  for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
   {
     free(messages[i].msg_hdr.msg_iov->iov_base);
     free(messages[i].msg_hdr.msg_iov);
@@ -131,8 +130,8 @@ int listener(struct listener_thread_input *in)
   while (infinity > 0)
   {
     // TODO: init only once
-    struct mmsghdr *messages = (struct mmsghdr *)malloc(PACKETS_VLEN * sizeof(struct mmsghdr));
-    for (size_t i = 0; i < PACKETS_VLEN; i++)
+    struct mmsghdr *messages = (struct mmsghdr *)malloc(in->recvmmsg_vlen * sizeof(struct mmsghdr));
+    for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
     {
       messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
       messages[i].msg_hdr.msg_iovlen = 1;
@@ -144,7 +143,7 @@ int listener(struct listener_thread_input *in)
       messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_in);
     }
 
-    int read_count = recvmmsg(*in->conn->sockfd, messages, PACKETS_VLEN, 0, NULL);
+    int read_count = recvmmsg(*in->conn->sockfd, messages, in->recvmmsg_vlen, 0, NULL);
     //TODO: check messages[i].msg_hdr.msg_flags & MSG_TRUNC --> if true datagram.len>buffer
 
     printf("%d messages read\n", read_count);
@@ -169,7 +168,7 @@ int listener(struct listener_thread_input *in)
       return -1;
     }
 
-    for (int i = 0; i < PACKETS_VLEN; i++)
+    for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
     {
       free(messages[i].msg_hdr.msg_iov);
       free(messages[i].msg_hdr.msg_name);

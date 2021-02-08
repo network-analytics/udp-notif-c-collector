@@ -1,23 +1,20 @@
-Copyright (c) 2020 Unyte Project members 
-Authors Tom Sampic, Axel Rosensthiel, Alex Huang, Pierre Francois, Stéphane Frénot
-WIRED Team 
-Telecommunications Department
-INSA Lyon
-contact: <pierre-francois@insa-lyon.fr>
+# C-Collector for UDP-notif
+Library for collecting UDP-notif protocol messages.
 
+## Build
+TODO
 
-Permission to use, copy, modify, and distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
+## Usage
+TODO
 
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+### Exemples
+There are some samples implemented during the development of the project.
+- `client_sample.c` : simple exemple for minimal usage of the lib.
+- `client_performance.c` : sample to test performance of data collection
+- `client_loss.c` : sample to test data loss during data collection
 
+## Docker
+See [Docker docs](docker)
 
-This code is an implementation of a collector for UDP-Notif messages as defined in 
-draft-ietf-netconf-udp-notif-01
+## License
+See [License](LICENSE)

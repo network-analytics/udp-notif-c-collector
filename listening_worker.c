@@ -33,6 +33,12 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
   /* Kill every workers here */
   for (int i = 0; i < PARSER_NUMBER; i++)
   {
+    (parsers + i)->input->segment_buff->stop_cleanup = 1;
+    pthread_cancel(*(parsers + i)->input->clean_up_thread);
+    pthread_join(*(parsers + i)->input->clean_up_thread, NULL);
+    free((parsers + i)->input->seg_cleanup_in);
+    free((parsers + i)->input->clean_up_thread);
+
     pthread_cancel(*(parsers + i)->worker);
     pthread_join(*(parsers + i)->worker, NULL);
     free((parsers + i)->queue->data);

@@ -4,6 +4,7 @@
 #include <string.h>
 #include "segmentation_buffer.h"
 #include "unyte_utils.h"
+#include <time.h>
 
 /*struct unyte_header
 {
@@ -70,9 +71,7 @@ uint32_t hashKey(uint32_t gid, uint32_t mid)
 {
     return (gid ^ mid) % SIZE_BUF;
 }
-/**
 
-*/
 int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content)
 {
     uint32_t hk = hashKey(gid, mid);
@@ -94,10 +93,13 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
         cur->next->gid = gid;
         cur->next->mid = mid;
         cur->next->head = create_message_segment_list(gid, mid);
+        buf->count++;
         cur->next->next = NULL;
     }
-    int res = insert_into_msl(cur->next->head, seqnum, last, payload_size, content);
-    return res;
+    if (payload_size == 0) {
+        printf("Payload size = 0\n");
+    }
+    return insert_into_msl(cur->next->head, seqnum, last, payload_size, content);
 }
 
 /**
@@ -138,7 +140,6 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
         cur->next->seqnum = seqnum;
         cur->next->next = NULL;
         cur->next->content = content;
-        printf("PAYL %d\n", payload_size);
         cur->next->content_size = payload_size;
         head->current_size++;
         head->total_payload_byte_size += payload_size;
@@ -154,6 +155,7 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
         //Duplicate insert?
         if (cur->next->seqnum == seqnum)
         {
+            printf("inserting duplicated\n");
             //duplicate insert. Return value based on message completeness
             if (head->total_size > 0 && head->current_size == head->total_size)
                 return -2;
@@ -170,7 +172,7 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
             cur->next->seqnum = seqnum;
             cur->next->next = temp;
             cur->next->content = content;
-            head->next->content_size = payload_size;
+            cur->next->content_size = payload_size;
             head->current_size++;
             head->total_payload_byte_size += payload_size;
             //return value based on message completeness
@@ -245,6 +247,7 @@ struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint
     res->total_size = 0;
     res->total_payload_byte_size = 0;
     res->next = NULL;
+    res->to_clean_up = 0;
     return res;
 }
 
@@ -292,6 +295,10 @@ struct segment_buffer *create_segment_buffer()
     {
         res->hash_array[i] = NULL;
     }
+    res->count = 0;
+    res->cleanup_start_index = 0;
+    res->cleanup = 0;
+    res->stop_cleanup = 0;
     return res;
 }
 
@@ -361,8 +368,63 @@ void print_segment_buffer_int(struct segment_buffer *buf)
     }
 }
 
-struct table_item *search(uint32_t gid, uint32_t mid, struct segment_buffer *buf);
-// adds a message based on its generator_id and message_id
-uint32_t insert(uint32_t gid, uint32_t mid, struct segment_buffer *buf, struct unyte_segment_with_metadata *seg);
-struct table_item *delete (uint32_t gid, uint32_t mid, struct segment_buffer *buf);
-void *add(struct segment_buffer *main_table, struct unyte_segment_with_metadata *segment);
+void *t_clean_up(void *in_seg_cleanup)
+{
+    struct segment_cleanup *seg_cleanup = (struct segment_cleanup *)in_seg_cleanup;
+
+    // struct timespec *t = (struct timespec *)malloc(sizeof(struct timespec));
+    struct timespec t;
+    t.tv_nsec = 999999 * seg_cleanup->time;
+    t.tv_sec = 0;
+    while (1)
+    {
+        printf("-->Setting cleanup %d %d\n",seg_cleanup->time, seg_cleanup->seg_buff->cleanup);
+        nanosleep(&t, NULL);
+        seg_cleanup->seg_buff->cleanup = 1;
+    }
+    printf("killing clean up thread");
+    // free(t);
+    return 0;
+}
+
+void cleanup_seg_buff(struct segment_buffer *buf)
+{
+    int count = 0;
+    printf("Cleaning up starting on %d | count: %d \n", (buf->cleanup_start_index + count) % SIZE_BUF, buf->count);
+    while (count < CLEAN_UP_PASS_SIZE)
+    {
+        int current_index = (buf->cleanup_start_index + count) % SIZE_BUF;
+        // printf("CurrentIndex : %d\n", current_index);
+        struct collision_list_cell * next = buf->hash_array[current_index];
+        if (next != NULL) {
+            next = next->next;
+            // printf("ISNULL : %d\n", next != NULL);
+            while (next != NULL) {
+                // printf("Clening up %d\n", next->head->to_clean_up);
+                if (next->head->to_clean_up == 0) {
+                    printf("Message is old %d|%d\n", next->gid, next->mid);
+                    next->head->to_clean_up = 1;
+                    next = next->next;
+                } else {
+                    printf("Message is to be cleaned %d|%d\n", next->gid, next->mid);
+                    struct collision_list_cell * t = next->next;
+                    clear_segment_list(buf, next->gid, next->mid);
+                    next = t;
+                    buf->count--;
+                }
+            }
+        }
+        count++;
+    }
+    // printf("cleanup_seg_buff: After while \n");
+
+    // reset cleanup
+    buf->cleanup = 0;
+    buf->cleanup_start_index = (buf->cleanup_start_index + CLEAN_UP_PASS_SIZE) % SIZE_BUF;
+}
+
+// struct table_item *search(uint32_t gid, uint32_t mid, struct segment_buffer *buf);
+// // adds a message based on its generator_id and message_id
+// uint32_t insert(uint32_t gid, uint32_t mid, struct segment_buffer *buf, struct unyte_segment_with_metadata *seg);
+// struct table_item *delete (uint32_t gid, uint32_t mid, struct segment_buffer *buf);
+// void *add(struct segment_buffer *main_table, struct unyte_segment_with_metadata *segment);

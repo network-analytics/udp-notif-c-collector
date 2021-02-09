@@ -5,6 +5,7 @@
 #include "unyte_utils.h"
 
 #define SIZE_BUF 10000 // size of buffer
+#define CLEAN_UP_PASS_SIZE 1000
 
 /**
 total_size, current_size, gid, mid, only relevant for header cell
@@ -21,6 +22,7 @@ struct message_segment_list_cell
   void *content;
   uint32_t content_size;
   struct message_segment_list_cell *next;
+  int to_clean_up; // 0 = init; 1 = cleaner passed once ;
 };
 
 /**
@@ -36,8 +38,17 @@ struct collision_list_cell
 
 struct segment_buffer
 {
-  uint32_t count; // TODO: ????
+  uint32_t count;
   struct collision_list_cell *hash_array[SIZE_BUF];
+  uint8_t cleanup; //1 il faut clean up
+  uint cleanup_start_index;
+  uint stop_cleanup; // 1 to stop cleanup thread
+};
+
+struct segment_cleanup 
+{
+  struct segment_buffer *seg_buff;
+  int time; //milliseconds
 };
 
 //Create a segment buffer to store UDP-notif message segments
@@ -81,6 +92,8 @@ void clear_msl(struct message_segment_list_cell *head);
 /*initialise a message segment list */
 struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint32_t mid);
 
+void *t_clean_up(void *in_seg_cleanup);
+void cleanup_seg_buff(struct segment_buffer *buf);
 /*struct table_item* search(uint32_t gid, uint32_t mid, struct segment_buffer* buf); 
 // adds a message based on its generator_id and message_id
 uint32_t insert(uint32_t gid, uint32_t mid, struct segment_buffer* buf, struct unyte_segment_with_metadata* seg); 

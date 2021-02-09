@@ -25,7 +25,7 @@ typedef struct
 } unyte_options_t;
 
 #define OUTPUT_QUEUE_SIZE 100
-#define PARSER_NUMBER 10
+#define PARSER_NUMBER 1
 
 unyte_collector_t *unyte_start_collector(unyte_options_t *options);
 //TODO: Move signature doc in here

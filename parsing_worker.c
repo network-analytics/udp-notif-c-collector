@@ -31,6 +31,7 @@ int parser(struct parser_thread_input *in)
     free(queue_data);
     /* Check about fragmentation */
 
+    // printf("count:%ld| %d\n",in->thread_id, segment_buff->count);
     if (parsed_segment->header->header_length <= 12)
     {
       unyte_queue_write(in->output, parsed_segment);
@@ -59,6 +60,7 @@ int parser(struct parser_thread_input *in)
         // printf("equalf %d\n", '\0'==0);
         while (temp->next != NULL)
         {
+          // printf("Copying %d|%d\n", msg_seg_list->total_payload_byte_size, temp->next->content_size);
           memcpy(msg_tmp, temp->next->content, temp->next->content_size);
           // hexdump(msg_tmp,temp->next->content_size - parsed_segment->header->header_length);
           msg_tmp += temp->next->content_size;
@@ -88,10 +90,17 @@ int parser(struct parser_thread_input *in)
         parsed_msg->payload = complete_msg;
 
         unyte_queue_write(in->output, parsed_msg);
-        clear_segment_list(segment_buff, parsed_msg->header->generator_id, parsed_msg->header->message_id);
-      }
+        clear_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
 
-      // printf("segmented packet, discarding.\n");
+        segment_buff->count--;
+      }
+      //TODO: if cleanup == 1 and count > 1000 --> clean up & set cleanup=0
+      //TODO: clean up = set value ++ or destroy
+      if (segment_buff->cleanup == 1 && segment_buff->count > 3) {
+        // printf("%d|%d\n", segment_buff->cleanup, segment_buff->count);
+        cleanup_seg_buff(segment_buff);
+      }
+      // printf("parsing_worker: segmented packet.\n");
       fflush(stdout);
       /* TODO: Discarding the segment while fragmentation is not fully implemented.*/
       unyte_free_header(parsed_segment);
@@ -99,6 +108,7 @@ int parser(struct parser_thread_input *in)
       free(parsed_segment);
     }
   }
+  printf("Ended");
   return 0;
 }
 
@@ -107,7 +117,25 @@ int parser(struct parser_thread_input *in)
  */
 void *t_parser(void *in)
 {
+  //TODO: change architecture: listening_worker launch both thread and not one after another
+  ((struct parser_thread_input *)in)->thread_id = pthread_self();
+
+  pthread_t *clean_up_thread = (pthread_t *)malloc(sizeof(pthread_t));
+  struct segment_cleanup *seg_cleanup = (struct segment_cleanup *)malloc(sizeof(struct segment_cleanup));
+  seg_cleanup->seg_buff = ((struct parser_thread_input *)in)->segment_buff;
+  seg_cleanup->time = 1000;
+  pthread_create(clean_up_thread, NULL, t_clean_up, (void *)seg_cleanup);
+  ((struct parser_thread_input *)in)->clean_up_thread = clean_up_thread;
+  ((struct parser_thread_input *)in)->seg_cleanup_in = seg_cleanup;
+
   parser((struct parser_thread_input *)in);
-  free(in);
+
+  // seg_cleanup->stop_cleanup = 1;
+  //FIXME: never arrives here
+  // free(clean_up_thread);
+  free(seg_cleanup->seg_buff);
+  free(seg_cleanup);
+  // free(clean_up_thread);
+  printf("Stopping t_parser %ld\n", pthread_self());
   pthread_exit(NULL);
 }

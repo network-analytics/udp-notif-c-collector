@@ -10,6 +10,7 @@
 #include <ctype.h>
 #include <pthread.h>
 #include "listening_worker.h"
+#include "segmentation_buffer.h"
 #include "parsing_worker.h"
 #include "hexdump.h"
 #include "unyte_utils.h"
@@ -37,6 +38,7 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
     free((parsers + i)->queue->data);
     free((parsers + i)->worker);
     free((parsers + i)->queue);
+    clear_buffer((parsers + i)->input->segment_buff);
     free((parsers + i)->input);
   }
 
@@ -116,6 +118,7 @@ int listener(struct listener_thread_input *in)
     /* Fill the struct */
     parser_input->input = (parsers + i)->queue;
     parser_input->output = in->output_queue;
+    parser_input->segment_buff = create_segment_buffer();
 
     /* Create the thread */
     pthread_create((parsers + i)->worker, NULL, t_parser, (void *)parser_input);

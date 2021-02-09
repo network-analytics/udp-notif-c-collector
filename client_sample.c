@@ -12,7 +12,7 @@
 
 #define PORT 8081
 #define ADDR "192.168.0.17"
-#define USED_VLEN 10
+#define USED_VLEN 5
 #define MAX_TO_RECEIVE 10
 
 int main()
@@ -34,11 +34,12 @@ int main()
     /* Read queue */
     unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
 
+    printf("HH %d|%d\n", recv_count, max);
     /* Processing sample */
     recv_count++;
-    // printHeader(seg->header, stdout);
+    printHeader(seg->header, stdout);
     // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
-    printf("counter : %d\n", recv_count);
+    // printf("counter : %d\n", recv_count);
     fflush(stdout);
 
     /* Struct frees */

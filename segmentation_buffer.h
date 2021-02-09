@@ -12,13 +12,14 @@ seqnum, content only relevant for non header cell
 */
 struct message_segment_list_cell
 {
-  uint32_t total_size;
-  uint32_t current_size;
-  uint32_t total_payload_byte_size;
+  uint32_t total_size; // nombre total de segment qu'un msg contient (0 si total pas connu) TODO: english
+  uint32_t current_size; // nombre de segment present dans la list
+  uint32_t total_payload_byte_size; // somme des tailles des segments pour ce segment list
   uint32_t gid;
   uint32_t mid;
-  uint32_t seqnum;
+  uint32_t seqnum; //ordered by seqnum
   void *content;
+  uint32_t content_size;
   struct message_segment_list_cell *next;
 };
 
@@ -70,6 +71,7 @@ uint32_t hashKey(uint32_t gid, uint32_t mid);
 void print_segment_list_header(struct message_segment_list_cell *head);
 void print_segment_list_int(struct message_segment_list_cell *head);
 void print_segment_buffer_int(struct segment_buffer *buf);
+void print_segment_list_string(struct message_segment_list_cell *head);
 
 /*adds a message segment in a list of segments of a given message*/
 int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content);

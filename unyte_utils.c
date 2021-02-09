@@ -171,8 +171,8 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
     }
     header->f_num = (ntohs(deserialize_uint16((char *)segment, 14)) >> 1);
   }
-
   int pSize = header->message_length - header->header_length;
+  // printf("       Psize|%d|%d|%d\n",header->message_length, header->header_length, pSize);
 
   char *payload = malloc(pSize);
   if (payload == NULL)

@@ -5,7 +5,6 @@
 #include "segmentation_buffer.h"
 #include "unyte_utils.h"
 
-#define SIZE_BUF 10000 // size of buffer
 /*struct unyte_header
 {
   uint8_t version : 3;
@@ -139,6 +138,8 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
         cur->next->seqnum = seqnum;
         cur->next->next = NULL;
         cur->next->content = content;
+        printf("PAYL %d\n", payload_size);
+        cur->next->content_size = payload_size;
         head->current_size++;
         head->total_payload_byte_size += payload_size;
         //return value based on message completeness
@@ -169,6 +170,7 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
             cur->next->seqnum = seqnum;
             cur->next->next = temp;
             cur->next->content = content;
+            head->next->content_size = payload_size;
             head->current_size++;
             head->total_payload_byte_size += payload_size;
             //return value based on message completeness
@@ -221,6 +223,17 @@ void print_segment_list_int(struct message_segment_list_cell *head)
     }
 }
 
+void print_segment_list_string(struct message_segment_list_cell *head)
+{
+    printf("Segment list: gid %d mid %d current size %d total size %d\n", head->gid, head->mid, head->current_size, head->total_size);
+    struct message_segment_list_cell *cur = head;
+    while (cur->next != NULL)
+    {
+        printf("%s\n", ((char *)cur->next->content));
+        cur = cur->next;
+    }
+}
+
 struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint32_t mid)
 {
     struct message_segment_list_cell *res = malloc(sizeof(struct message_segment_list_cell));
@@ -249,6 +262,7 @@ void clear_msl(struct message_segment_list_cell *head)
     while (cur != NULL)
     {
         temp = cur->next;
+        free(cur->content);
         free(cur);
         cur = temp;
     }

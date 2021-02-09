@@ -10,36 +10,39 @@
 total_size, current_size, gid, mid, only relevant for header cell
 seqnum, content only relevant for non header cell
 */
-struct message_segment_list_cell {
-    uint32_t total_size;
-    uint32_t current_size;
-    uint32_t total_payload_byte_size;
-    uint32_t gid;
-    uint32_t mid;
-    uint32_t seqnum;
-    void*    content;
-    struct message_segment_list_cell* next;
+struct message_segment_list_cell
+{
+  uint32_t total_size;
+  uint32_t current_size;
+  uint32_t total_payload_byte_size;
+  uint32_t gid;
+  uint32_t mid;
+  uint32_t seqnum;
+  void *content;
+  struct message_segment_list_cell *next;
 };
 
 /**
 gid, id, seglist  only relevant for non header cell
 */
-struct collision_list_cell{
-    uint32_t gid;
-    uint32_t mid;
-    struct message_segment_list_cell* head;
-    struct collision_list_cell* next; 
+struct collision_list_cell
+{
+  uint32_t gid;
+  uint32_t mid;
+  struct message_segment_list_cell *head;
+  struct collision_list_cell *next;
 };
 
-struct segment_buffer {
-  uint32_t count;//TODO
-  struct collision_list_cell* hash_array[SIZE_BUF];
+struct segment_buffer
+{
+  uint32_t count; // TODO: ????
+  struct collision_list_cell *hash_array[SIZE_BUF];
 };
 
 //Create a segment buffer to store UDP-notif message segments
-struct segment_buffer* create_segment_buffer();
+struct segment_buffer *create_segment_buffer();
 //Clear a buffer of any collision list, collision list header, and clear the buffer itself
-int clear_buffer(struct segment_buffer* buf);
+int clear_buffer(struct segment_buffer *buf);
 
 /*insert a message segment inside a segment buffer */
 /**
@@ -55,26 +58,26 @@ returns -1 if a content was already present for this seqnum
 returns -2 if a content was already present and message is complete
 returns -3 if a memory allocation failed
 */
-int insert_segment(struct segment_buffer* buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void* content);
+int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content);
 
 /*segment buffer management*/
 /*Retrieve the header cell of a segment list for a given message */
-struct message_segment_list_cell* get_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t  mid);
+struct message_segment_list_cell *get_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid);
 /*clear a list of segments*/
-int clear_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t  mid);
+int clear_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid);
 uint32_t hashKey(uint32_t gid, uint32_t mid);
 
-void print_segment_list_header(struct message_segment_list_cell* head);
-void print_segment_list_int(struct message_segment_list_cell* head);
-void print_segment_buffer_int(struct segment_buffer* buf);
+void print_segment_list_header(struct message_segment_list_cell *head);
+void print_segment_list_int(struct message_segment_list_cell *head);
+void print_segment_buffer_int(struct segment_buffer *buf);
 
 /*adds a message segment in a list of segments of a given message*/
-int insert_into_msl(struct message_segment_list_cell* head, uint32_t seqnum, int last, uint32_t payload_size, void* content);
+int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content);
 /*destroys a message*/
-void clear_msl(struct message_segment_list_cell* head);
+void clear_msl(struct message_segment_list_cell *head);
 
 /*initialise a message segment list */
-struct message_segment_list_cell* create_message_segment_list(uint32_t gid, uint32_t mid);
+struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint32_t mid);
 
 /*struct table_item* search(uint32_t gid, uint32_t mid, struct segment_buffer* buf); 
 // adds a message based on its generator_id and message_id

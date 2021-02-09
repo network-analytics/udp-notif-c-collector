@@ -7,6 +7,7 @@
 #include "unyte_utils.h"
 #include "parsing_worker.h"
 #include "unyte.h"
+#include "segmentation_buffer.h"
 
 /**
  * Parser that receive unyte_minimal structs stream from the Q queue.
@@ -34,6 +35,7 @@ int parser(struct parser_thread_input *in)
     }
     else
     {
+      //TODO:
       printf("segmented packet, discarding.\n");
       fflush(stdout);
       /* Discarding the segment while fragmentation is not fully implemented.*/

@@ -67,36 +67,39 @@ struct segment_buffer {
 
 */
 
-uint32_t hashKey(uint32_t gid, uint32_t mid){
+uint32_t hashKey(uint32_t gid, uint32_t mid)
+{
     return (gid ^ mid) % SIZE_BUF;
 }
 /**
 
 */
-int insert_segment(struct segment_buffer* buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void* content){
+int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content)
+{
     uint32_t hk = hashKey(gid, mid);
-    if (buf->hash_array[hk] == NULL){
+    if (buf->hash_array[hk] == NULL)
+    {
         buf->hash_array[hk] = malloc(sizeof(struct collision_list_cell));
         buf->hash_array[hk]->next = NULL;
     }
 
-    struct collision_list_cell* head = buf->hash_array[hk];
-    struct collision_list_cell* cur = head;
-    while(cur->next!=NULL && (cur->next->gid!=gid || cur->next->mid!=mid)){
+    struct collision_list_cell *head = buf->hash_array[hk];
+    struct collision_list_cell *cur = head;
+    while (cur->next != NULL && (cur->next->gid != gid || cur->next->mid != mid))
+    {
         cur = cur->next;
     }
-    if(cur->next == NULL){
+    if (cur->next == NULL)
+    {
         cur->next = malloc(sizeof(struct collision_list_cell));
         cur->next->gid = gid;
         cur->next->mid = mid;
-        cur->next->head= create_message_segment_list(gid, mid);
+        cur->next->head = create_message_segment_list(gid, mid);
         cur->next->next = NULL;
     }
     int res = insert_into_msl(cur->next->head, seqnum, last, payload_size, content);
     return res;
-    
 }
-
 
 /**
 inserts a content in a message segment list, maintaining order among the content based on seqnum
@@ -111,88 +114,118 @@ returns -1 if a content was already present for this seqnum
 returns -2 if a content was already present and message is complete
 returns -3 if a memory allocation failed
 */
-int insert_into_msl(struct message_segment_list_cell* head, uint32_t seqnum, int last, uint32_t payload_size, void* content){
+int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content)
+{
     //If the segment is the last, we now know the total size of the message.
-    if(last == 1) head->total_size = seqnum +1;
+    if (last == 1)
+        head->total_size = seqnum + 1;
     //Search for insert location
     //printf("Searching for insert location\n");
-    struct message_segment_list_cell* cur = head;
-    while(cur->next != NULL && cur->next->seqnum < seqnum){
+    struct message_segment_list_cell *cur = head;
+    while (cur->next != NULL && cur->next->seqnum < seqnum)
+    {
         cur = cur->next;
-    } 
+    }
     //printf("Done\n");
     /*cur->next is the insertion location*/
     /**if cur->next is NULL, the content is being placed at the end of list
         This segment is not a duplicate, hence the current_size must be increased
     */
-    if(cur->next == NULL){
+    if (cur->next == NULL)
+    {
         cur->next = malloc(sizeof(struct message_segment_list_cell));
-        if(cur->next == NULL) return -3;
+        if (cur->next == NULL)
+            return -3;
         cur->next->seqnum = seqnum;
         cur->next->next = NULL;
-        cur->next->content= content;
+        cur->next->content = content;
         head->current_size++;
         head->total_payload_byte_size += payload_size;
         //return value based on message completeness
-        if(head->total_size>0 && head->current_size ==head->total_size) return 1; else return 0;
-    }else{
+        if (head->total_size > 0 && head->current_size == head->total_size)
+            return 1;
+        else
+            return 0;
+    }
+    else
+    {
         //There is a segment present at cur->next
         //Duplicate insert?
-        if(cur->next->seqnum == seqnum){
+        if (cur->next->seqnum == seqnum)
+        {
             //duplicate insert. Return value based on message completeness
-            if(head->total_size>0 && head->current_size ==head->total_size) return -2; else return -1;
-        }else{
+            if (head->total_size > 0 && head->current_size == head->total_size)
+                return -2;
+            else
+                return -1;
+        }
+        else
+        {
             //not a duplicate insert. create intermediate cell and make it point to the rest of the list;
-            struct message_segment_list_cell* temp = cur->next;
+            struct message_segment_list_cell *temp = cur->next;
             cur->next = malloc(sizeof(struct message_segment_list_cell));
-            if(cur->next == NULL) return -3;
+            if (cur->next == NULL)
+                return -3;
             cur->next->seqnum = seqnum;
             cur->next->next = temp;
-            cur->next->content= content;
+            cur->next->content = content;
             head->current_size++;
             head->total_payload_byte_size += payload_size;
             //return value based on message completeness
-            if(head->total_size>0 && head->current_size ==head->total_size) return 1; else return 0;
+            if (head->total_size > 0 && head->current_size == head->total_size)
+                return 1;
+            else
+                return 0;
         }
     }
 }
-struct message_segment_list_cell* get_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t  mid){
+struct message_segment_list_cell *get_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid)
+{
     uint32_t hk = hashKey(gid, mid);
     /*If there is no message at the request hashvalue, we don't have that segment list*/
-    if (buf->hash_array[hk] == NULL){
+    if (buf->hash_array[hk] == NULL)
+    {
         return NULL;
     }
 
-    struct collision_list_cell* cur =  buf->hash_array[hk];
-    while(cur->next!=NULL && (cur->next->gid!=gid || cur->next->mid!=mid)){
+    struct collision_list_cell *cur = buf->hash_array[hk];
+    while (cur->next != NULL && (cur->next->gid != gid || cur->next->mid != mid))
+    {
         cur = cur->next;
     }
     /*If we walked the collision list and could not find a cell with correct gid and mid, we don't have 
     that semgent list */
-    if(cur->next == NULL){
+    if (cur->next == NULL)
+    {
         return NULL;
-    }else{
-    /*if we stopped before cur->next is NULL, the next cell has the requested gid and mid value */
+    }
+    else
+    {
+        /*if we stopped before cur->next is NULL, the next cell has the requested gid and mid value */
         return cur->next->head;
     }
 }
 
-void print_segment_list_header(struct message_segment_list_cell* head){
+void print_segment_list_header(struct message_segment_list_cell *head)
+{
     printf("Segment list: gid %d mid %d current size %d total size %d\n", head->gid, head->mid, head->current_size, head->total_size);
 }
-void print_segment_list_int(struct message_segment_list_cell* head){
+void print_segment_list_int(struct message_segment_list_cell *head)
+{
     printf("Segment list: gid %d mid %d current size %d total size %d\n", head->gid, head->mid, head->current_size, head->total_size);
-    struct message_segment_list_cell* cur = head;
-    while(cur->next != NULL){
-        printf("Value at seqnum %d : %d\n", cur->next->seqnum, *((int*)cur->next->content));
+    struct message_segment_list_cell *cur = head;
+    while (cur->next != NULL)
+    {
+        printf("Value at seqnum %d : %d\n", cur->next->seqnum, *((int *)cur->next->content));
         cur = cur->next;
     }
-
 }
 
-struct message_segment_list_cell* create_message_segment_list(uint32_t gid, uint32_t mid){
-    struct message_segment_list_cell* res = malloc(sizeof(struct message_segment_list_cell));
-    if (res == NULL) return NULL;
+struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint32_t mid)
+{
+    struct message_segment_list_cell *res = malloc(sizeof(struct message_segment_list_cell));
+    if (res == NULL)
+        return NULL;
     res->gid = gid;
     res->mid = mid;
     res->current_size = 0;
@@ -209,10 +242,12 @@ next: NULL
 tant que cur->next!=NULL
     next 
 */
-void clear_msl(struct message_segment_list_cell* head){
-    struct message_segment_list_cell* cur = head->next;
-    struct message_segment_list_cell* temp;     
-    while(cur != NULL){
+void clear_msl(struct message_segment_list_cell *head)
+{
+    struct message_segment_list_cell *cur = head->next;
+    struct message_segment_list_cell *temp;
+    while (cur != NULL)
+    {
         temp = cur->next;
         free(cur);
         cur = temp;
@@ -220,39 +255,42 @@ void clear_msl(struct message_segment_list_cell* head){
     free(head);
 }
 
-int clear_collision_list(struct segment_buffer* buf, struct collision_list_cell* head){
+int clear_collision_list(struct segment_buffer *buf, struct collision_list_cell *head)
+{
     int res = 0;
-    struct collision_list_cell* cur = head->next;
-    struct collision_list_cell* temp;     
-    while(cur != NULL){
+    struct collision_list_cell *cur = head->next;
+    struct collision_list_cell *temp;
+    while (cur != NULL)
+    {
         res++;
         temp = cur->next;
-        clear_segment_list(buf,cur->head->gid, cur->head->mid);
+        clear_segment_list(buf, cur->head->gid, cur->head->mid);
         cur = temp;
     }
     free(head);
     return res;
 }
 
-
-
-
-
-struct segment_buffer* create_segment_buffer(){
-    struct segment_buffer* res = malloc(sizeof(struct segment_buffer));
-    for (int i =0; i<SIZE_BUF; i++){
+struct segment_buffer *create_segment_buffer()
+{
+    struct segment_buffer *res = malloc(sizeof(struct segment_buffer));
+    for (int i = 0; i < SIZE_BUF; i++)
+    {
         res->hash_array[i] = NULL;
     }
     return res;
 }
 
-int clear_buffer(struct segment_buffer* buf){
+int clear_buffer(struct segment_buffer *buf)
+{
     int res = 0;
-    for (int i = 0; i < SIZE_BUF; i++){
-        if(buf->hash_array[i] !=NULL){
+    for (int i = 0; i < SIZE_BUF; i++)
+    {
+        if (buf->hash_array[i] != NULL)
+        {
 
             //There is a collision list header cell at hasharray[i]
-            //The collision list is not empty. Clear it. 
+            //The collision list is not empty. Clear it.
             res += clear_collision_list(buf, buf->hash_array[i]);
         }
     }
@@ -260,52 +298,57 @@ int clear_buffer(struct segment_buffer* buf){
     return res;
 }
 
-void print_collision_list_int(struct collision_list_cell* cell){
-    if (cell!=NULL){
-        struct collision_list_cell* cur = cell;
-        while(cur->next!=NULL){
-           print_segment_list_int(cur->next->head);
-           cur = cur->next;
+void print_collision_list_int(struct collision_list_cell *cell)
+{
+    if (cell != NULL)
+    {
+        struct collision_list_cell *cur = cell;
+        while (cur->next != NULL)
+        {
+            print_segment_list_int(cur->next->head);
+            cur = cur->next;
         }
-        
     }
 }
 
-int clear_segment_list(struct segment_buffer* buf, uint32_t gid, uint32_t mid){
+int clear_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid)
+{
     uint32_t hk = hashKey(gid, mid);
-    if(buf->hash_array[hk]==NULL){
+    if (buf->hash_array[hk] == NULL)
+    {
         return -1;
     }
-    struct collision_list_cell* cur = buf->hash_array[hk];
-    struct collision_list_cell* next = cur->next;
-    while(next!=NULL && ((next->gid!=gid)||next->mid!=mid)){
+    struct collision_list_cell *cur = buf->hash_array[hk];
+    struct collision_list_cell *next = cur->next;
+    while (next != NULL && ((next->gid != gid) || next->mid != mid))
+    {
         next = next->next;
         cur = cur->next;
     }
-    if(next==NULL) return -1;
+    if (next == NULL)
+        return -1;
     //if next is not NULL, that means we stopped before the end so gid and mid of cur->next are the ones to delete. So we bypass cur->next from cur-> and free the content of cur->next
-    cur->next=next->next;
+    cur->next = next->next;
     clear_msl(next->head);
     free(next);
     return 0;
-
 }
 
-void print_segment_buffer_int(struct segment_buffer* buf){
-    int i=0;
-    for(i=0; i<SIZE_BUF; i++){
-        if (buf->hash_array[i]!=NULL){
+void print_segment_buffer_int(struct segment_buffer *buf)
+{
+    int i = 0;
+    for (i = 0; i < SIZE_BUF; i++)
+    {
+        if (buf->hash_array[i] != NULL)
+        {
             printf("Collision list at hk %d:\n", i);
             print_collision_list_int(buf->hash_array[i]);
         }
     }
 }
 
-
-
-struct table_item* search(uint32_t gid, uint32_t mid, struct segment_buffer* buf); 
+struct table_item *search(uint32_t gid, uint32_t mid, struct segment_buffer *buf);
 // adds a message based on its generator_id and message_id
-uint32_t insert(uint32_t gid, uint32_t mid, struct segment_buffer* buf, struct unyte_segment_with_metadata* seg); 
-struct table_item* delete(uint32_t gid, uint32_t mid, struct segment_buffer* buf); 
-void *add(struct segment_buffer* main_table, struct unyte_segment_with_metadata* segment); 
-
+uint32_t insert(uint32_t gid, uint32_t mid, struct segment_buffer *buf, struct unyte_segment_with_metadata *seg);
+struct table_item *delete (uint32_t gid, uint32_t mid, struct segment_buffer *buf);
+void *add(struct segment_buffer *main_table, struct unyte_segment_with_metadata *segment);

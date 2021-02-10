@@ -51,13 +51,17 @@ int main()
 
     /* Processing sample */
     recv_count++;
-    if (msg_obs_ids[seg->header->generator_id].observation_id < 0) {
+    if (msg_obs_ids[seg->header->generator_id].observation_id < 0)
+    {
       msg_obs_ids[seg->header->generator_id].segment_id = seg->header->f_num;
       msg_obs_ids[seg->header->generator_id].lost = 0;
       msg_obs_ids[seg->header->generator_id].observation_id = seg->header->generator_id;
       // printf("new observation id: %d\n", seg->header->generator_id);
-    } else {
-      if (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id > 1) {
+    }
+    else
+    {
+      if (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id > 1)
+      {
         msg_obs_ids[seg->header->generator_id].lost += (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id) - 1;
         printf("-> Lost %d messages\n", (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id) - 1);
       }
@@ -75,11 +79,11 @@ int main()
 
   for (int i = 0; i < MAX_TO_RECEIVE; i++)
   {
-    if (msg_obs_ids[i].lost > 0) {
+    if (msg_obs_ids[i].lost > 0)
+    {
       printf("Lost %d messages\n", msg_obs_ids[i].lost);
     }
   }
-  
 
   printf("Shutdown the socket\n");
   shutdown(*collector->sockfd, SHUT_RDWR); //TODO: à valider/force empty queue (?)

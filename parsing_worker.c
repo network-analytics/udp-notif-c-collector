@@ -10,7 +10,6 @@
 #include "segmentation_buffer.h"
 #include "hexdump.h"
 
-
 /**
  * Parser that receive unyte_minimal structs stream from the Q queue.
  * It transforms it into unyte_segment_with_metadata structs and push theses to the OUTPUT queue.
@@ -55,13 +54,14 @@ int parser(struct parser_thread_input *in)
         // printf("Hello: %s||\n", complete_msg);
 
         unyte_seg_met_t *parsed_msg = create_assembled_msg(complete_msg, parsed_segment, msg_seg_list->total_payload_byte_size);
-        
+
         unyte_queue_write(in->output, parsed_msg);
         clear_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         segment_buff->count--;
       }
-      
-      if (segment_buff->cleanup == 1 && segment_buff->count > 3) {
+
+      if (segment_buff->cleanup == 1 && segment_buff->count > 3)
+      {
         // printf("%d|%d\n", segment_buff->cleanup, segment_buff->count);
         cleanup_seg_buff(segment_buff);
       }
@@ -77,23 +77,24 @@ int parser(struct parser_thread_input *in)
   return 0;
 }
 
-unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_parsed_segment, uint16_t total_payload_byte_size) {
-    // Create a new unyte_seg_met_t to push to queue 
-    unyte_seg_met_t *parsed_msg = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t));
+unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_parsed_segment, uint16_t total_payload_byte_size)
+{
+  // Create a new unyte_seg_met_t to push to queue
+  unyte_seg_met_t *parsed_msg = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t));
 
-    parsed_msg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
-    parsed_msg->metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
+  parsed_msg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
+  parsed_msg->metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
 
-    copy_unyte_seg_met_headers(parsed_msg, src_parsed_segment);
+  copy_unyte_seg_met_headers(parsed_msg, src_parsed_segment);
 
-    // Rewrite header length and message length
-    parsed_msg->header->header_length = HEADER_BYTES;
-    parsed_msg->header->message_length = total_payload_byte_size + HEADER_BYTES;
-    
-    copy_unyte_seg_met_metadata(parsed_msg, src_parsed_segment);
+  // Rewrite header length and message length
+  parsed_msg->header->header_length = HEADER_BYTES;
+  parsed_msg->header->message_length = total_payload_byte_size + HEADER_BYTES;
 
-    parsed_msg->payload = complete_msg;
-    return parsed_msg;
+  copy_unyte_seg_met_metadata(parsed_msg, src_parsed_segment);
+
+  parsed_msg->payload = complete_msg;
+  return parsed_msg;
 }
 
 /**

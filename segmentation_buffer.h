@@ -13,8 +13,8 @@ seqnum, content only relevant for non header cell
 */
 struct message_segment_list_cell
 {
-  uint32_t total_size; // nombre total de segment qu'un msg contient (0 si total pas connu) TODO: english
-  uint32_t current_size; // nombre de segment present dans la list
+  uint32_t total_size;              // nombre total de segment qu'un msg contient (0 si total pas connu) TODO: english
+  uint32_t current_size;            // nombre de segment present dans la list
   uint32_t total_payload_byte_size; // somme des tailles des segments pour ce segment list
   uint32_t gid;
   uint32_t mid;
@@ -45,7 +45,7 @@ struct segment_buffer
   // uint8_t stop_cleanup; // flag: 1 to kill cleanup thread
 };
 
-struct segment_cleanup 
+struct segment_cleanup
 {
   struct segment_buffer *seg_buff;
   int time; // clean up every <time> milliseconds

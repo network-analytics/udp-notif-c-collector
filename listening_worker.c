@@ -153,11 +153,14 @@ int listener(struct listener_thread_input *in)
       // hexdump(messages[i].msg_hdr.msg_iov->iov_base, 10000);
 
       // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
-      if (messages[i].msg_len > 0) {
+      if (messages[i].msg_len > 0)
+      {
         unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_in *)messages[i].msg_hdr.msg_name), in->conn->addr);
         /* Dispatching by modulo on threads */
         unyte_queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
-      } else {
+      }
+      else
+      {
         free(messages[i].msg_hdr.msg_iov->iov_base);
       }
     }

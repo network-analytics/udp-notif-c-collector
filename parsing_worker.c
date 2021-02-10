@@ -30,7 +30,7 @@ int parser(struct parser_thread_input *in)
     free(queue_data);
     /* Check about fragmentation */
 
-    // printf("count:%ld| %d\n",in->thread_id, segment_buff->count);
+    // printf("count:%ld| %d\n",in->parser_thread_id, segment_buff->count);
     if (parsed_segment->header->header_length <= HEADER_BYTES)
     {
       unyte_queue_write(in->output, parsed_segment);
@@ -60,9 +60,9 @@ int parser(struct parser_thread_input *in)
         segment_buff->count--;
       }
 
-      if (segment_buff->cleanup == 1 && segment_buff->count > 3)
+      if (segment_buff->cleanup == 1 && segment_buff->count > CLEAN_COUNT_MAX)
       {
-        // printf("%d|%d\n", segment_buff->cleanup, segment_buff->count);
+        printf("CLEAN NOW: %d|%d\n", segment_buff->cleanup, segment_buff->count);
         cleanup_seg_buff(segment_buff);
       }
       // printf("parsing_worker: segmented packet.\n");
@@ -103,16 +103,7 @@ unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_p
 void *t_parser(void *in)
 {
   //TODO: change architecture: listening_worker launch both thread and not one after another
-  ((struct parser_thread_input *)in)->thread_id = pthread_self();
-
-  pthread_t *clean_up_thread = (pthread_t *)malloc(sizeof(pthread_t));
-  struct segment_cleanup *seg_cleanup = (struct segment_cleanup *)malloc(sizeof(struct segment_cleanup));
-  seg_cleanup->seg_buff = ((struct parser_thread_input *)in)->segment_buff;
-  seg_cleanup->time = 1000;
-  pthread_create(clean_up_thread, NULL, t_clean_up, (void *)seg_cleanup);
-  ((struct parser_thread_input *)in)->clean_up_thread = clean_up_thread;
-  ((struct parser_thread_input *)in)->seg_cleanup_in = seg_cleanup;
-
+  ((struct parser_thread_input *)in)->parser_thread_id = pthread_self();
   parser((struct parser_thread_input *)in);
 
   // seg_cleanup->stop_cleanup = 1;
@@ -121,6 +112,6 @@ void *t_parser(void *in)
   // free(seg_cleanup->seg_buff);
   // free(seg_cleanup);
   // free(clean_up_thread);
-  // printf("Stopping t_parser %ld\n", pthread_self());
+  printf("Stopping t_parser %ld\n", pthread_self());
   pthread_exit(NULL);
 }

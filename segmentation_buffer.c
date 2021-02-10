@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <pthread.h>
 #include "segmentation_buffer.h"
 #include "unyte_utils.h"
 #include <time.h>
@@ -321,23 +322,24 @@ void print_segment_buffer_int(struct segment_buffer *buf)
 
 void *t_clean_up(void *in_seg_cleanup)
 {
-  struct segment_cleanup *seg_cleanup = (struct segment_cleanup *)in_seg_cleanup;
+  struct cleanup_thread_input *cleanup_in = (struct cleanup_thread_input *)in_seg_cleanup;
 
   struct timespec t;
   t.tv_sec = 0;
-  if (seg_cleanup->time > 1000)
+  if (cleanup_in->time > 1000)
   {
-    t.tv_sec = seg_cleanup->time / 1000;
+    t.tv_sec = cleanup_in->time / 1000;
   }
-  t.tv_nsec = 999999 * seg_cleanup->time;
-  while (1)
+  t.tv_nsec = 999999 * cleanup_in->time;
+  while (cleanup_in->stop_cleanup_thread == 0)
   {
-    // printf("-->Setting cleanup %d %d\n",seg_cleanup->time, seg_cleanup->seg_buff->cleanup);
+    // printf("-->Setting cleanup %d %d\n",cleanup_in->time, cleanup_in->seg_buff->cleanup);
     nanosleep(&t, NULL);
-    seg_cleanup->seg_buff->cleanup = 1;
+    cleanup_in->seg_buff->cleanup = 1;
   }
-  // FIXME: not called
-  printf("killing clean up thread");
+  printf("Thread %ld: killing clean up thread\n", pthread_self());
+
+  free(cleanup_in);
   // free(t);
   return 0;
 }
@@ -357,7 +359,7 @@ void cleanup_seg_buff(struct segment_buffer *buf)
       // printf("ISNULL : %d\n", next != NULL);
       while (next != NULL)
       {
-        // printf("Clening up %d\n", next->head->to_clean_up);
+        printf("Clening up %d\n", next->head->to_clean_up);
         if (next->head->to_clean_up == 0)
         {
           printf("Message is old (%d|%d)\n", next->gid, next->mid);

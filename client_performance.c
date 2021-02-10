@@ -13,9 +13,9 @@
 
 #define PORT 8081
 #define ADDR "192.168.0.17"
-#define MAX_TO_RECEIVE 100000
+#define MAX_TO_RECEIVE 10000
 #define USED_VLEN 10
-#define TIME_BETWEEN 2000
+#define TIME_BETWEEN 200
 
 struct message_obs_id
 {

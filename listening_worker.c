@@ -24,11 +24,12 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
   for (int i = 0; i < PARSER_NUMBER; i++)
   {
     // Kill clean up thread
-    // (parsers + i)->input->segment_buff->stop_cleanup = 1;
-    pthread_cancel(*(parsers + i)->input->clean_up_thread);
-    pthread_join(*(parsers + i)->input->clean_up_thread, NULL);
-    free((parsers + i)->input->seg_cleanup_in);
-    free((parsers + i)->input->clean_up_thread);
+    (parsers + i)->cleanup_worker->cleanup_in->stop_cleanup_thread = 1;
+    // pthread_cancel(*(parsers + i)->cleanup_worker->cleanup_thread);
+    pthread_join(*(parsers + i)->cleanup_worker->cleanup_thread, NULL);
+    // free((parsers + i)->cleanup_worker->cleanup_in);
+    free((parsers + i)->cleanup_worker->cleanup_thread);
+    free((parsers + i)->cleanup_worker);
 
     // Kill worker thread
     pthread_cancel(*(parsers + i)->worker);
@@ -53,6 +54,44 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
     free(messages[i].msg_hdr.msg_name);
   }
   free(messages);
+}
+
+int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *parser)
+{
+  pthread_t *clean_up_thread = (pthread_t *)malloc(sizeof(pthread_t));
+  if (clean_up_thread == NULL)
+  {
+    printf("Malloc failed.\n");
+    return -1;
+  }
+
+  struct cleanup_thread_input *cleanup_in = (struct cleanup_thread_input *)malloc(sizeof(struct cleanup_thread_input));
+  if (cleanup_in == NULL)
+  {
+    printf("Malloc failed.\n");
+    return -1;
+  }
+
+  parser->cleanup_worker = (struct cleanup_worker *)malloc(sizeof(struct cleanup_worker));
+  if (parser->cleanup_worker == NULL)
+  {
+    printf("Malloc failed.\n");
+    return -1;
+  }
+
+  // cleanup_in->seg_buff = ((struct parser_thread_input *)in)->segment_buff;
+  cleanup_in->seg_buff = seg_buff;
+  cleanup_in->time = 1000; //TODO: put in constant
+  cleanup_in->stop_cleanup_thread = 0;
+
+  pthread_create(clean_up_thread, NULL, t_clean_up, (void *)cleanup_in);
+
+  // Saving cleanup_worker references for free afterwards
+  parser->cleanup_worker->cleanup_thread = clean_up_thread;
+  parser->cleanup_worker->cleanup_in = cleanup_in;
+  // ((struct parser_thread_input *)in)->clean_up_thread = clean_up_thread;
+  // ((struct parser_thread_input *)in)->seg_cleanup_in = seg_cleanup;
+  return 0;
 }
 
 int create_parse_worker(struct parse_worker *parser, struct listener_thread_input *in)
@@ -106,7 +145,7 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   /* Store the pointer to be able to free it at the end */
   parser->input = parser_input;
 
-  return 0;
+  return create_cleanup_thread(parser_input->segment_buff, parser);
 }
 
 /**
@@ -122,6 +161,7 @@ int listener(struct listener_thread_input *in)
 
   /* Create parsing workers */
   struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * PARSER_NUMBER);
+  // struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * PARSER_NUMBER);
   if (parsers == NULL)
   {
     printf("Malloc failed \n");
@@ -190,7 +230,6 @@ int listener(struct listener_thread_input *in)
 
     for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
     {
-      // free(messages[i].msg_hdr.msg_iov);
       free(messages[i].msg_hdr.msg_name);
     }
     // free(messages);
@@ -198,6 +237,13 @@ int listener(struct listener_thread_input *in)
     /* Comment if infinity is required */
     /* infinity = infinity - 1; */
   }
+
+  // Never called cause while(1)
+  for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+  {
+    free(messages[i].msg_hdr.msg_iov);
+  }
+  free(messages);
 
   return 0;
 }

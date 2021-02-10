@@ -6,6 +6,7 @@
 
 #define SIZE_BUF 10000 // size of buffer
 #define CLEAN_UP_PASS_SIZE 1000
+#define CLEAN_COUNT_MAX 5
 
 /**
 total_size, current_size, gid, mid, only relevant for header cell
@@ -42,13 +43,13 @@ struct segment_buffer
   struct collision_list_cell *hash_array[SIZE_BUF];
   uint8_t cleanup; //1 il faut clean up
   uint8_t cleanup_start_index;
-  // uint8_t stop_cleanup; // flag: 1 to kill cleanup thread
 };
 
-struct segment_cleanup
+struct cleanup_thread_input
 {
   struct segment_buffer *seg_buff;
   int time; // clean up every <time> milliseconds
+  uint8_t stop_cleanup_thread; // flag: 1 to kill cleanup thread
 };
 
 //Create a segment buffer to store UDP-notif message segments

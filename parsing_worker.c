@@ -10,6 +10,7 @@
 #include "segmentation_buffer.h"
 #include "hexdump.h"
 
+
 /**
  * Parser that receive unyte_minimal structs stream from the Q queue.
  * It transforms it into unyte_segment_with_metadata structs and push theses to the OUTPUT queue.
@@ -19,10 +20,9 @@ int parser(struct parser_thread_input *in)
   struct segment_buffer *segment_buff = in->segment_buff;
   while (1)
   {
-    /* char *segment = (char *)unyte_queue_read(q); */
     unyte_min_t *queue_data = (unyte_min_t *)unyte_queue_read(in->input);
 
-    /* Can do better */
+    // Can do better
     unyte_seg_met_t *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
     // printf("From %d | %d\n", parsed_segment->metadata->src_addr, parsed_segment->metadata->src_port);
 
@@ -32,13 +32,12 @@ int parser(struct parser_thread_input *in)
     /* Check about fragmentation */
 
     // printf("count:%ld| %d\n",in->thread_id, segment_buff->count);
-    if (parsed_segment->header->header_length <= 12)
+    if (parsed_segment->header->header_length <= HEADER_BYTES)
     {
       unyte_queue_write(in->output, parsed_segment);
     }
     else
     {
-      // struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content
       int insert_res = insert_segment(segment_buff,
                                       parsed_segment->header->generator_id,
                                       parsed_segment->header->message_id,
@@ -47,69 +46,54 @@ int parser(struct parser_thread_input *in)
                                       parsed_segment->header->message_length - parsed_segment->header->header_length,
                                       parsed_segment->payload);
       // printf("Result: %d\n", insert_res);
+      // TODO: what if insert_res < 0 ?
       // completed message
       if (insert_res == 1 || insert_res == -2)
       {
         struct message_segment_list_cell *msg_seg_list = get_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
-        // print_segment_list_header(msg_seg_list);
-        // print_segment_list_string(msg_seg_list);
-        char *complete_msg = (char *)malloc(msg_seg_list->total_payload_byte_size);
-        // memset(complete_msg,0,msg_seg_list->total_payload_byte_size);
-        char *msg_tmp = complete_msg;
-        struct message_segment_list_cell *temp = msg_seg_list;
-        // printf("equalf %d\n", '\0'==0);
-        while (temp->next != NULL)
-        {
-          // printf("Copying %d|%d\n", msg_seg_list->total_payload_byte_size, temp->next->content_size);
-          memcpy(msg_tmp, temp->next->content, temp->next->content_size);
-          // hexdump(msg_tmp,temp->next->content_size - parsed_segment->header->header_length);
-          msg_tmp += temp->next->content_size;
-          temp = temp->next;
-        }
-
+        char *complete_msg = reassemble_payload(msg_seg_list);
         // printf("Hello: %s||\n", complete_msg);
-        unyte_seg_met_t *parsed_msg = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t));
-        // parsed_msg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
-        // parsed_msg->metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
 
-        parsed_msg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
-        parsed_msg->metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
-
-        parsed_msg->header->header_length = 12; //sans options à mettre en constant
-        parsed_msg->header->message_length = msg_seg_list->total_payload_byte_size + 12;
-        parsed_msg->header->generator_id = parsed_segment->header->generator_id;
-        parsed_msg->header->message_id = parsed_segment->header->message_id;
-        parsed_msg->header->space = parsed_segment->header->space;
-        parsed_msg->header->encoding_type = parsed_segment->header->encoding_type;
-        parsed_msg->header->version = parsed_segment->header->version;
-
-        parsed_msg->metadata->collector_addr = parsed_segment->metadata->collector_addr;
-        parsed_msg->metadata->src_addr = parsed_segment->metadata->src_addr;
-        parsed_msg->metadata->src_port = parsed_segment->metadata->src_port;
-
-        parsed_msg->payload = complete_msg;
-
+        unyte_seg_met_t *parsed_msg = create_assembled_msg(complete_msg, parsed_segment, msg_seg_list->total_payload_byte_size);
+        
         unyte_queue_write(in->output, parsed_msg);
         clear_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
-
         segment_buff->count--;
       }
-      //TODO: if cleanup == 1 and count > 1000 --> clean up & set cleanup=0
-      //TODO: clean up = set value ++ or destroy
+      
       if (segment_buff->cleanup == 1 && segment_buff->count > 3) {
         // printf("%d|%d\n", segment_buff->cleanup, segment_buff->count);
         cleanup_seg_buff(segment_buff);
       }
       // printf("parsing_worker: segmented packet.\n");
       fflush(stdout);
-      /* TODO: Discarding the segment while fragmentation is not fully implemented.*/
+
+      // free unused partial parsed_segment without payload
       unyte_free_header(parsed_segment);
       unyte_free_metadata(parsed_segment);
       free(parsed_segment);
     }
   }
-  printf("Ended");
   return 0;
+}
+
+unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_parsed_segment, uint16_t total_payload_byte_size) {
+    // Create a new unyte_seg_met_t to push to queue 
+    unyte_seg_met_t *parsed_msg = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t));
+
+    parsed_msg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
+    parsed_msg->metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
+
+    copy_unyte_seg_met_headers(parsed_msg, src_parsed_segment);
+
+    // Rewrite header length and message length
+    parsed_msg->header->header_length = HEADER_BYTES;
+    parsed_msg->header->message_length = total_payload_byte_size + HEADER_BYTES;
+    
+    copy_unyte_seg_met_metadata(parsed_msg, src_parsed_segment);
+
+    parsed_msg->payload = complete_msg;
+    return parsed_msg;
 }
 
 /**
@@ -133,9 +117,9 @@ void *t_parser(void *in)
   // seg_cleanup->stop_cleanup = 1;
   //FIXME: never arrives here
   // free(clean_up_thread);
-  free(seg_cleanup->seg_buff);
-  free(seg_cleanup);
+  // free(seg_cleanup->seg_buff);
+  // free(seg_cleanup);
   // free(clean_up_thread);
-  printf("Stopping t_parser %ld\n", pthread_self());
+  // printf("Stopping t_parser %ld\n", pthread_self());
   pthread_exit(NULL);
 }

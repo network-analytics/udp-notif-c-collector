@@ -41,20 +41,23 @@ struct segment_buffer
   uint32_t count;
   struct collision_list_cell *hash_array[SIZE_BUF];
   uint8_t cleanup; //1 il faut clean up
-  uint cleanup_start_index;
-  uint stop_cleanup; // 1 to stop cleanup thread
+  uint8_t cleanup_start_index;
+  // uint8_t stop_cleanup; // flag: 1 to kill cleanup thread
 };
 
 struct segment_cleanup 
 {
   struct segment_buffer *seg_buff;
-  int time; //milliseconds
+  int time; // clean up every <time> milliseconds
 };
 
 //Create a segment buffer to store UDP-notif message segments
 struct segment_buffer *create_segment_buffer();
 //Clear a buffer of any collision list, collision list header, and clear the buffer itself
 int clear_buffer(struct segment_buffer *buf);
+
+// Reassembles the payload from a segment_list
+char *reassemble_payload(struct message_segment_list_cell *);
 
 /*insert a message segment inside a segment buffer */
 /**

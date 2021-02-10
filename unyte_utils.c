@@ -219,6 +219,33 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 }
 
 /**
+ * Deep copies header values without options from src to dest 
+ * Returns dest
+ */
+unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met_t *src) {
+  dest->header->encoding_type = src->header->encoding_type;
+  dest->header->generator_id = src->header->generator_id;
+  dest->header->header_length= src->header->header_length;
+  dest->header->message_id = src->header->message_id;
+  dest->header->message_length = src->header->message_length;
+  dest->header->space = src->header->space;
+  dest->header->version = src->header->version;
+  return dest;
+}
+
+/**
+ * Deep copies header values without options from src to dest 
+ * Returns dest
+ */
+unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_met_t *src) {
+  dest->metadata->collector_addr = src->metadata->collector_addr;
+  dest->metadata->src_addr = src->metadata->src_addr;
+  dest->metadata->src_port = src->metadata->src_port;
+  return dest;
+}
+
+
+/**
  * Display *HEADER to *STD.
  */
 void printHeader(unyte_header_t *header, FILE *std)

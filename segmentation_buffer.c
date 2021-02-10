@@ -6,66 +6,36 @@
 #include "unyte_utils.h"
 #include <time.h>
 
-/*struct unyte_header
+struct segment_buffer *create_segment_buffer()
 {
-  uint8_t version : 3;
-  uint8_t space : 1;
-  uint8_t encoding_type : 4;
-  uint8_t header_length : 8;
-  uint16_t message_length;
-  uint32_t generator_id;
-  uint32_t message_id;
+    struct segment_buffer *res = malloc(sizeof(struct segment_buffer));
+    for (int i = 0; i < SIZE_BUF; i++)
+    {
+        res->hash_array[i] = NULL;
+    }
+    res->count = 0;
+    res->cleanup_start_index = 0;
+    res->cleanup = 0;
+    // res->stop_cleanup = 0;
+    return res;
+}
 
-  uint8_t f_type;
-  uint8_t f_len;
-  uint32_t f_num : 31;
-  uint8_t f_last : 1;
-};
 
-struct unyte_segment
-{
-  struct unyte_header *header;
-  char *payload;
-};
+char *reassemble_payload(struct message_segment_list_cell *msg_seg_list){
+    char *complete_msg = (char *)malloc(msg_seg_list->total_payload_byte_size);
+    char *msg_tmp = complete_msg;
+    struct message_segment_list_cell *temp = msg_seg_list;
 
-struct unyte_metadata
-{
-  uint16_t src_port;        
-  unsigned long src_addr;  
-  unsigned long collector_addr;
-};
-
-struct unyte_segment_with_metadata
-{
-  struct unyte_metadata *metadata;
-  struct unyte_header *header;
-  char *payload;
-};
-*/
-/*
-struct message_segment_list_cell {
-    uint32_t total_size;
-    uint32_t current_size;
-    uint32_t gid;
-    uint32_t mid;
-    uint32_t seqnum;
-    void*    content;
-    struct message_segment_list_cell* next;
-};
-
-struct collision_list_cell{
-    uint32_t gid;
-    uint32_t mid;
-    struct message_segment_list_cell* head;
-    struct collision_list_cell* next;
-};
-
-struct segment_buffer {
-  uint32_t count;
-  struct collision_list_cell* hash_array[SIZE_BUF];
-};
-
-*/
+    while (temp->next != NULL)
+    {
+      // printf("Copying %d|%d\n", msg_seg_list->total_payload_byte_size, temp->next->content_size);
+      memcpy(msg_tmp, temp->next->content, temp->next->content_size);
+      // hexdump(msg_tmp,temp->next->content_size - parsed_segment->header->header_length);
+      msg_tmp += temp->next->content_size;
+      temp = temp->next;
+    }
+    return complete_msg;
+}
 
 uint32_t hashKey(uint32_t gid, uint32_t mid)
 {
@@ -96,9 +66,6 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
         buf->count++;
         cur->next->next = NULL;
     }
-    if (payload_size == 0) {
-        printf("Payload size = 0\n");
-    }
     return insert_into_msl(cur->next->head, seqnum, last, payload_size, content);
 }
 
@@ -121,13 +88,11 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
     if (last == 1)
         head->total_size = seqnum + 1;
     //Search for insert location
-    //printf("Searching for insert location\n");
     struct message_segment_list_cell *cur = head;
     while (cur->next != NULL && cur->next->seqnum < seqnum)
     {
         cur = cur->next;
     }
-    //printf("Done\n");
     /*cur->next is the insertion location*/
     /**if cur->next is NULL, the content is being placed at the end of list
         This segment is not a duplicate, hence the current_size must be increased
@@ -288,20 +253,6 @@ int clear_collision_list(struct segment_buffer *buf, struct collision_list_cell 
     return res;
 }
 
-struct segment_buffer *create_segment_buffer()
-{
-    struct segment_buffer *res = malloc(sizeof(struct segment_buffer));
-    for (int i = 0; i < SIZE_BUF; i++)
-    {
-        res->hash_array[i] = NULL;
-    }
-    res->count = 0;
-    res->cleanup_start_index = 0;
-    res->cleanup = 0;
-    res->stop_cleanup = 0;
-    return res;
-}
-
 int clear_buffer(struct segment_buffer *buf)
 {
     int res = 0;
@@ -372,16 +323,19 @@ void *t_clean_up(void *in_seg_cleanup)
 {
     struct segment_cleanup *seg_cleanup = (struct segment_cleanup *)in_seg_cleanup;
 
-    // struct timespec *t = (struct timespec *)malloc(sizeof(struct timespec));
     struct timespec t;
-    t.tv_nsec = 999999 * seg_cleanup->time;
     t.tv_sec = 0;
+    if (seg_cleanup->time > 1000) {
+      t.tv_sec = seg_cleanup->time / 1000;
+    }
+    t.tv_nsec = 999999 * seg_cleanup->time;
     while (1)
     {
-        printf("-->Setting cleanup %d %d\n",seg_cleanup->time, seg_cleanup->seg_buff->cleanup);
+        // printf("-->Setting cleanup %d %d\n",seg_cleanup->time, seg_cleanup->seg_buff->cleanup);
         nanosleep(&t, NULL);
         seg_cleanup->seg_buff->cleanup = 1;
     }
+    // FIXME: not called
     printf("killing clean up thread");
     // free(t);
     return 0;
@@ -402,11 +356,11 @@ void cleanup_seg_buff(struct segment_buffer *buf)
             while (next != NULL) {
                 // printf("Clening up %d\n", next->head->to_clean_up);
                 if (next->head->to_clean_up == 0) {
-                    printf("Message is old %d|%d\n", next->gid, next->mid);
+                    printf("Message is old (%d|%d)\n", next->gid, next->mid);
                     next->head->to_clean_up = 1;
                     next = next->next;
                 } else {
-                    printf("Message is to be cleaned %d|%d\n", next->gid, next->mid);
+                    printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
                     struct collision_list_cell * t = next->next;
                     clear_segment_list(buf, next->gid, next->mid);
                     next = t;
@@ -416,7 +370,6 @@ void cleanup_seg_buff(struct segment_buffer *buf)
         }
         count++;
     }
-    // printf("cleanup_seg_buff: After while \n");
 
     // reset cleanup
     buf->cleanup = 0;

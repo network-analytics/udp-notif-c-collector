@@ -17,28 +17,20 @@
 #include "unyte.h"
 #include "queue.h"
 
-#define RCVSIZE 65535
-#define QUEUE_SIZE 50
-
-struct parse_worker
-{
-  queue_t *queue;
-  pthread_t *worker;
-  struct parser_thread_input *input;
-};
-
 void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in, struct mmsghdr *messages)
 {
 
   /* Kill every workers here */
   for (int i = 0; i < PARSER_NUMBER; i++)
   {
-    (parsers + i)->input->segment_buff->stop_cleanup = 1;
+    // Kill clean up thread
+    // (parsers + i)->input->segment_buff->stop_cleanup = 1;
     pthread_cancel(*(parsers + i)->input->clean_up_thread);
     pthread_join(*(parsers + i)->input->clean_up_thread, NULL);
     free((parsers + i)->input->seg_cleanup_in);
     free((parsers + i)->input->clean_up_thread);
 
+    // Kill worker thread
     pthread_cancel(*(parsers + i)->worker);
     pthread_join(*(parsers + i)->worker, NULL);
     free((parsers + i)->queue->data);

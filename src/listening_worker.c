@@ -12,7 +12,7 @@
 #include "listening_worker.h"
 #include "segmentation_buffer.h"
 #include "parsing_worker.h"
-#include "hexdump.h"
+#include "lib/hexdump.h"
 #include "unyte_utils.h"
 #include "unyte.h"
 #include "queue.h"

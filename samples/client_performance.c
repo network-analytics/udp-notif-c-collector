@@ -5,11 +5,11 @@
 #include <string.h>
 #include <signal.h>
 #include <time.h>
-#include "unistd.h"
-#include "hexdump.h"
-#include "unyte.h"
-#include "unyte_utils.h"
-#include "queue.h"
+#include <unistd.h>
+#include "../src/lib/hexdump.h"
+#include "../src/unyte.h"
+#include "../src/unyte_utils.h"
+#include "../src/queue.h"
 
 #define PORT 8081
 #define ADDR "192.168.0.17"

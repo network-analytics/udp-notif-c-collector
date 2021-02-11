@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include "unyte_utils.h"
-#include "segmentation_buffer.h"
+#include "../src/unyte_utils.h"
+#include "../src/segmentation_buffer.h"
 
 void test_segment_lists()
 {

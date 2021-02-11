@@ -8,7 +8,7 @@
 #include "parsing_worker.h"
 #include "unyte.h"
 #include "segmentation_buffer.h"
-#include "hexdump.h"
+#include "lib/hexdump.h"
 #include "cleanup_worker.h"
 
 /**

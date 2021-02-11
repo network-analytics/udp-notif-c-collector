@@ -63,7 +63,7 @@ int parser(struct parser_thread_input *in)
 
       if (segment_buff->cleanup == 1 && segment_buff->count > CLEAN_COUNT_MAX)
       {
-        printf("CLEAN NOW: %d|%d\n", segment_buff->cleanup, segment_buff->count);
+        // printf("CLEAN NOW: %d|%d\n", segment_buff->cleanup, segment_buff->count);
         cleanup_seg_buff(segment_buff);
       }
       // printf("parsing_worker: segmented packet.\n");

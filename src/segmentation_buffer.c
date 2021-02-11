@@ -322,7 +322,7 @@ void print_segment_buffer_int(struct segment_buffer *buf)
 void cleanup_seg_buff(struct segment_buffer *buf)
 {
   int count = 0;
-  printf("Cleaning up starting on %d | count: %d \n", (buf->cleanup_start_index + count) % SIZE_BUF, buf->count);
+  // printf("Cleaning up starting on %d | count: %d \n", (buf->cleanup_start_index + count) % SIZE_BUF, buf->count);
   while (count < CLEAN_UP_PASS_SIZE)
   {
     int current_index = (buf->cleanup_start_index + count) % SIZE_BUF;
@@ -334,16 +334,16 @@ void cleanup_seg_buff(struct segment_buffer *buf)
       // printf("ISNULL : %d\n", next != NULL);
       while (next != NULL)
       {
-        printf("Clening up %d\n", next->head->to_clean_up);
+        // printf("Cleaning up %d\n", next->head->to_clean_up);
         if (next->head->to_clean_up == 0)
         {
-          printf("Message is old (%d|%d)\n", next->gid, next->mid);
+          // printf("Message is old (%d|%d)\n", next->gid, next->mid);
           next->head->to_clean_up = 1;
           next = next->next;
         }
         else
         {
-          printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
+          // printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
           struct collision_list_cell *t = next->next;
           clear_segment_list(buf, next->gid, next->mid);
           next = t;

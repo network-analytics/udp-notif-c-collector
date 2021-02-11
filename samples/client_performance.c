@@ -5,17 +5,17 @@
 #include <string.h>
 #include <signal.h>
 #include <time.h>
-#include "unistd.h"
-#include "hexdump.h"
-#include "unyte.h"
-#include "unyte_utils.h"
-#include "queue.h"
+#include <unistd.h>
+#include "../src/lib/hexdump.h"
+#include "../src/unyte.h"
+#include "../src/unyte_utils.h"
+#include "../src/queue.h"
 
 #define PORT 8081
 #define ADDR "192.168.0.17"
-#define MAX_TO_RECEIVE 100000
+#define MAX_TO_RECEIVE 10000
 #define USED_VLEN 10
-#define TIME_BETWEEN 2000
+#define TIME_BETWEEN 200
 
 struct message_obs_id
 {
@@ -37,9 +37,8 @@ void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *st
     diff->tv_sec = stop->tv_sec - start->tv_sec;
     diff->tv_nsec = stop->tv_nsec - start->tv_nsec;
   }
-	printf("%d;%d;%ld,%06ld\n", messages, lost_messages, diff->tv_sec * 1000 + diff->tv_nsec / 1000000, diff->tv_nsec % 1000000);
+  printf("%d;%d;%ld,%06ld\n", messages, lost_messages, diff->tv_sec * 1000 + diff->tv_nsec / 1000000, diff->tv_nsec % 1000000);
 }
-
 
 int main()
 {
@@ -74,11 +73,15 @@ int main()
     /* Read queue */
     unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
 
-    if (recv_count % TIME_BETWEEN == 0) {
-      if (first) {
+    if (recv_count % TIME_BETWEEN == 0)
+    {
+      if (first)
+      {
         first = 0;
         clock_gettime(CLOCK_MONOTONIC, &start);
-      } else {
+      }
+      else
+      {
         clock_gettime(CLOCK_MONOTONIC, &stop);
         time_diff(&diff, &stop, &start, recv_count, lost_packets);
         clock_gettime(CLOCK_MONOTONIC, &start);
@@ -87,13 +90,17 @@ int main()
     }
     recv_count++;
 
-    if (msg_obs_ids[seg->header->generator_id].observation_id < 0) {
+    if (msg_obs_ids[seg->header->generator_id].observation_id < 0)
+    {
       msg_obs_ids[seg->header->generator_id].segment_id = seg->header->f_num;
       msg_obs_ids[seg->header->generator_id].lost = 0;
       msg_obs_ids[seg->header->generator_id].observation_id = seg->header->generator_id;
       // printf("new observation id: %d\n", seg->header->generator_id);
-    } else {
-      if (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id > 1) {
+    }
+    else
+    {
+      if (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id > 1)
+      {
         msg_obs_ids[seg->header->generator_id].lost += (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id) - 1;
         lost_packets += (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id) - 1;
         // printf("-> Lost %d messages\n", (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id) - 1);

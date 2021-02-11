@@ -1,8 +1,9 @@
 *.o
 client_sample
 client_performance
-test
+test_listener
 client_loss
+test_seg
 
 !**/*.sh
 !Dockerfile

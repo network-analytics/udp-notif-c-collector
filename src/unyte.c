@@ -77,8 +77,9 @@ void set_default_options(unyte_options_t *options)
 
 /**
  * Start all the subprocesses of the collector on the given port and return the output segment queue.
- * Messages in the queues are structured in structs unyte_segment_with_metadata like defined in the
- * unyte_utils.h file.
+
+ * Messages in the queues are structured in structs unyte_segment_with_metadata like defined in 
+ * unyte_utils.h.
  */
 unyte_collector_t *unyte_start_collector(unyte_options_t *options)
 {

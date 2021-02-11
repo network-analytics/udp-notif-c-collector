@@ -171,8 +171,8 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
     }
     header->f_num = (ntohs(deserialize_uint16((char *)segment, 14)) >> 1);
   }
-
   int pSize = header->message_length - header->header_length;
+  // printf("       Psize|%d|%d|%d\n",header->message_length, header->header_length, pSize);
 
   char *payload = malloc(pSize);
   if (payload == NULL)
@@ -216,6 +216,34 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   seg->metadata = meta;
 
   return seg;
+}
+
+/**
+ * Deep copies header values without options from src to dest 
+ * Returns dest
+ */
+unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met_t *src)
+{
+  dest->header->encoding_type = src->header->encoding_type;
+  dest->header->generator_id = src->header->generator_id;
+  dest->header->header_length = src->header->header_length;
+  dest->header->message_id = src->header->message_id;
+  dest->header->message_length = src->header->message_length;
+  dest->header->space = src->header->space;
+  dest->header->version = src->header->version;
+  return dest;
+}
+
+/**
+ * Deep copies header values without options from src to dest 
+ * Returns dest
+ */
+unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_met_t *src)
+{
+  dest->metadata->collector_addr = src->metadata->collector_addr;
+  dest->metadata->src_addr = src->metadata->src_addr;
+  dest->metadata->src_port = src->metadata->src_port;
+  return dest;
 }
 
 /**

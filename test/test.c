@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include "listening_worker.h"
-#include "unyte_utils.h"
+#include "../src/listening_worker.h"
+#include "../src/unyte_utils.h"
 
 #define PORT 10000
 

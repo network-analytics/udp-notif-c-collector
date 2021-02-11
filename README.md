@@ -2,7 +2,7 @@
 Library for collecting UDP-notif protocol messages.
 
 ## Build
-TODO
+To build the project and test example clients, just `make` on root folder. Il will compile with gcc all dependences and the clients.
 
 ## Usage
 TODO

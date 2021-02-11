@@ -70,6 +70,13 @@ typedef struct unyte_socket
 unyte_min_t *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector);
 unyte_segment_t *parse(char *segment);
 unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um);
+
+/**
+ * Deep copies header values without options from src to dest 
+ * Returns dest
+ */
+unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met_t *src);
+unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_met_t *src);
 void printHeader(unyte_header_t *header, FILE *std);
 void printPayload(char *p, int len, FILE *std);
 

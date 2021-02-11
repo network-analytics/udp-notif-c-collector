@@ -1,0 +1,1 @@
+# C-collector lib build folder

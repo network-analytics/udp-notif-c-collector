@@ -96,8 +96,9 @@ void clear_msl(struct message_segment_list_cell *head);
 /*initialise a message segment list */
 struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint32_t mid);
 
-void *t_clean_up(void *in_seg_cleanup);
+// void *t_clean_up(void *in_seg_cleanup);
 void cleanup_seg_buff(struct segment_buffer *buf);
+
 /*struct table_item* search(uint32_t gid, uint32_t mid, struct segment_buffer* buf); 
 // adds a message based on its generator_id and message_id
 uint32_t insert(uint32_t gid, uint32_t mid, struct segment_buffer* buf, struct unyte_segment_with_metadata* seg); 

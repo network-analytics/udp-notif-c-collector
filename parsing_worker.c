@@ -9,6 +9,7 @@
 #include "unyte.h"
 #include "segmentation_buffer.h"
 #include "hexdump.h"
+#include "cleanup_worker.h"
 
 /**
  * Parser that receive unyte_minimal structs stream from the Q queue.

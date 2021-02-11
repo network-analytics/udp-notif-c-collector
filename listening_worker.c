@@ -16,6 +16,7 @@
 #include "unyte_utils.h"
 #include "unyte.h"
 #include "queue.h"
+#include "cleanup_worker.h"
 
 void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in, struct mmsghdr *messages)
 {
@@ -25,9 +26,7 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
   {
     // Kill clean up thread
     (parsers + i)->cleanup_worker->cleanup_in->stop_cleanup_thread = 1;
-    // pthread_cancel(*(parsers + i)->cleanup_worker->cleanup_thread);
     pthread_join(*(parsers + i)->cleanup_worker->cleanup_thread, NULL);
-    // free((parsers + i)->cleanup_worker->cleanup_in);
     free((parsers + i)->cleanup_worker->cleanup_thread);
     free((parsers + i)->cleanup_worker);
 
@@ -89,8 +88,7 @@ int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *
   // Saving cleanup_worker references for free afterwards
   parser->cleanup_worker->cleanup_thread = clean_up_thread;
   parser->cleanup_worker->cleanup_in = cleanup_in;
-  // ((struct parser_thread_input *)in)->clean_up_thread = clean_up_thread;
-  // ((struct parser_thread_input *)in)->seg_cleanup_in = seg_cleanup;
+
   return 0;
 }
 

@@ -45,7 +45,7 @@ unyte_sock_t *unyte_init_socket(char *addr, uint16_t port)
 
   if (bind(*sock, (struct sockaddr *)adresse, sizeof(*adresse)) == -1)
   {
-    perror("Bind failed\n");
+    perror("Bind failed");
     close(*sock);
     exit(EXIT_FAILURE);
   }

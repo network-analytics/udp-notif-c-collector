@@ -12,3 +12,5 @@ You can use both `docker` and `podman` engines.
 | `docker logs <container_id> -f`      | See a c-collector container logs. By default, the logs are binded by a volume in the folder `logs` |
 | `./clean-logs.sh`                    | Clean container volume logs in folder `logs`. |
 
+## Notes
+/!\ `client_sample.c` should listen to IP 0.0.0.0 to work on docker.

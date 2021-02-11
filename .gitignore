@@ -5,11 +5,13 @@ test_listener
 client_loss
 test_seg
 
-!**/*.sh
-!Dockerfile
-!**/*.yml
-!**/*.md
-!README
+docker/tmp
+
+# !**/*.sh
+# !Dockerfile
+# !**/*.yml
+# !**/*.md
+# !README
 
 **/*.log
 /.vscode

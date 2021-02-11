@@ -9,4 +9,4 @@ elif [ "$1" == "podman" ]; then
     ENGINE=podman
 fi
 
-$ENGINE run -d -p 8081:8081/udp -v "$(pwd)"/logs:/home/unyte/logs unyte/c-collector:latest /home/unyte/src/launch.sh
+$ENGINE run -d -p 8081:8081/udp -v "$(pwd)"/logs:/home/unyte/logs unyte/c-collector:latest /home/unyte/launch.sh

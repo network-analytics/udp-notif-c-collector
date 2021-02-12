@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SRC=/home/unyte/src
+SRC=/home/unyte
 
 $SRC/client_sample > /home/unyte/logs/client1.log &
 $SRC/client_sample > /home/unyte/logs/client2.log &

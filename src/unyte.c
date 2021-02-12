@@ -21,8 +21,6 @@ unyte_sock_t *unyte_init_socket(char *addr, uint16_t port)
     exit(EXIT_FAILURE);
   }
 
-  /* TODO put in constant */
-  int release = 1;
   struct sockaddr_in *adresse = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
 
   /*create socket on UDP protocol*/
@@ -36,7 +34,8 @@ unyte_sock_t *unyte_init_socket(char *addr, uint16_t port)
     exit(EXIT_FAILURE);
   }
 
-  setsockopt(*sock, SOL_SOCKET, SO_REUSEPORT, &release, sizeof(int));
+  int optval = 1;
+  setsockopt(*sock, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int));
 
   adresse->sin_family = AF_INET;
   adresse->sin_port = htons(port);
@@ -184,5 +183,14 @@ int unyte_free_header(unyte_seg_met_t *seg)
 int unyte_free_metadata(unyte_seg_met_t *seg)
 {
   free(seg->metadata);
+  return 0;
+}
+
+int unyte_free_collector(unyte_collector_t *collector)
+{
+  free(collector->queue->data);
+  free(collector->queue);
+  free(collector->main_thread);
+  free(collector);
   return 0;
 }

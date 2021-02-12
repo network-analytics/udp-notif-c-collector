@@ -78,9 +78,8 @@ int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *
     return -1;
   }
 
-  // cleanup_in->seg_buff = ((struct parser_thread_input *)in)->segment_buff;
   cleanup_in->seg_buff = seg_buff;
-  cleanup_in->time = 1000; //TODO: put in constant
+  cleanup_in->time = CLEANUP_FLAG_CRON;
   cleanup_in->stop_cleanup_thread = 0;
 
   pthread_create(clean_up_thread, NULL, t_clean_up, (void *)cleanup_in);
@@ -198,7 +197,6 @@ int listener(struct listener_thread_input *in)
     }
 
     int read_count = recvmmsg(*in->conn->sockfd, messages, in->recvmmsg_vlen, 0, NULL);
-    //TODO: check messages[i].msg_hdr.msg_flags & MSG_TRUNC --> if true datagram.len>buffer
     // printf("read_count: %d\n", read_count);
     if (read_count == -1)
     {

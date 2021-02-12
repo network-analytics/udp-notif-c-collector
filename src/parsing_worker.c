@@ -103,7 +103,6 @@ unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_p
  */
 void *t_parser(void *in)
 {
-  //TODO: change architecture: listening_worker launch both thread and not one after another
   ((struct parser_thread_input *)in)->parser_thread_id = pthread_self();
   parser((struct parser_thread_input *)in);
 

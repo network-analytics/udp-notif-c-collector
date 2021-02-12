@@ -8,6 +8,7 @@
 #define RCVSIZE 65535
 #define QUEUE_SIZE 50
 #define PARSER_NUMBER 10
+#define CLEANUP_FLAG_CRON 1000
 
 /**
  * Input given to the listener thread when creating it.

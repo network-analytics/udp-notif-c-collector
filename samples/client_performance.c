@@ -134,11 +134,9 @@ int main()
     unyte_free_all(seg);
   }
 
-  free(collector->queue->data);
-  free(collector->queue);
-  free(collector->main_thread);
-  free(collector);
+  // freeing collector mallocs
+  unyte_free_collector(collector);
+  
   free(msg_obs_ids);
-
   return 0;
 }

@@ -148,8 +148,7 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 
   /* Header contains options */
   /* TODO: handle something else than fragmentaion ? */
-  // TODO: constantes à le mettre dans headers
-  if (header->header_length > 12)
+  if (header->header_length > HEADER_BYTES)
   {
     header->f_type = segment[12];
     header->f_len = segment[13];

@@ -4,7 +4,6 @@
 #include <string.h>
 #include "segmentation_buffer.h"
 #include "unyte_utils.h"
-#include "cleanup_worker.h"
 
 struct segment_buffer *create_segment_buffer()
 {
@@ -16,7 +15,6 @@ struct segment_buffer *create_segment_buffer()
   res->count = 0;
   res->cleanup_start_index = 0;
   res->cleanup = 0;
-  // res->stop_cleanup = 0;
   return res;
 }
 

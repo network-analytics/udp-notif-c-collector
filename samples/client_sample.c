@@ -57,11 +57,8 @@ int main()
     unyte_free_all(seg);
   }
 
-  //TODO Should we encapsulate this in a function?
-  free(collector->queue->data);
-  free(collector->queue);
-  free(collector->main_thread);
-  free(collector);
+  // freeing collector mallocs
+  unyte_free_collector(collector);
 
   return 0;
 }

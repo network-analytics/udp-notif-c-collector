@@ -32,5 +32,6 @@ int unyte_free_all(unyte_seg_met_t *seg);
 int unyte_free_payload(unyte_seg_met_t *seg);
 int unyte_free_header(unyte_seg_met_t *seg);
 int unyte_free_metadata(unyte_seg_met_t *seg);
+int unyte_free_collector(unyte_collector_t *collector);
 
 #endif

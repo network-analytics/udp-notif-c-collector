@@ -6,10 +6,6 @@
 #include <string.h>
 #include "unyte_utils.h"
 
-#define SPACE_MASK 0b00010000
-#define ET_MASK 0b00001111
-#define LAST_MASK 0b00000001
-
 /**
  * Return 32 bits unsigned integer value out of *C+P char pointer value.
  */
@@ -81,7 +77,7 @@ unyte_segment_t *parse(char *segment)
   /* Header contains options */
   /* TODO handle something else than fragmentaion */
 
-  if (header->header_length > 12)
+  if (header->header_length > HEADER_BYTES)
   {
     header->f_type = segment[12];
     header->f_len = segment[13];

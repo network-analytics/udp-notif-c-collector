@@ -4,9 +4,10 @@
 #include <string.h>
 #include "unyte_utils.h"
 
-#define SIZE_BUF 10000 // size of buffer
-#define CLEAN_UP_PASS_SIZE 1000
-#define CLEAN_COUNT_MAX 5
+// Segmentation_buffer parameters
+#define SIZE_BUF 10000           // size of buffer
+#define CLEAN_UP_PASS_SIZE 1000  // number of iterations to clean up
+#define CLEAN_COUNT_MAX 5        // clean up segment buffer when count > CLEAN_COUNT_MAX
 
 /**
 total_size, current_size, gid, mid, only relevant for header cell
@@ -14,16 +15,16 @@ seqnum, content only relevant for non header cell
 */
 struct message_segment_list_cell
 {
-  uint32_t total_size;              // nombre total de segment qu'un msg contient (0 si total pas connu) TODO: english
-  uint32_t current_size;            // nombre de segment present dans la list
-  uint32_t total_payload_byte_size; // somme des tailles des segments pour ce segment list
-  uint32_t gid;
-  uint32_t mid;
-  uint32_t seqnum; //ordered by seqnum
+  uint32_t total_size;              // total segments for a complete message, 0 if unknown
+  uint32_t current_size;            // present segments in a list
+  uint32_t total_payload_byte_size; // sum of segments size for this segment list
+  uint32_t gid;                     // generator_id, observation_domain_id in scapy
+  uint32_t mid;                     // message_id, segment_id in scapy
+  uint32_t seqnum;                  // ordered by seqnum
   void *content;
   uint32_t content_size;
   struct message_segment_list_cell *next;
-  int to_clean_up; // 0 = init; 1 = cleaner passed once ;
+  int to_clean_up;                  // 0 = not passed yet; 1 = cleaner passed once;
 };
 
 /**
@@ -48,8 +49,8 @@ struct segment_buffer
 struct cleanup_thread_input
 {
   struct segment_buffer *seg_buff;
-  int time; // clean up every <time> milliseconds
-  uint8_t stop_cleanup_thread; // flag: 1 to kill cleanup thread
+  int time;                         // clean up every <time> milliseconds
+  uint8_t stop_cleanup_thread;      // flag: 1 to kill cleanup thread
 };
 
 //Create a segment buffer to store UDP-notif message segments
@@ -96,12 +97,4 @@ void clear_msl(struct message_segment_list_cell *head);
 /*initialise a message segment list */
 struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint32_t mid);
 
-// void *t_clean_up(void *in_seg_cleanup);
 void cleanup_seg_buff(struct segment_buffer *buf);
-
-/*struct table_item* search(uint32_t gid, uint32_t mid, struct segment_buffer* buf); 
-// adds a message based on its generator_id and message_id
-uint32_t insert(uint32_t gid, uint32_t mid, struct segment_buffer* buf, struct unyte_segment_with_metadata* seg); 
-struct table_item* delete(uint32_t gid, uint32_t mid, struct segment_buffer* buf); 
-void *add(struct segment_buffer* main_table, struct unyte_segment_with_metadata* segment); 
-*/

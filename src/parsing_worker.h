@@ -3,8 +3,6 @@
 #ifndef H_PARSING_WORKER
 #define H_PARSING_WORKER
 
-#define HEADER_BYTES 12
-
 struct parser_thread_input
 {
   pthread_t parser_thread_id;

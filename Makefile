@@ -9,11 +9,19 @@ ODIR = obj
 _OBJS = listening_worker.o unyte_utils.o queue.o parsing_worker.o unyte.o segmentation_buffer.o cleanup_worker.o
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
+###### c-collector source headers ######
+_DEPS = listening_worker.h unyte_utils.h queue.h parsing_worker.h unyte.h segmentation_buffer.h cleanup_worker.h
+DEPS = $(patsubst %,$(SDIR)/%,$(_DEPS))
+
 ###### c-collector lib source code ######
 LDIR = src/lib
 LODIR = obj/lib
 _LIBS = hexdump.o
 LIBS = $(patsubst %,$(LODIR)/%,$(_LIBS))
+
+###### c-collector lib headers ######
+_LDEPS = hexdump.h
+LDEPS = $(patsubst %,$(LDIR)/%,$(_LDEPS))
 
 ###### c-collector examples ######
 SAMPLES_DIR = samples
@@ -24,10 +32,10 @@ TDIR = test
 
 all: client_sample client_performance client_loss test_listener test_seg
 
-$(ODIR)/%.o: $(SDIR)/%.c 
+$(ODIR)/%.o: $(SDIR)/%.c $(DEPS) $(LDEPS)
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
-$(LODIR)/%.o: $(LDIR)/%.c 
+$(LODIR)/%.o: $(LDIR)/%.c $(LDEPS)
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
 $(SAMPLES_ODIR)/%.o: $(SAMPLES_DIR)/%.c 

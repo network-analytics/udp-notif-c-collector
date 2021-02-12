@@ -343,7 +343,7 @@ void cleanup_seg_buff(struct segment_buffer *buf)
         }
         else
         {
-          // printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
+          printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
           struct collision_list_cell *t = next->next;
           clear_segment_list(buf, next->gid, next->mid);
           next = t;
@@ -358,9 +358,3 @@ void cleanup_seg_buff(struct segment_buffer *buf)
   buf->cleanup = 0;
   buf->cleanup_start_index = (buf->cleanup_start_index + CLEAN_UP_PASS_SIZE) % SIZE_BUF;
 }
-
-// struct table_item *search(uint32_t gid, uint32_t mid, struct segment_buffer *buf);
-// // adds a message based on its generator_id and message_id
-// uint32_t insert(uint32_t gid, uint32_t mid, struct segment_buffer *buf, struct unyte_segment_with_metadata *seg);
-// struct table_item *delete (uint32_t gid, uint32_t mid, struct segment_buffer *buf);
-// void *add(struct segment_buffer *main_table, struct unyte_segment_with_metadata *segment);

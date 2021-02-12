@@ -5,6 +5,11 @@
 #ifndef UNYTE_UTILS_H
 #define UNYTE_UTILS_H
 
+#define SPACE_MASK 0b00010000
+#define ET_MASK 0b00001111
+#define LAST_MASK 0b00000001
+#define HEADER_BYTES 12
+
 typedef struct unyte_header
 {
   uint8_t version : 3;

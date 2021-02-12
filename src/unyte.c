@@ -36,8 +36,7 @@ unyte_sock_t *unyte_init_socket(char *addr, uint16_t port)
     exit(EXIT_FAILURE);
   }
 
-  // TODO: SO_REUSEPORT = 15 but compilation error with gcc
-  setsockopt(*sock, SOL_SOCKET, 15, &release, sizeof(int));
+  setsockopt(*sock, SOL_SOCKET, SO_REUSEPORT, &release, sizeof(int));
 
   adresse->sin_family = AF_INET;
   adresse->sin_port = htons(port);

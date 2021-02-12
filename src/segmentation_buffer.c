@@ -8,6 +8,12 @@
 struct segment_buffer *create_segment_buffer()
 {
   struct segment_buffer *res = malloc(sizeof(struct segment_buffer));
+  if (res == NULL) 
+  {
+    printf("Malloc failed.");
+    return NULL;
+  }
+
   for (int i = 0; i < SIZE_BUF; i++)
   {
     res->hash_array[i] = NULL;
@@ -118,7 +124,6 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
     //Duplicate insert?
     if (cur->next->seqnum == seqnum)
     {
-      printf("inserting duplicated\n");
       //duplicate insert. Return value based on message completeness
       if (head->total_size > 0 && head->current_size == head->total_size)
         return -2;
@@ -341,7 +346,7 @@ void cleanup_seg_buff(struct segment_buffer *buf)
         }
         else
         {
-          printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
+          // printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
           struct collision_list_cell *t = next->next;
           clear_segment_list(buf, next->gid, next->mid);
           next = t;

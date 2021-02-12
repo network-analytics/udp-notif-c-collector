@@ -197,6 +197,7 @@ int listener(struct listener_thread_input *in)
     }
 
     int read_count = recvmmsg(*in->conn->sockfd, messages, in->recvmmsg_vlen, 0, NULL);
+    //TODO: check messages[i].msg_hdr.msg_flags & MSG_TRUNC --> if true datagram.len>buffer
     // printf("read_count: %d\n", read_count);
     if (read_count == -1)
     {

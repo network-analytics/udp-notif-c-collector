@@ -7,7 +7,7 @@
 // Segmentation_buffer parameters
 #define SIZE_BUF 10000           // size of buffer
 #define CLEAN_UP_PASS_SIZE 1000  // number of iterations to clean up
-#define CLEAN_COUNT_MAX 5        // clean up segment buffer when count > CLEAN_COUNT_MAX
+#define CLEAN_COUNT_MAX 500      // clean up segment buffer when count > CLEAN_COUNT_MAX
 
 /**
 total_size, current_size, gid, mid, only relevant for header cell

@@ -21,7 +21,8 @@ void *t_clean_up(void *in_seg_cleanup)
     nanosleep(&t, NULL);
     cleanup_in->seg_buff->cleanup = 1;
   }
-  printf("Thread %ld: killing clean up thread\n", pthread_self());
+
+  // printf("Thread %ld: killing clean up thread\n", pthread_self());
 
   free(cleanup_in);
   return 0;

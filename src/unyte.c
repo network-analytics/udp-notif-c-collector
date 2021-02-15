@@ -70,7 +70,7 @@ void set_default_options(unyte_options_t *options)
   {
     options->recvmmsg_vlen = DEFAULT_VLEN;
   }
-  printf("Options: %s:%d | vlen: %d\n", options->address, options->port, options->recvmmsg_vlen);
+  // printf("Options: %s:%d | vlen: %d\n", options->address, options->port, options->recvmmsg_vlen);
 }
 
 /**

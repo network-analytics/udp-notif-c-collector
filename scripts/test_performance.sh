@@ -9,6 +9,7 @@ fi
 
 LOG_FOLDER=$(pwd)/../logs
 
+# unyte collector projects paths
 UNYTE_COLLECTOR=$(pwd)/..
 UNYTE_SCAPY=$(pwd)/../../scapy
 
@@ -16,7 +17,7 @@ COLLECTOR_CLIENT=client_performance
 SCAPY_SCRIPT=scripts/performance.sh
 
 ######## Scapy parameters ########
-INSTANCES=60
+INSTANCES=200
 MESSAGES=100
 JSON="big"
 DEST_IP="192.168.0.17"
@@ -24,7 +25,7 @@ DEST_PORT="8081"
 
 ######## C-collector parameters ########
 C_MESSAGES=$(($MESSAGES * $INSTANCES))
-C_TIME_BETWEEN=1000
+C_TIME_BETWEEN=2000
 C_VLEN=10
 C_SRC=$DEST_IP
 C_PORT=$DEST_PORT

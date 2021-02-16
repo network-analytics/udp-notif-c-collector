@@ -16,6 +16,7 @@
 #define MAX_TO_RECEIVE 10000
 #define USED_VLEN 10
 #define TIME_BETWEEN 200
+#define LAST_GEN_ID 49993648
 
 struct message_obs_id
 {
@@ -29,7 +30,7 @@ struct messages_max_log {
   int time_between_log;
 };
 
-void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *start, int messages, int lost_messages)
+void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *start, int messages)
 {
   if (stop->tv_nsec < start->tv_nsec)
   {
@@ -42,7 +43,7 @@ void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *st
     diff->tv_sec = stop->tv_sec - start->tv_sec;
     diff->tv_nsec = stop->tv_nsec - start->tv_nsec;
   }
-  printf("%d;%d;%ld,%06ld\n", messages, lost_messages, diff->tv_sec * 1000 + diff->tv_nsec / 1000000, diff->tv_nsec % 1000000);
+  printf("%d;%ld,%06ld\n", messages, diff->tv_sec * 1000 + diff->tv_nsec / 1000000, diff->tv_nsec % 1000000);
 }
 
 void parse_arguments(unyte_options_t *options, struct messages_max_log *msg_max_log, int argc, char *argv[]) {
@@ -80,25 +81,19 @@ int main(int argc, char *argv[])
   unyte_collector_t *collector = unyte_start_collector(&options);
   int recv_count = 0;
   int first = 1;
-  int lost_packets = 0;
 
   struct timespec start;
   struct timespec stop;
   struct timespec diff;
 
-  struct message_obs_id *msg_obs_ids = (struct message_obs_id *)malloc(msg_max->max_to_receive * sizeof(struct message_obs_id));
-  memset(msg_obs_ids, 0, msg_max->max_to_receive * sizeof(struct message_obs_id));
-
-  for (int i = 0; i < msg_max->max_to_receive; i++)
-  {
-    msg_obs_ids[i].observation_id = -1;
-  }
+  int received_gids[msg_max->max_to_receive];
+  memset(received_gids, -1, msg_max->max_to_receive * sizeof(int));
 
   while (recv_count < msg_max->max_to_receive)
   {
     /* Read queue */
     unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
-
+    
     if (recv_count % msg_max->time_between_log == 0)
     {
       if (first)
@@ -109,31 +104,20 @@ int main(int argc, char *argv[])
       else
       {
         clock_gettime(CLOCK_MONOTONIC, &stop);
-        time_diff(&diff, &stop, &start, recv_count, lost_packets);
+        time_diff(&diff, &stop, &start, recv_count);
         clock_gettime(CLOCK_MONOTONIC, &start);
-        lost_packets = 0;
       }
     }
     recv_count++;
 
-    if (msg_obs_ids[seg->header->generator_id].observation_id < 0)
-    {
-      msg_obs_ids[seg->header->generator_id].segment_id = seg->header->f_num;
-      msg_obs_ids[seg->header->generator_id].lost = 0;
-      msg_obs_ids[seg->header->generator_id].observation_id = seg->header->generator_id;
-      // printf("new observation id: %d\n", seg->header->generator_id);
+    if (seg->header->generator_id == LAST_GEN_ID) {
+      fflush(stdout);
+      unyte_free_all(seg);
+      break;
     }
-    else
-    {
-      if (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id > 1)
-      {
-        msg_obs_ids[seg->header->generator_id].lost += (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id) - 1;
-        lost_packets += (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id) - 1;
-        printf("-> Lost %d messages\n", (seg->header->f_num - msg_obs_ids[seg->header->generator_id].segment_id) - 1);
-      }
-      // printf("--> new id %d\n", seg->header->f_num);
-      msg_obs_ids[seg->header->generator_id].segment_id = seg->header->f_num;
-    }
+
+    received_gids[seg->header->generator_id] = 1;
+
     // printHeader(seg->header, stdout);
     // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
     // printf("counter : %d\n", recv_count);
@@ -145,8 +129,17 @@ int main(int argc, char *argv[])
 
   // Get last time
   clock_gettime(CLOCK_MONOTONIC, &stop);
-  time_diff(&diff, &stop, &start, recv_count, lost_packets);
+  time_diff(&diff, &stop, &start, recv_count);
   clock_gettime(CLOCK_MONOTONIC, &start);
+
+  int lost_messages = 0;
+  for (int i = 0; i < msg_max->max_to_receive; i++)
+  {
+    if (received_gids[i] == -1) {
+      lost_messages += 1;
+    }
+  }
+  printf("Lost;%d\n", lost_messages);
 
   printf("Shutdown the socket\n");
   shutdown(*collector->sockfd, SHUT_RDWR); //TODO: à valider/force empty queue (?)
@@ -163,7 +156,6 @@ int main(int argc, char *argv[])
   // freeing collector mallocs
   unyte_free_collector(collector);
   
-  free(msg_obs_ids);
   free(msg_max);
   return 0;
 }

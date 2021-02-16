@@ -216,6 +216,7 @@ struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint
   res->total_payload_byte_size = 0;
   res->next = NULL;
   res->to_clean_up = 0;
+  // res->timestamp = time(NULL);
   return res;
 }
 
@@ -326,6 +327,7 @@ void cleanup_seg_buff(struct segment_buffer *buf)
 {
   int count = 0;
   // printf("Cleaning up starting on %d | count: %d \n", (buf->cleanup_start_index + count) % SIZE_BUF, buf->count);
+  // time_t now = time(NULL);
   while (count < CLEAN_UP_PASS_SIZE)
   {
     int current_index = (buf->cleanup_start_index + count) % SIZE_BUF;
@@ -348,9 +350,14 @@ void cleanup_seg_buff(struct segment_buffer *buf)
         {
           // printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
           struct collision_list_cell *t = next->next;
-          clear_segment_list(buf, next->gid, next->mid);
-          next = t;
-          buf->count--;
+          // if ((now - next->head->timestamp) > EXPIRE_MSG) {
+            printf("Actually clearing message (%d|%d)\n", next->gid, next->mid);
+            clear_segment_list(buf, next->gid, next->mid);
+            next = t;
+            buf->count--;
+          // } else {
+          //   next = next->next;
+          // }
         }
       }
     }

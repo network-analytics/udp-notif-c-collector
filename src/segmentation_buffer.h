@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+// #include <time.h>
 #include "unyte_utils.h"
 
 // Segmentation_buffer parameters
 #define SIZE_BUF 10000           // size of buffer
-#define CLEAN_UP_PASS_SIZE 1000  // number of iterations to clean up
-#define CLEAN_COUNT_MAX 500      // clean up segment buffer when count > CLEAN_COUNT_MAX
+#define CLEAN_UP_PASS_SIZE 500  // number of iterations to clean up
+#define CLEAN_COUNT_MAX 50      // clean up segment buffer when count > CLEAN_COUNT_MAX
+// #define EXPIRE_MSG 3            // seconds to consider the message segmented in the buffer expired (not receiving segments anymore)
 
 /**
 total_size, current_size, gid, mid, only relevant for header cell
@@ -25,6 +27,7 @@ struct message_segment_list_cell
   uint32_t content_size;
   struct message_segment_list_cell *next;
   int to_clean_up;                  // 0 = not passed yet; 1 = cleaner passed once;
+  // time_t timestamp;
 };
 
 /**
@@ -42,7 +45,7 @@ struct segment_buffer
 {
   uint32_t count;
   struct collision_list_cell *hash_array[SIZE_BUF];
-  uint8_t cleanup; //1 il faut clean up
+  uint8_t cleanup;                // 1 should clean up
   uint8_t cleanup_start_index;
 };
 

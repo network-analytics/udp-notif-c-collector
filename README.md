@@ -72,7 +72,7 @@ int main()
 
 ### Exemples
 There are some samples implemented during the development of the project [here](samples).
-- `client_sample.c` : simple exemple for minimal usage of the lib.
+- `client_sample.c` : simple exemple for minimal usage of the library.
 - `client_performance.c` : sample to test performance of data collection
 - `client_loss.c` : sample to test data loss during data collection
 

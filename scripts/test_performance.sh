@@ -26,7 +26,7 @@ DEST_PORT="8081"
 ######## C-collector parameters ########
 C_MESSAGES=$(($MESSAGES * $INSTANCES))
 C_TIME_BETWEEN=2000
-C_VLEN=20
+C_VLEN=50
 C_SRC=$DEST_IP
 C_PORT=$DEST_PORT
 

@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
     }
     recv_count++;
 
+    // break when receive last_gen_id from scapy
     if (seg->header->generator_id == LAST_GEN_ID) {
       fflush(stdout);
       unyte_free_all(seg);

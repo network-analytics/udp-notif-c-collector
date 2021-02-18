@@ -18,9 +18,11 @@
 #include "queue.h"
 #include "cleanup_worker.h"
 
+/**
+ * Frees all parsers mallocs and thread input memory.
+ */
 void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in, struct mmsghdr *messages)
 {
-
   /* Kill every workers here */
   for (int i = 0; i < PARSER_NUMBER; i++)
   {
@@ -55,6 +57,9 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
   free(messages);
 }
 
+/**
+ * Creates a thread with a cleanup cron worker
+ */
 int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *parser)
 {
   pthread_t *clean_up_thread = (pthread_t *)malloc(sizeof(pthread_t));
@@ -79,7 +84,9 @@ int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *
 
   return 0;
 }
-
+/**
+ * Creates a thread with a parse worker.
+ */
 int create_parse_worker(struct parse_worker *parser, struct listener_thread_input *in)
 {
 

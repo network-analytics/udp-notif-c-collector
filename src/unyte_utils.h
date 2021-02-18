@@ -66,7 +66,14 @@ typedef struct unyte_socket
   int *sockfd;              /* The socket file descriptor */
 } unyte_sock_t;
 
+/**
+ * Return unyte_min_t data out of *SEGMENT.
+ */
 unyte_min_t *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector);
+
+/**
+ * Parse udp-notif segment out of *SEGMENT char buffer.
+ */
 unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um);
 
 /**
@@ -74,8 +81,21 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um);
  * Returns dest
  */
 unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met_t *src);
+
+/**
+ * Deep copies metadata values from src to dest 
+ * Returns dest
+ */
 unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_met_t *src);
+
+/**
+ * Print header to std buffer
+ */
 void printHeader(unyte_header_t *header, FILE *std);
+
+/**
+ * Print payload to std buffer
+ */
 void printPayload(char *p, int len, FILE *std);
 
 #endif

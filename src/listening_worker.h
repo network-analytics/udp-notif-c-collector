@@ -35,7 +35,9 @@ struct cleanup_worker
   struct cleanup_thread_input *cleanup_in;
 };
 
-int listener(struct listener_thread_input *in);
+/**
+ * Threadified app function listening using listener_thread_input struct parameters.
+ */
 void *t_listener(void *in);
 
 #endif

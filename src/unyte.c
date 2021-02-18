@@ -73,12 +73,6 @@ void set_default_options(unyte_options_t *options)
   // printf("Options: %s:%d | vlen: %d\n", options->address, options->port, options->recvmmsg_vlen);
 }
 
-/**
- * Start all the subprocesses of the collector on the given port and return the output segment queue.
-
- * Messages in the queues are structured in structs unyte_segment_with_metadata like defined in 
- * unyte_utils.h.
- */
 unyte_collector_t *unyte_start_collector(unyte_options_t *options)
 {
   set_default_options(options);
@@ -143,9 +137,6 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   return collector;
 }
 
-/**
- * Free all the mem related to the segment
- */
 int unyte_free_all(unyte_seg_met_t *seg)
 {
   /* Free all the sub modules */
@@ -161,30 +152,18 @@ int unyte_free_all(unyte_seg_met_t *seg)
   return 0;
 }
 
-/**
- * Free only the payload
- * pointer still exist but is NULL
- */
 int unyte_free_payload(unyte_seg_met_t *seg)
 {
   free(seg->payload);
   return 0;
 }
 
-/**
- * Free only the header
- * pointer still exist but is NULL
- */
 int unyte_free_header(unyte_seg_met_t *seg)
 {
   free(seg->header);
   return 0;
 }
 
-/**
- * Free only the metadata
- * pointer still exist but is NULL
- */
 int unyte_free_metadata(unyte_seg_met_t *seg)
 {
   free(seg->metadata);

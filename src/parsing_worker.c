@@ -12,6 +12,28 @@
 #include "cleanup_worker.h"
 
 /**
+ * Assembles a message from all segments
+ */
+unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_parsed_segment, uint16_t total_payload_byte_size)
+{
+  // Create a new unyte_seg_met_t to push to queue
+  unyte_seg_met_t *parsed_msg = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t));
+  parsed_msg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
+  parsed_msg->metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
+
+  copy_unyte_seg_met_headers(parsed_msg, src_parsed_segment);
+
+  // Rewrite header length and message length
+  parsed_msg->header->header_length = HEADER_BYTES;
+  parsed_msg->header->message_length = total_payload_byte_size + HEADER_BYTES;
+
+  copy_unyte_seg_met_metadata(parsed_msg, src_parsed_segment);
+
+  parsed_msg->payload = complete_msg;
+  return parsed_msg;
+}
+
+/**
  * Parser that receive unyte_minimal structs stream from the Q queue.
  * It transforms it into unyte_segment_with_metadata structs and push theses to the OUTPUT queue.
  */
@@ -84,25 +106,6 @@ int parser(struct parser_thread_input *in)
     }
   }
   return 0;
-}
-
-unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_parsed_segment, uint16_t total_payload_byte_size)
-{
-  // Create a new unyte_seg_met_t to push to queue
-  unyte_seg_met_t *parsed_msg = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t));
-  parsed_msg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
-  parsed_msg->metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
-
-  copy_unyte_seg_met_headers(parsed_msg, src_parsed_segment);
-
-  // Rewrite header length and message length
-  parsed_msg->header->header_length = HEADER_BYTES;
-  parsed_msg->header->message_length = total_payload_byte_size + HEADER_BYTES;
-
-  copy_unyte_seg_met_metadata(parsed_msg, src_parsed_segment);
-
-  parsed_msg->payload = complete_msg;
-  return parsed_msg;
 }
 
 /**

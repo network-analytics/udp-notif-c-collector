@@ -11,7 +11,10 @@ struct parser_thread_input
   struct segment_buffer *segment_buff;
 };
 
+/**
+ * Threaded parser function.
+ * Calls parser function initializing the parsing worker.
+ */
 void *t_parser(void *in);
-unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_parsed_segment, uint16_t total_payload_byte_size);
 
 #endif

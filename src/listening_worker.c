@@ -58,21 +58,10 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
 int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *parser)
 {
   pthread_t *clean_up_thread = (pthread_t *)malloc(sizeof(pthread_t));
-  if (clean_up_thread == NULL)
-  {
-    printf("Malloc failed.\n");
-    return -1;
-  }
-
   struct cleanup_thread_input *cleanup_in = (struct cleanup_thread_input *)malloc(sizeof(struct cleanup_thread_input));
-  if (cleanup_in == NULL)
-  {
-    printf("Malloc failed.\n");
-    return -1;
-  }
-
   parser->cleanup_worker = (struct cleanup_worker *)malloc(sizeof(struct cleanup_worker));
-  if (parser->cleanup_worker == NULL)
+  
+  if (clean_up_thread == NULL || cleanup_in == NULL || parser->cleanup_worker == NULL)
   {
     printf("Malloc failed.\n");
     return -1;
@@ -106,28 +95,22 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   parser->queue->tail = 0;
   parser->queue->size = QUEUE_SIZE;
   parser->queue->data = malloc(sizeof(void *) * QUEUE_SIZE);
-  sem_init(&parser->queue->empty, 0, QUEUE_SIZE);
-  sem_init(&parser->queue->full, 0, 0);
-  pthread_mutex_init(&parser->queue->lock, NULL);
-
   if (parser->queue->data == NULL)
   {
     printf("Malloc failed \n");
     return -1;
   }
 
+  sem_init(&parser->queue->empty, 0, QUEUE_SIZE);
+  sem_init(&parser->queue->full, 0, 0);
+  pthread_mutex_init(&parser->queue->lock, NULL);
+
   parser->worker = (pthread_t *)malloc(sizeof(pthread_t));
-  if (parser->worker == NULL)
+  // Define the struct passed to the next parser
+  struct parser_thread_input *parser_input = (struct parser_thread_input *)malloc(sizeof(struct parser_thread_input));
+  if (parser->worker == NULL || parser_input == NULL)
   {
     printf("Malloc failed \n");
-    return -1;
-  }
-
-  /* Define the struct passed to the next parser */
-  struct parser_thread_input *parser_input = (struct parser_thread_input *)malloc(sizeof(struct parser_thread_input));
-  if (parser_input == NULL)
-  {
-    printf("Malloc failed.\n");
     return -1;
   }
 
@@ -135,6 +118,11 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   parser_input->input = parser->queue;
   parser_input->output = in->output_queue;
   parser_input->segment_buff = create_segment_buffer();
+
+  if (parser_input->segment_buff == NULL) {
+    printf("Create segment buffer failed.\n");
+    return -1;
+  }
 
   /* Create the thread */
   pthread_create(parser->worker, NULL, t_parser, (void *)parser_input);
@@ -153,12 +141,8 @@ int listener(struct listener_thread_input *in)
   /* errno used to handle socket read errors */
   errno = 0;
 
-  /* Iterations number if not commented in the while loop */
-  int infinity = 10;
-
   /* Create parsing workers */
   struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * PARSER_NUMBER);
-  // struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * PARSER_NUMBER);
   if (parsers == NULL)
   {
     printf("Malloc failed \n");
@@ -172,24 +156,24 @@ int listener(struct listener_thread_input *in)
       return created;
   }
 
-  /* Uncomment if no listening is wanted */
-  /* infinity = 0; */
-
   struct mmsghdr *messages = (struct mmsghdr *)malloc(in->recvmmsg_vlen * sizeof(struct mmsghdr));
+  if (messages == NULL) 
+  {
+    printf("Malloc failed \n");
+    return -1;
+  }
   // Init msg_iov first to reduce mallocs every iteration of while
   for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
   {
     messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
     messages[i].msg_hdr.msg_iovlen = 1;
   }
-  while (infinity > 0)
+  while (1)
   {
     for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
     {
-      // messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
-      // messages[i].msg_hdr.msg_iovlen = 1;
-      messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(RCVSIZE * sizeof(char));
-      messages[i].msg_hdr.msg_iov->iov_len = RCVSIZE;
+      messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(UDP_SIZE * sizeof(char));
+      messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
       messages[i].msg_hdr.msg_control = 0;
       messages[i].msg_hdr.msg_controllen = 0;
       messages[i].msg_hdr.msg_name = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
@@ -197,8 +181,6 @@ int listener(struct listener_thread_input *in)
     }
 
     int read_count = recvmmsg(*in->conn->sockfd, messages, in->recvmmsg_vlen, 0, NULL);
-    //TODO: check messages[i].msg_hdr.msg_flags & MSG_TRUNC --> if true datagram.len>buffer
-    // printf("read_count: %d\n", read_count);
     if (read_count == -1)
     {
       perror("recvmmsg failed");
@@ -207,15 +189,17 @@ int listener(struct listener_thread_input *in)
       return -1;
     }
 
-    // printf("%d messages read\n", read_count);
-    for (long int i = 0; i < read_count; i++)
+    for (int i = 0; i < read_count; i++)
     {
-      // hexdump(messages[i].msg_hdr.msg_iov->iov_base, 10000);
-
       // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
       if (messages[i].msg_len > 0)
       {
         unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_in *)messages[i].msg_hdr.msg_name), in->conn->addr);
+        if (seg == NULL) 
+        {
+          printf("minimal_parse error\n");
+          return -1;
+        }
         /* Dispatching by modulo on threads */
         unyte_queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
       }
@@ -230,9 +214,6 @@ int listener(struct listener_thread_input *in)
       free(messages[i].msg_hdr.msg_name);
     }
     // free(messages);
-
-    /* Comment if infinity is required */
-    /* infinity = infinity - 1; */
   }
 
   // Never called cause while(1)

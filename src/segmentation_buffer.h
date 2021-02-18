@@ -8,8 +8,11 @@
 // Segmentation_buffer parameters
 #define SIZE_BUF 10000           // size of buffer
 #define CLEAN_UP_PASS_SIZE 500  // number of iterations to clean up
-#define CLEAN_COUNT_MAX 50      // clean up segment buffer when count > CLEAN_COUNT_MAX
+#define CLEAN_COUNT_MAX 5      // clean up segment buffer when count > CLEAN_COUNT_MAX
 // #define EXPIRE_MSG 3            // seconds to consider the message segmented in the buffer expired (not receiving segments anymore)
+
+// Errors on segmentation buffer
+// #define CREATE_ERROR 1
 
 /**
 total_size, current_size, gid, mid, only relevant for header cell

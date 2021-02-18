@@ -95,6 +95,11 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   output_queue->tail = 0;
   output_queue->size = OUTPUT_QUEUE_SIZE;
   output_queue->data = malloc(sizeof(void *) * OUTPUT_QUEUE_SIZE);
+  if (output_queue->data == NULL)
+  {
+    printf("Malloc failed.\n");
+    exit(EXIT_FAILURE);
+  }
   sem_init(&output_queue->empty, 0, OUTPUT_QUEUE_SIZE);
   sem_init(&output_queue->full, 0, 0);
   pthread_mutex_init(&output_queue->lock, NULL);
@@ -112,7 +117,7 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   if (listener_input == NULL)
   {
     printf("Malloc failed.\n");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   listener_input->port = options->port;

@@ -264,7 +264,6 @@ int clear_buffer(struct segment_buffer *buf)
   {
     if (buf->hash_array[i] != NULL)
     {
-
       //There is a collision list header cell at hasharray[i]
       //The collision list is not empty. Clear it.
       res += clear_collision_list(buf, buf->hash_array[i]);
@@ -336,10 +335,8 @@ void cleanup_seg_buff(struct segment_buffer *buf)
     if (next != NULL)
     {
       next = next->next;
-      // printf("ISNULL : %d\n", next != NULL);
       while (next != NULL)
       {
-        // printf("Cleaning up %d\n", next->head->to_clean_up);
         if (next->head->to_clean_up == 0)
         {
           // printf("Message is old (%d|%d)\n", next->gid, next->mid);
@@ -351,7 +348,7 @@ void cleanup_seg_buff(struct segment_buffer *buf)
           // printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
           struct collision_list_cell *t = next->next;
           // if ((now - next->head->timestamp) > EXPIRE_MSG) {
-            printf("Actually clearing message (%d|%d)\n", next->gid, next->mid);
+            // printf("Actually clearing message (%d|%d)\n", next->gid, next->mid);
             clear_segment_list(buf, next->gid, next->mid);
             next = t;
             buf->count--;

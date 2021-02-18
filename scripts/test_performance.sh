@@ -18,7 +18,7 @@ SCAPY_SCRIPT=scripts/performance.sh
 
 ######## Scapy parameters ########
 INSTANCES=200
-MESSAGES=100
+MESSAGES=60
 JSON="big"
 DEST_IP="192.168.0.17"
 DEST_PORT="8081"
@@ -26,7 +26,7 @@ DEST_PORT="8081"
 ######## C-collector parameters ########
 C_MESSAGES=$(($MESSAGES * $INSTANCES))
 C_TIME_BETWEEN=2000
-C_VLEN=10
+C_VLEN=20
 C_SRC=$DEST_IP
 C_PORT=$DEST_PORT
 
@@ -43,7 +43,8 @@ $UNYTE_COLLECTOR/$COLLECTOR_CLIENT $C_MESSAGES $C_TIME_BETWEEN $C_VLEN $C_SRC $C
 
 sleep 1
 
-sudo $UNYTE_SCAPY/$SCAPY_SCRIPT $INSTANCES $MESSAGES $JSON $DEST_IP $DEST_PORT -y
+sudo $UNYTE_SCAPY/$SCAPY_SCRIPT $INSTANCES $MESSAGES $JSON $C_VLEN $DEST_IP $DEST_PORT -y
+
 wait
 echo "####### End test ########" >> $LOG_FOLDER/collector.log
 ######## End Test ########

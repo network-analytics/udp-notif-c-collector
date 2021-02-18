@@ -27,12 +27,6 @@ typedef struct unyte_header
   uint8_t f_last : 1;
 } unyte_header_t;
 
-typedef struct unyte_segment
-{
-  unyte_header_t *header;
-  char *payload;
-} unyte_segment_t;
-
 typedef struct unyte_metadata
 {
   /* Metadatas */
@@ -73,7 +67,6 @@ typedef struct unyte_socket
 } unyte_sock_t;
 
 unyte_min_t *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector);
-unyte_segment_t *parse(char *segment);
 unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um);
 
 /**

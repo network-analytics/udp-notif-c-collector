@@ -132,15 +132,6 @@ int main(int argc, char *argv[])
   time_diff(&diff, &stop, &start, recv_count);
   clock_gettime(CLOCK_MONOTONIC, &start);
 
-  int lost_messages = 0;
-  for (int i = 0; i < msg_max->max_to_receive; i++)
-  {
-    if (received_gids[i] == -1) {
-      lost_messages += 1;
-    }
-  }
-  printf("Lost;%d\n", lost_messages);
-
   printf("Shutdown the socket\n");
   shutdown(*collector->sockfd, SHUT_RDWR); //TODO: à valider/force empty queue (?)
   close(*collector->sockfd);
@@ -150,11 +141,24 @@ int main(int argc, char *argv[])
   while (is_queue_empty(collector->queue) != 0)
   {
     unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
+    if (seg->header->generator_id != LAST_GEN_ID) {
+      received_gids[seg->header->generator_id] = 1;
+    }
     unyte_free_all(seg);
   }
 
+  int lost_messages = 0;
+  for (int i = 0; i < msg_max->max_to_receive; i++)
+  {
+    if (received_gids[i] == -1) {
+      lost_messages += 1;
+    }
+  }
+  printf("Lost;%d/%d;%f\n", lost_messages, msg_max->max_to_receive,((double)lost_messages/(double)msg_max->max_to_receive) * 100);
+
   // freeing collector mallocs
   unyte_free_collector(collector);
+  fflush(stdout);
   
   free(msg_max);
   return 0;

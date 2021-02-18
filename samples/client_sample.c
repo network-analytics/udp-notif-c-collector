@@ -13,7 +13,7 @@
 #define PORT 8081
 #define ADDR "192.168.0.17"
 #define USED_VLEN 5
-#define MAX_TO_RECEIVE 30
+#define MAX_TO_RECEIVE 100
 
 int main()
 {

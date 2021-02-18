@@ -70,6 +70,17 @@ int main()
 }
 ```
 
+### Segments data
+To process the message data, all the headers, meta-data and payload are found on the struct unyte_seg_met_t defined on unyte_utils.h:
+```
+typedef struct unyte_segment_with_metadata
+{
+  unyte_metadata_t *metadata; // source/port
+  unyte_header_t *header;     // UDP-notif headers
+  char *payload;              // payload of message
+} unyte_seg_met_t;
+```
+
 ### Exemples
 There are some samples implemented during the development of the project [here](samples).
 - `client_sample.c` : simple exemple for minimal usage of the library.

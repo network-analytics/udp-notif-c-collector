@@ -40,9 +40,9 @@ typedef struct unyte_metadata
  */
 typedef struct unyte_segment_with_metadata
 {
-  unyte_metadata_t *metadata;
-  unyte_header_t *header;
-  char *payload;
+  unyte_metadata_t *metadata; // source/port
+  unyte_header_t *header;     // UDP-notif headers
+  char *payload;              // payload of message
 } unyte_seg_met_t;
 
 typedef struct unyte_minimal

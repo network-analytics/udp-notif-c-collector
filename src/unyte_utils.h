@@ -27,12 +27,6 @@ typedef struct unyte_header
   uint8_t f_last : 1;
 } unyte_header_t;
 
-typedef struct unyte_segment
-{
-  unyte_header_t *header;
-  char *payload;
-} unyte_segment_t;
-
 typedef struct unyte_metadata
 {
   /* Metadatas */
@@ -46,9 +40,9 @@ typedef struct unyte_metadata
  */
 typedef struct unyte_segment_with_metadata
 {
-  unyte_metadata_t *metadata;
-  unyte_header_t *header;
-  char *payload;
+  unyte_metadata_t *metadata; // source/port
+  unyte_header_t *header;     // UDP-notif headers
+  char *payload;              // payload of message
 } unyte_seg_met_t;
 
 typedef struct unyte_minimal
@@ -72,8 +66,14 @@ typedef struct unyte_socket
   int *sockfd;              /* The socket file descriptor */
 } unyte_sock_t;
 
+/**
+ * Return unyte_min_t data out of *SEGMENT.
+ */
 unyte_min_t *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector);
-unyte_segment_t *parse(char *segment);
+
+/**
+ * Parse udp-notif segment out of *SEGMENT char buffer.
+ */
 unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um);
 
 /**
@@ -81,8 +81,21 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um);
  * Returns dest
  */
 unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met_t *src);
+
+/**
+ * Deep copies metadata values from src to dest 
+ * Returns dest
+ */
 unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_met_t *src);
+
+/**
+ * Print header to std buffer
+ */
 void printHeader(unyte_header_t *header, FILE *std);
+
+/**
+ * Print payload to std buffer
+ */
 void printPayload(char *p, int len, FILE *std);
 
 #endif

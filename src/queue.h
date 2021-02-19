@@ -16,8 +16,24 @@ typedef struct
   void **data;
 } queue_t;
 
+/**
+ * Read a message from a queue_t. 
+ * Returns the buffer pointer void *.
+ */
 void *unyte_queue_read(queue_t *queue);
+
+/**
+ * Writes a buffer pointer to a queue.
+ * Return 0 if message is written correctly. 
+ * Return -1 if queue already full. 
+ */
 int unyte_queue_write(queue_t *queue, void *handle);
+
+/**
+ * Check wether or not the queue is empty.
+ * Return 1 for not empty. 
+ * Return 0 for empty.
+ */
 int is_queue_empty(queue_t *queue);
 
 #endif

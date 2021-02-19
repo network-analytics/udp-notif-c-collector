@@ -70,15 +70,9 @@ void set_default_options(unyte_options_t *options)
   {
     options->recvmmsg_vlen = DEFAULT_VLEN;
   }
-  printf("Options: %s:%d | vlen: %d\n", options->address, options->port, options->recvmmsg_vlen);
+  // printf("Options: %s:%d | vlen: %d\n", options->address, options->port, options->recvmmsg_vlen);
 }
 
-/**
- * Start all the subprocesses of the collector on the given port and return the output segment queue.
-
- * Messages in the queues are structured in structs unyte_segment_with_metadata like defined in 
- * unyte_utils.h.
- */
 unyte_collector_t *unyte_start_collector(unyte_options_t *options)
 {
   set_default_options(options);
@@ -95,6 +89,11 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   output_queue->tail = 0;
   output_queue->size = OUTPUT_QUEUE_SIZE;
   output_queue->data = malloc(sizeof(void *) * OUTPUT_QUEUE_SIZE);
+  if (output_queue->data == NULL)
+  {
+    printf("Malloc failed.\n");
+    exit(EXIT_FAILURE);
+  }
   sem_init(&output_queue->empty, 0, OUTPUT_QUEUE_SIZE);
   sem_init(&output_queue->full, 0, 0);
   pthread_mutex_init(&output_queue->lock, NULL);
@@ -112,7 +111,7 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   if (listener_input == NULL)
   {
     printf("Malloc failed.\n");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   listener_input->port = options->port;
@@ -138,9 +137,6 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   return collector;
 }
 
-/**
- * Free all the mem related to the segment
- */
 int unyte_free_all(unyte_seg_met_t *seg)
 {
   /* Free all the sub modules */
@@ -156,30 +152,18 @@ int unyte_free_all(unyte_seg_met_t *seg)
   return 0;
 }
 
-/**
- * Free only the payload
- * pointer still exist but is NULL
- */
 int unyte_free_payload(unyte_seg_met_t *seg)
 {
   free(seg->payload);
   return 0;
 }
 
-/**
- * Free only the header
- * pointer still exist but is NULL
- */
 int unyte_free_header(unyte_seg_met_t *seg)
 {
   free(seg->header);
   return 0;
 }
 
-/**
- * Free only the metadata
- * pointer still exist but is NULL
- */
 int unyte_free_metadata(unyte_seg_met_t *seg)
 {
   free(seg->metadata);

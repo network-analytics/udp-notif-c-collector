@@ -54,79 +54,6 @@ unyte_min_t *minimal_parse(char *segment, struct sockaddr_in *source, struct soc
 
 /**
  * Parse udp-notif segment out of *SEGMENT char array.
- * DEPRECATED use unyte_segment_with_metadata instead
- */
-unyte_segment_t *parse(char *segment)
-{
-  unyte_header_t *header = malloc(sizeof(unyte_header_t));
-
-  if (header == NULL)
-  {
-    printf("Malloc failed \n");
-    return NULL;
-  }
-
-  header->version = segment[0] >> 5;
-  header->space = (segment[0] & SPACE_MASK);
-  header->encoding_type = (segment[0] & ET_MASK);
-  header->header_length = segment[1];
-  header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
-  header->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
-  header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
-
-  /* Header contains options */
-  /* TODO handle something else than fragmentaion */
-
-  if (header->header_length > HEADER_BYTES)
-  {
-    header->f_type = segment[12];
-    header->f_len = segment[13];
-
-    /* WARN : Modifying directly segment, is it a pb ? + Not sure it works well*/
-    /* If last = TRUE */
-
-    if ((uint8_t)(segment[15] & 0b00000001) == 1)
-    {
-      header->f_last = 1;
-    }
-    else
-    {
-      header->f_last = 0;
-    }
-    header->f_num = (ntohs(deserialize_uint16((char *)segment, 14)) >> 1);
-  }
-
-  int pSize = header->message_length - header->header_length;
-
-  char *payload = malloc(pSize);
-
-  if (payload == NULL)
-  {
-    printf("Malloc failed \n");
-    return NULL;
-  }
-
-  memcpy(payload, (segment + header->header_length), pSize);
-
-  unyte_segment_t *seg = malloc(sizeof(unyte_segment_t) + sizeof(payload));
-
-  if (seg == NULL)
-  {
-    printf("Malloc failed \n");
-    return NULL;
-  }
-
-  /* not optimal - pass pointer instead */
-  seg->header = header;
-  seg->payload = payload;
-
-  free(header);
-
-  return seg;
-}
-
-/**
- * Parse udp-notif segment out of *SEGMENT char array.
  */
 unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 {
@@ -167,14 +94,8 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
     header->f_num = (ntohs(deserialize_uint16((char *)segment, 14)) >> 1);
   }
   int pSize = header->message_length - header->header_length;
-  // printf("       Psize|%d|%d|%d\n",header->message_length, header->header_length, pSize);
 
   char *payload = malloc(pSize);
-  if (payload == NULL)
-  {
-    printf("Malloc failed.\n");
-    exit(-1);
-  }
 
   if (payload == NULL)
   {
@@ -257,7 +178,7 @@ void printHeader(unyte_header_t *header, FILE *std)
 
   /* Header contains options */
 
-  if (header->header_length > 12)
+  if (header->header_length > HEADER_BYTES)
   {
     fprintf(std, "\nOptions: YES\n");
     fprintf(std, "opt type: %u\n", header->f_type);

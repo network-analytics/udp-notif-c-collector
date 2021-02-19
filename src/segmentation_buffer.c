@@ -8,6 +8,12 @@
 struct segment_buffer *create_segment_buffer()
 {
   struct segment_buffer *res = malloc(sizeof(struct segment_buffer));
+  if (res == NULL) 
+  {
+    printf("Malloc failed.");
+    return NULL;
+  }
+
   for (int i = 0; i < SIZE_BUF; i++)
   {
     res->hash_array[i] = NULL;
@@ -26,9 +32,7 @@ char *reassemble_payload(struct message_segment_list_cell *msg_seg_list)
 
   while (temp->next != NULL)
   {
-    // printf("Copying %d|%d\n", msg_seg_list->total_payload_byte_size, temp->next->content_size);
     memcpy(msg_tmp, temp->next->content, temp->next->content_size);
-    // hexdump(msg_tmp,temp->next->content_size - parsed_segment->header->header_length);
     msg_tmp += temp->next->content_size;
     temp = temp->next;
   }
@@ -68,18 +72,18 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
 }
 
 /**
-inserts a content in a message segment list, maintaining order among the content based on seqnum
-head must be the empty header cell of a message_segment_list, cannot be NULL
-seqnum is the sequence number of that segment
-last is 1 if the segment is the last one of the content, 0 otherwise
-content is the value to be added at the corresponding seqnum
-returns 0 if the content was added and message is not complete yet
-returns 1 if the content was added and message is complete 
-(a message was stored with last 1, and the length of the list is equal to the total number of segments)
-returns -1 if a content was already present for this seqnum
-returns -2 if a content was already present and message is complete
-returns -3 if a memory allocation failed
-*/
+ * inserts a content in a message segment list, maintaining order among the content based on seqnum
+ * head must be the empty header cell of a message_segment_list, cannot be NULL
+ * seqnum is the sequence number of that segment
+ * last is 1 if the segment is the last one of the content, 0 otherwise
+ * content is the value to be added at the corresponding seqnum
+ * returns 0 if the content was added and message is not complete yet
+ * returns 1 if the content was added and message is complete 
+ * (a message was stored with last 1, and the length of the list is equal to the total number of segments)
+ * returns -1 if a content was already present for this seqnum
+ * returns -2 if a content was already present and message is complete
+ * returns -3 if a memory allocation failed
+ */
 int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content)
 {
   //If the segment is the last, we now know the total size of the message.
@@ -91,9 +95,9 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
   {
     cur = cur->next;
   }
-  /*cur->next is the insertion location*/
-  /**if cur->next is NULL, the content is being placed at the end of list
-        This segment is not a duplicate, hence the current_size must be increased
+  /** cur->next is the insertion location
+    * if cur->next is NULL, the content is being placed at the end of list
+    * This segment is not a duplicate, hence the current_size must be increased
     */
   if (cur->next == NULL)
   {
@@ -106,7 +110,7 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
     cur->next->content_size = payload_size;
     head->current_size++;
     head->total_payload_byte_size += payload_size;
-    //return value based on message completeness
+    // return value based on message completeness
     if (head->total_size > 0 && head->current_size == head->total_size)
       return 1;
     else
@@ -114,12 +118,11 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
   }
   else
   {
-    //There is a segment present at cur->next
-    //Duplicate insert?
+    // There is a segment present at cur->next
+    // Duplicate insert?
     if (cur->next->seqnum == seqnum)
     {
-      printf("inserting duplicated\n");
-      //duplicate insert. Return value based on message completeness
+      // duplicate insert. Return value based on message completeness
       if (head->total_size > 0 && head->current_size == head->total_size)
         return -2;
       else
@@ -127,7 +130,7 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
     }
     else
     {
-      //not a duplicate insert. create intermediate cell and make it point to the rest of the list;
+      // not a duplicate insert. create intermediate cell and make it point to the rest of the list;
       struct message_segment_list_cell *temp = cur->next;
       cur->next = malloc(sizeof(struct message_segment_list_cell));
       if (cur->next == NULL)
@@ -138,7 +141,7 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
       cur->next->content_size = payload_size;
       head->current_size++;
       head->total_payload_byte_size += payload_size;
-      //return value based on message completeness
+      // return value based on message completeness
       if (head->total_size > 0 && head->current_size == head->total_size)
         return 1;
       else
@@ -149,7 +152,7 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
 struct message_segment_list_cell *get_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid)
 {
   uint32_t hk = hashKey(gid, mid);
-  /*If there is no message at the request hashvalue, we don't have that segment list*/
+  // If there is no message at the request hashvalue, we don't have that segment list
   if (buf->hash_array[hk] == NULL)
   {
     return NULL;
@@ -211,16 +214,17 @@ struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint
   res->total_payload_byte_size = 0;
   res->next = NULL;
   res->to_clean_up = 0;
+  res->timestamp = 0;
   return res;
 }
 
 /**
-head -> NOTNULL
-cur : head (->NOTNULL)
-next: NULL
-tant que cur->next!=NULL
-    next 
-*/
+ * head -> NOTNULL
+ * cur : head (->NOTNULL)
+ * next: NULL
+ * tant que cur->next!=NULL
+ *     next 
+ */
 void clear_msl(struct message_segment_list_cell *head)
 {
   struct message_segment_list_cell *cur = head->next;
@@ -258,7 +262,6 @@ int clear_buffer(struct segment_buffer *buf)
   {
     if (buf->hash_array[i] != NULL)
     {
-
       //There is a collision list header cell at hasharray[i]
       //The collision list is not empty. Clear it.
       res += clear_collision_list(buf, buf->hash_array[i]);
@@ -321,6 +324,7 @@ void cleanup_seg_buff(struct segment_buffer *buf)
 {
   int count = 0;
   // printf("Cleaning up starting on %d | count: %d \n", (buf->cleanup_start_index + count) % SIZE_BUF, buf->count);
+  time_t now = time(NULL);
   while (count < CLEAN_UP_PASS_SIZE)
   {
     int current_index = (buf->cleanup_start_index + count) % SIZE_BUF;
@@ -329,10 +333,8 @@ void cleanup_seg_buff(struct segment_buffer *buf)
     if (next != NULL)
     {
       next = next->next;
-      // printf("ISNULL : %d\n", next != NULL);
       while (next != NULL)
       {
-        // printf("Cleaning up %d\n", next->head->to_clean_up);
         if (next->head->to_clean_up == 0)
         {
           // printf("Message is old (%d|%d)\n", next->gid, next->mid);
@@ -341,11 +343,19 @@ void cleanup_seg_buff(struct segment_buffer *buf)
         }
         else
         {
-          printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
+          // printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
           struct collision_list_cell *t = next->next;
-          clear_segment_list(buf, next->gid, next->mid);
-          next = t;
-          buf->count--;
+          if (next->head->timestamp == 0) {
+            next->head->timestamp = now;
+          }
+          if ((now - next->head->timestamp) > EXPIRE_MSG) {
+            // printf("Actually clearing message (%d|%d) %ld\n", next->gid, next->mid, next->head->timestamp);
+            clear_segment_list(buf, next->gid, next->mid);
+            next = t;
+            buf->count--;
+          } else {
+            next = next->next;
+          }
         }
       }
     }

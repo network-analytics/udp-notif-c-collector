@@ -4,11 +4,11 @@ Library for collecting UDP-notif protocol messages.
 ## Build
 To build the project and test example clients, just `make` on root folder. Il will compile with gcc all dependences and the clients.
 
-## Usage
-The api is in `unyte.h` :
-- `unyte_collector_t *unyte_start_collector(unyte_options_t *options)` from `unyte.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: address (the IP address to listen to), port (port to listen to), recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many message to receive every syscall, by default 10)
+## Usage of the UDP-notif collector
+The api is in `unyte_collector.h` :
+- `unyte_collector_t *unyte_start_collector(unyte_options_t *options)` from `unyte_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: address (the IP address to listen to), port (port to listen to), recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many message to receive every syscall, by default 10)
 - `void *unyte_queue_read(queue_t *queue)` from `queue.h` : read from a queue a struct with all the message buffer and metadata.
-- `int unyte_free_all(unyte_seg_met_t *seg)` from `unyte.h`: free all struct used on a message received.
+- `int unyte_free_all(unyte_seg_met_t *seg)` from `unyte_collector.h`: free all struct used on a message received.
 
 Simple exemple of usage :
 ```
@@ -19,7 +19,7 @@ Simple exemple of usage :
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include "src/unyte.h"
+#include "src/unyte_collector.h"
 #include "src/unyte_utils.h"
 #include "src/queue.h"
 

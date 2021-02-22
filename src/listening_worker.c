@@ -14,7 +14,7 @@
 #include "parsing_worker.h"
 #include "lib/hexdump.h"
 #include "unyte_utils.h"
-#include "unyte.h"
+#include "unyte_collector.h"
 #include "queue.h"
 #include "cleanup_worker.h"
 

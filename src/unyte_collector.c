@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "queue.h"
-#include "unyte.h"
+#include "unyte_collector.h"
 #include "unyte_utils.h"
 #include "listening_worker.h"
 

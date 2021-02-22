@@ -6,7 +6,7 @@
 #include "queue.h"
 #include "unyte_utils.h"
 #include "parsing_worker.h"
-#include "unyte.h"
+#include "unyte_collector.h"
 #include "segmentation_buffer.h"
 #include "lib/hexdump.h"
 #include "cleanup_worker.h"

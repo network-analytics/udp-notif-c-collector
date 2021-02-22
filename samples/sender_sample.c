@@ -24,6 +24,8 @@ int main()
   options.port = PORT;
   options.recvmmsg_vlen = USED_VLEN;
 
+  char *string_to_send = "Hello world!";
+
   /* Initialize collector */
   unyte_collector_t *collector = unyte_start_collector(&options);
   int recv_count = 0;

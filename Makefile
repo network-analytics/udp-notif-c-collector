@@ -6,11 +6,11 @@ CFLAGS= -Wextra -Wall -ansi -g -std=c99 -D_GNU_SOURCE
 ###### c-collector source code ######
 SDIR = src
 ODIR = obj
-_OBJS = listening_worker.o unyte_utils.o queue.o parsing_worker.o unyte.o segmentation_buffer.o cleanup_worker.o
+_OBJS = listening_worker.o unyte_utils.o queue.o parsing_worker.o unyte_collector.o segmentation_buffer.o cleanup_worker.o
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 ###### c-collector source headers ######
-_DEPS = listening_worker.h unyte_utils.h queue.h parsing_worker.h unyte.h segmentation_buffer.h cleanup_worker.h
+_DEPS = listening_worker.h unyte_utils.h queue.h parsing_worker.h unyte_collector.h segmentation_buffer.h cleanup_worker.h
 DEPS = $(patsubst %,$(SDIR)/%,$(_DEPS))
 
 ###### c-collector lib source code ######

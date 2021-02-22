@@ -18,7 +18,7 @@ SCAPY_SCRIPT=scripts/performance.sh
 
 ######## Scapy parameters ########
 INSTANCES=200
-MESSAGES=60
+MESSAGES=100
 JSON="big"
 DEST_IP="192.168.0.17"
 DEST_PORT="8081"
@@ -40,7 +40,7 @@ do
 
   sleep 1
   echo "###### Start test #######" >> $LOG_FOLDER/collector.log
-  $UNYTE_COLLECTOR/$COLLECTOR_CLIENT $C_MESSAGES $C_TIME_BETWEEN $C_VLEN $C_SRC $C_PORT >> $LOG_FOLDER/collector.log &
+  taskset -ca 0 $($UNYTE_COLLECTOR/$COLLECTOR_CLIENT $C_MESSAGES $C_TIME_BETWEEN $C_VLEN $C_SRC $C_PORT >> $LOG_FOLDER/collector.log) &
 
   sleep 1
 

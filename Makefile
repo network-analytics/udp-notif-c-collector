@@ -6,11 +6,11 @@ CFLAGS= -Wextra -Wall -ansi -g -std=c99 -D_GNU_SOURCE
 ###### c-collector source code ######
 SDIR = src
 ODIR = obj
-_OBJS = listening_worker.o unyte_utils.o queue.o parsing_worker.o unyte_collector.o segmentation_buffer.o cleanup_worker.o
+_OBJS = listening_worker.o unyte_utils.o queue.o parsing_worker.o unyte_collector.o segmentation_buffer.o cleanup_worker.o unyte_sender.o
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 ###### c-collector source headers ######
-_DEPS = listening_worker.h unyte_utils.h queue.h parsing_worker.h unyte_collector.h segmentation_buffer.h cleanup_worker.h
+_DEPS = listening_worker.h unyte_utils.h queue.h parsing_worker.h unyte_collector.h segmentation_buffer.h cleanup_worker.h unyte_sender.h
 DEPS = $(patsubst %,$(SDIR)/%,$(_DEPS))
 
 ###### c-collector lib source code ######
@@ -30,7 +30,7 @@ SAMPLES_ODIR = samples/obj
 ###### c-collector test files ######
 TDIR = test
 
-all: client_sample client_performance client_loss test_listener test_seg
+all: client_sample client_performance client_loss test_listener test_seg sender_sample
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS) $(LDEPS)
 	$(CC) -c -o $@ $< $(CFLAGS) 
@@ -48,6 +48,9 @@ client_performance: $(SAMPLES_ODIR)/client_performance.o $(OBJS) $(LIBS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
 client_loss: $(SAMPLES_ODIR)/client_loss.o $(OBJS) $(LIBS)
+	$(CC) -pthread -o $@ $^ $(LDFLAGS)
+
+sender_sample: $(SAMPLES_ODIR)/sender_sample.o $(OBJS) $(LIBS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
 test_listener: $(TDIR)/test.o $(OBJS)

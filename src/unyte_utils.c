@@ -210,3 +210,56 @@ void printPayload(char *p, int len, FILE *std)
     fflush(stdout);
   }
 }
+
+struct unyte_segmented_msg *build_message(unyte_message_t *message) {
+  struct unyte_segmented_msg *segments_msg = (struct unyte_segmented_msg *)malloc(sizeof(struct unyte_segmented_msg));
+  segments_msg->segments = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t));
+  segments_msg->segments_len = 1;
+  
+  unyte_seg_met_t *current_seg = segments_msg->segments;
+
+  current_seg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
+  current_seg->payload = message->buffer;
+  current_seg->header->generator_id = message->generator_id;
+  current_seg->header->message_id = message->message_id;
+  current_seg->header->space = message->space;
+  current_seg->header->version = message->version;
+  current_seg->header->encoding_type = message->encoding_type;
+  current_seg->header->header_length = HEADER_BYTES;
+  current_seg->header->message_length = message->buffer_len;
+  // TODO: Fragmentation
+  // seg->header->f_last = 1;
+  // seg->header->f_type = 
+
+  return segments_msg;
+}
+
+unsigned char *serialize_message(unyte_seg_met_t * msg) {
+  unsigned char *parsed_bytes = (unsigned char *)malloc(msg->header->message_length + HEADER_BYTES); //TODO: options later
+
+  parsed_bytes[0] = (((msg->header->version << 5) + (msg->header->space << 4) + (msg->header->encoding_type))) & 0xFF;
+  parsed_bytes[1] = msg->header->header_length & 0xFF;
+  // message length
+  parsed_bytes[2] = ((msg->header->message_length + HEADER_BYTES) >> 8) & 0xFF;
+  parsed_bytes[3] = (msg->header->message_length + HEADER_BYTES) & 0xFF;
+
+  // observation id
+  parsed_bytes[4] = (msg->header->generator_id >> 24) & 0xFF;
+  parsed_bytes[5] = (msg->header->generator_id >> 16) & 0xFF;
+  parsed_bytes[6] = (msg->header->generator_id >> 8) & 0xFF;
+  parsed_bytes[7] = (msg->header->generator_id) & 0xFF;
+  // message i 
+  parsed_bytes[8] = (msg->header->message_id >> 24) & 0xFF;
+  parsed_bytes[9] = (msg->header->message_id >> 16) & 0xFF;
+  parsed_bytes[10] = (msg->header->message_id >> 8) & 0xFF;
+  parsed_bytes[11] = (msg->header->message_id) & 0xFF;
+  // printf("%x|%x|%x|%x|%d\n", parsed_bytes[8], parsed_bytes[9], parsed_bytes[10], parsed_bytes[11], msg->header->message_id);
+
+  for (uint i = 0; i < msg->header->message_length; i++)
+  {
+    parsed_bytes[12 + i] = msg->payload[i];
+  }
+
+  return parsed_bytes;
+}
+

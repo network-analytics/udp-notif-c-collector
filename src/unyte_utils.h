@@ -66,6 +66,29 @@ typedef struct unyte_socket
   int *sockfd;              /* The socket file descriptor */
 } unyte_sock_t;
 
+struct unyte_segmented_msg
+{
+  // Array of segments
+  unyte_seg_met_t *segments;
+  uint segments_len;
+};
+
+typedef struct unyte_message
+{
+  uint used_mtu;
+  char *dest_addr;
+  uint16_t dest_port;
+  char *buffer;
+  uint buffer_len;
+
+  // UDP-notif
+  uint8_t version : 3;
+  uint8_t space : 1;
+  uint8_t encoding_type : 4;
+  uint32_t generator_id;
+  uint32_t message_id;
+} unyte_message_t;
+
 /**
  * Return unyte_min_t data out of *SEGMENT.
  */
@@ -97,5 +120,8 @@ void printHeader(unyte_header_t *header, FILE *std);
  * Print payload to std buffer
  */
 void printPayload(char *p, int len, FILE *std);
+
+struct unyte_segmented_msg *build_message(unyte_message_t *message);
+unsigned char *serialize_message(unyte_seg_met_t *message);
 
 #endif

@@ -3,6 +3,7 @@ client_sample
 client_performance
 test_listener
 client_loss
+sender_sample
 test_seg
 
 docker/tmp

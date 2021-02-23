@@ -24,5 +24,6 @@ struct unyte_sender_socket
 struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options);
 int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message);
 int free_sender_socket(struct unyte_sender_socket *sender_sk);
+int free_seg_msgs(struct unyte_segmented_msg *packets);
 
 #endif

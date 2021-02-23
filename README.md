@@ -50,7 +50,7 @@ int main()
   }
 
   // To shut down the collector, just shutdown and close the socket.
-  shutdown(*collector->sockfd, SHUT_RDWR);¡
+  shutdown(*collector->sockfd, SHUT_RDWR);
   close(*collector->sockfd);
 
   // wait for main_tread to finish

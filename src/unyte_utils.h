@@ -9,6 +9,7 @@
 #define ET_MASK 0b00001111
 #define LAST_MASK 0b00000001
 #define HEADER_BYTES 12
+#define OPTIONS_BYTES 4
 
 typedef struct unyte_header
 {
@@ -78,7 +79,7 @@ typedef struct unyte_message
   uint used_mtu;
   char *dest_addr;
   uint16_t dest_port;
-  char *buffer;
+  void *buffer;
   uint buffer_len;
 
   // UDP-notif
@@ -121,7 +122,7 @@ void printHeader(unyte_header_t *header, FILE *std);
  */
 void printPayload(char *p, int len, FILE *std);
 
-struct unyte_segmented_msg *build_message(unyte_message_t *message);
+struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu);
 unsigned char *serialize_message(unyte_seg_met_t *message);
 
 #endif

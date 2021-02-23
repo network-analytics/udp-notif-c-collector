@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
@@ -10,6 +11,12 @@
 struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
 {
   struct sockaddr_in *addr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+  struct unyte_sender_socket *sender_sk = (struct unyte_sender_socket *)malloc(sizeof(struct unyte_sender_socket));
+  if (addr == NULL || sender_sk == NULL ) 
+  {
+    perror("Malloc failed.\n");
+    exit(EXIT_FAILURE);
+  }
 
   int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
   if (sockfd < 0)
@@ -17,6 +24,9 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
     perror("socket()");
     exit(EXIT_FAILURE);
   }
+
+  // int optval = 1;
+  // setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int));
 
   addr->sin_family = AF_INET;
   addr->sin_port = htons(options->port);
@@ -29,7 +39,6 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
   //   exit(EXIT_FAILURE);
   // }
 
-  struct unyte_sender_socket *sender_sk = (struct unyte_sender_socket *)malloc(sizeof(struct unyte_sender_socket));
   sender_sk->sock_in = addr;
   sender_sk->sockfd = sockfd;
   sender_sk->default_mtu = options->default_mtu;
@@ -38,6 +47,7 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
 
 int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
 {
+  // struct sockaddr_in *to = sender_sk->sock_in;
   struct sockaddr_in *to = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
   to->sin_family = AF_INET;
   to->sin_port = htons(message->dest_port);
@@ -52,19 +62,18 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
       mtu = DEFAULT_MTU;
   }
 
-  struct unyte_segmented_msg *packets = build_message(message);
+  struct unyte_segmented_msg *packets = build_message(message, mtu);
   unyte_seg_met_t *current_seg = packets->segments;
   for (uint i = 0; i < packets->segments_len; i++)
   {
     unsigned char *parsed_packet = serialize_message(current_seg);
+    sendto(sender_sk->sockfd, parsed_packet, current_seg->header->header_length + current_seg->header->message_length, 0, (const struct sockaddr *)to, sizeof(*to));
 
-    sendto(sender_sk->sockfd, parsed_packet, HEADER_BYTES + message->buffer_len, 0, (const struct sockaddr *)to, sizeof(*to));
     printf("(%d,%d) sent\n", current_seg->header->generator_id, current_seg->header->message_id);
-    free(current_seg->header);
-    free(current_seg);
     free(parsed_packet);
     current_seg++;
   }
+  free_seg_msgs(packets);
 
   free(to);
   return 0;
@@ -74,5 +83,19 @@ int free_sender_socket(struct unyte_sender_socket *sender_sk)
 {
   free(sender_sk->sock_in);
   free(sender_sk);
+  return 0;
+}
+
+int free_seg_msgs(struct unyte_segmented_msg *packets)
+{
+  unyte_seg_met_t *current = packets->segments;
+  for (uint i = 0; i < packets->segments_len; i++)
+  {
+    free(current->payload);
+    free(current->header);
+    current++;
+  }
+  free(packets->segments);
+  free(packets);
   return 0;
 }

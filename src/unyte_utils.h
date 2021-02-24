@@ -10,6 +10,7 @@
 #define LAST_MASK 0b00000001
 #define HEADER_BYTES 12
 #define OPTIONS_BYTES 4
+#define F_SEGMENTATION_TYPE 1
 
 typedef struct unyte_header
 {
@@ -77,8 +78,6 @@ struct unyte_segmented_msg
 typedef struct unyte_message
 {
   uint used_mtu;
-  char *dest_addr;
-  uint16_t dest_port;
   void *buffer;
   uint buffer_len;
 

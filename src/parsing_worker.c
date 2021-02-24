@@ -60,7 +60,6 @@ int parser(struct parser_thread_input *in)
     // Fragmented message
     else
     {
-      printf("Received:%d|%d\n", parsed_segment->header->f_num, parsed_segment->header->f_last);
       int insert_res = insert_segment(segment_buff,
                                       parsed_segment->header->generator_id,
                                       parsed_segment->header->message_id,

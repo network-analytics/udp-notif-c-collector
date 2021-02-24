@@ -215,6 +215,11 @@ void printPayload(char *p, int len, FILE *std)
 struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
 {
   struct unyte_segmented_msg *segments_msg = (struct unyte_segmented_msg *)malloc(sizeof(struct unyte_segmented_msg));
+  if (segments_msg == NULL) 
+  {
+    printf("Malloc failed.\n");
+    return NULL;
+  }
 
   uint packets_to_send = 1;
   // Usable bytes for segmentation
@@ -225,20 +230,35 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
     if (message->buffer_len % actual_usable_bytes != 0)
     {
       packets_to_send++;
-      printf("add supplement packet\n");
     }
   }
 
   segments_msg->segments = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t) * packets_to_send);
   segments_msg->segments_len = packets_to_send;
+  if (segments_msg->segments == NULL)
+  {
+    printf("Malloc failed \n");
+    return NULL;
+  }
   unyte_seg_met_t *current_seg = segments_msg->segments;
+
   if (packets_to_send == 1)
   {
     // not segmented
     current_seg->payload = (char *)malloc(message->buffer_len);
+    if (current_seg->payload == NULL)
+    {
+      printf("Malloc failed \n");
+      return NULL;
+    }
     memcpy(current_seg->payload, message->buffer, message->buffer_len);
-
     current_seg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
+
+    if (current_seg->header == NULL)
+    {
+      printf("Malloc failed \n");
+      return NULL;
+    }
     current_seg->header->generator_id = message->generator_id;
     current_seg->header->message_id = message->message_id;
     current_seg->header->space = message->space;
@@ -250,18 +270,24 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
   else
   {
     // segmented packets
-    printf("packets %d\n", packets_to_send);
     uint copy_it = 0;
     for (uint i = 0; i < segments_msg->segments_len; i++)
     {
-      // printf("building %d %d\n", i, actual_usable_bytes);
-      // Min(len-already_copied, actual_usable_bytes)
+      // Min(bytes_to_copy, actual_usable_bytes)
       uint bytes_to_send = (message->buffer_len - copy_it) < actual_usable_bytes ? (message->buffer_len - copy_it) : actual_usable_bytes;
       current_seg->payload = (char *)malloc(bytes_to_send);
-
+      if (current_seg->payload == NULL)
+      {
+        printf("Malloc failed \n");
+        return NULL;
+      }
       memcpy(current_seg->payload, (message->buffer + copy_it), bytes_to_send);
-
       current_seg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
+      if (current_seg->header == NULL)
+      {
+        printf("Malloc failed \n");
+        return NULL;
+      }
       current_seg->header->generator_id = message->generator_id;
       current_seg->header->message_id = message->message_id;
       current_seg->header->space = message->space;
@@ -271,8 +297,8 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
       current_seg->header->message_length = bytes_to_send;
 
       current_seg->header->f_num = i;
-      current_seg->header->f_len = OPTIONS_BYTES;  // TODO: ?
-      current_seg->header->f_type = 0; // TODO: ?
+      current_seg->header->f_len = OPTIONS_BYTES;
+      current_seg->header->f_type = F_SEGMENTATION_TYPE;
       if (i == segments_msg->segments_len - 1)
       {
         current_seg->header->f_last = 1;
@@ -293,7 +319,8 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
 unsigned char *serialize_message(unyte_seg_met_t *msg)
 {
   uint packet_size = msg->header->message_length + HEADER_BYTES;
-  if (msg->header->header_length > HEADER_BYTES) {
+  if (msg->header->header_length > HEADER_BYTES)
+  {
     // segmented header
     packet_size = msg->header->message_length + HEADER_BYTES + OPTIONS_BYTES;
   }
@@ -315,21 +342,17 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
   parsed_bytes[9] = (msg->header->message_id >> 16);
   parsed_bytes[10] = (msg->header->message_id >> 8);
   parsed_bytes[11] = (msg->header->message_id);
-  // printf("%x|%x|%x|%x|%d\n", parsed_bytes[8], parsed_bytes[9], parsed_bytes[10], parsed_bytes[11], msg->header->message_id);
-  uint payload_start = 12;
-  if (msg->header->header_length > HEADER_BYTES) {
+  uint payload_start = HEADER_BYTES;
+
+  if (msg->header->header_length > HEADER_BYTES)
+  {
     parsed_bytes[12] = (msg->header->f_type);
     parsed_bytes[13] = (msg->header->f_len);
     parsed_bytes[14] = (msg->header->f_num >> 8);
     parsed_bytes[15] = (msg->header->f_num << 1) + msg->header->f_last;
-    // printf("%x|%x|%x|%x|%d\n", parsed_bytes[12], parsed_bytes[13], parsed_bytes[14], parsed_bytes[15], msg->header->f_num);
-    payload_start = 16;
+    payload_start = HEADER_BYTES + OPTIONS_BYTES;
   }
-  for (uint i = 0; i < msg->header->message_length; i++)
-  {
-    parsed_bytes[payload_start + i] = msg->payload[i];
-    printf("|%c", parsed_bytes[payload_start + i]);
-  }
-  // hexdump(parsed_bytes, msg->header->message_length + HEADER_BYTES);
+  memcpy(parsed_bytes + payload_start, msg->payload, msg->header->message_length);
+
   return parsed_bytes;
 }

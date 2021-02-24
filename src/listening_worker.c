@@ -201,7 +201,6 @@ int listener(struct listener_thread_input *in)
       // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
       if (messages[i].msg_len > 0)
       {
-        printf("Bytes:%d\n", messages[i].msg_len);
         unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_in *)messages[i].msg_hdr.msg_name), in->conn->addr);
         if (seg == NULL) 
         {
@@ -221,7 +220,6 @@ int listener(struct listener_thread_input *in)
     {
       free(messages[i].msg_hdr.msg_name);
     }
-    // free(messages);
   }
 
   // Never called cause while(1)

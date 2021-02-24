@@ -30,7 +30,7 @@ SAMPLES_ODIR = samples/obj
 ###### c-collector test files ######
 TDIR = test
 
-all: client_sample client_performance client_loss test_listener test_seg sender_sample
+all: client_sample client_performance client_loss test_listener test_seg sender_sample sender_json
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS) $(LDEPS)
 	$(CC) -c -o $@ $< $(CFLAGS) 
@@ -51,6 +51,9 @@ client_loss: $(SAMPLES_ODIR)/client_loss.o $(OBJS) $(LIBS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
 sender_sample: $(SAMPLES_ODIR)/sender_sample.o $(OBJS) $(LIBS)
+	$(CC) -pthread -o $@ $^ $(LDFLAGS)
+
+sender_json: $(SAMPLES_ODIR)/sender_json.o $(OBJS) $(LIBS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
 test_listener: $(TDIR)/test.o $(OBJS)

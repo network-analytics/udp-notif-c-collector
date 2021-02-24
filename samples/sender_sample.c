@@ -24,9 +24,9 @@ int main()
   message->buffer = string_to_send;
   message->buffer_len = 97;
   // UDP-notif
-  message->version = 1;
-  message->space = 1;
-  message->encoding_type = 1;
+  message->version = 0;
+  message->space = 0;
+  message->encoding_type = 1; // json but sending string
   message->generator_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 200; // use other than default configured

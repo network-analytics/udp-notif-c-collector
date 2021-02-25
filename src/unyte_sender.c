@@ -60,7 +60,7 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
     unsigned char *parsed_packet = serialize_message(current_seg);
     send(sender_sk->sockfd, parsed_packet, current_seg->header->header_length + current_seg->header->message_length, 0);
 
-    printf("(%d,%d) sent\n", current_seg->header->generator_id, current_seg->header->message_id);
+    // printf("(%d,%d) sent\n", current_seg->header->generator_id, current_seg->header->message_id);
     free(parsed_packet);
     current_seg++;
   }

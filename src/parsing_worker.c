@@ -43,8 +43,13 @@ int parser(struct parser_thread_input *in)
   int max_malloc_errs = 3;
   while (1)
   {
-    unyte_min_t *queue_data = (unyte_min_t *)unyte_queue_read(in->input);
-
+    void *queue_bef = unyte_queue_read(in->input);
+    if (queue_bef == NULL) {
+      printf("Error reading fron queue\n");
+      fflush(stdout);
+      continue;
+    }
+    unyte_min_t *queue_data = (unyte_min_t *)queue_bef;
     // Can do better
     unyte_seg_met_t *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
 
@@ -55,7 +60,14 @@ int parser(struct parser_thread_input *in)
     // Not fragmented message
     if (parsed_segment->header->header_length <= HEADER_BYTES)
     {
-      unyte_queue_write(in->output, parsed_segment);
+      int ret = unyte_queue_write(in->output, parsed_segment);
+      if (ret < 0) {
+        // printf("parsing 1:UnyteWrite fail %d\n", ret);
+        free(parsed_segment->header);
+        free(parsed_segment->metadata);
+        free(parsed_segment->payload);
+        free(parsed_segment);
+      }
     }
     // Fragmented message
     else
@@ -87,7 +99,14 @@ int parser(struct parser_thread_input *in)
 
         unyte_seg_met_t *parsed_msg = create_assembled_msg(complete_msg, parsed_segment, msg_seg_list->total_payload_byte_size);
 
-        unyte_queue_write(in->output, parsed_msg);
+        int ret = unyte_queue_write(in->output, parsed_msg);
+        if (ret < 0) {
+          // printf("parsing UnyteWrite fail %d\n", ret);
+          free(parsed_msg->header);
+          free(parsed_msg->metadata);
+          free(parsed_msg->payload);
+          free(parsed_msg);
+        }
         clear_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         segment_buff->count--;
       }

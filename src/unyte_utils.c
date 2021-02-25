@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <signal.h>
 #include "lib/hexdump.h"
 #include "unyte_utils.h"
 
@@ -73,7 +74,6 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
   header->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
   header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
-
   /* Header contains options */
   /* TODO: handle something else than fragmentaion ? */
   if (header->header_length > HEADER_BYTES)

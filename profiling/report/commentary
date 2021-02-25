@@ -1,0 +1,37 @@
+Execution parameters :
+
+client_performance & sender_performance
+~500 000 packets transferred
+~10 min execution time
+no printing
+
+Analysis :
+
+Nota bene :
+- discussed costs down below are in "cycle estimation"
+
+global cost : 20M
+
+line 1 : free - 5M (25%)
+
+lines 2&3 :  int malloc and malloc - 7M (35%)
+
+line 4 : create segment buffer - 2M (10%)
+
+line 6 : listener - 1M (5%) self, 10M (50%) incl
+
+lines 8&10 : unyte queue read & write (origin : parser & listener) - 4M (20%)
+
+lines 9&12 : mutex (origin : parser & listener) - 1.2M (6%)
+
+line 11 : deserialize uint32 (origin : parser) - 0.6M (3%)
+
+line 20 : parser - 0.2M (1%) self, 9M (45%) incl
+
+=> malloc and free cost (60%) scales with the number of packets
+=> create segment buffer cost (10%) is initial and constant
+=> listener and parser have other important costs
+
+Conclusion :
+
+Although it is not the only thing that should be looked into in the long run, memory allocation has an important cost and should be a priority.

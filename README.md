@@ -200,8 +200,8 @@ Check used ports and change it in client_sample and sender_sample if necessary (
 
 We use kcachegrind, a tool from the valgrind framework. The command to profile executable code is :
 
-`sudo valgrind --tool=callgrind --dump-instr=yes --simulate-cache=yes --collect-jumps=yes <executable> <args>`
+`sudo valgrind --tool=callgrind --dump-instr=yes --simulate-cache=yes --collect-jumps=yes --callgrind-out-file=profiling/test.out <executable> <args>`
 
 There are premade kcachegrind .outs in the profiling folder, that employ client_sample, sender_sample, sender_json
 
-`sudo kcachegrind profiling/sender_sample.out`
+`sudo kcachegrind profiling/test.out`

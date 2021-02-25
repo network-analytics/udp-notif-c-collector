@@ -5,31 +5,6 @@
 
 #define SIZE 10
 
-queue_t *init()
-{
-  queue_t *output_queue = (queue_t *)malloc(sizeof(queue_t));
-  if (output_queue == NULL)
-  {
-    printf("Malloc failed.\n");
-    exit(EXIT_FAILURE);
-  }
-
-  /* Filling queue and creating thread mem protections. */
-  output_queue->head = 0;
-  output_queue->tail = 0;
-  output_queue->size = SIZE;
-  output_queue->data = malloc(sizeof(void *) * SIZE);
-  if (output_queue->data == NULL)
-  {
-    printf("Malloc failed.\n");
-    exit(EXIT_FAILURE);
-  }
-  sem_init(&output_queue->empty, 0, SIZE);
-  sem_init(&output_queue->full, 0, 0);
-  pthread_mutex_init(&output_queue->lock, NULL);
-  return output_queue;
-}
-
 void *t_read(void *queue)
 {
   queue_t *output_queue = (queue_t *)queue;
@@ -44,11 +19,12 @@ void *t_read(void *queue)
     printf("Read %d\n", read_done++);
     free(res);
   }
+  return NULL;
 }
 
 int main()
 {
-  queue_t *output_queue = init();
+  queue_t *output_queue = unyte_queue_init(SIZE);
 
   pthread_t *thread = (pthread_t *)malloc(sizeof(pthread_t));
   pthread_create(thread, NULL, t_read, (void *)output_queue);

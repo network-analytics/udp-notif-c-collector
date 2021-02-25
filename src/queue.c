@@ -10,6 +10,31 @@ Note that empty is head==tail, thus only QUEUE_SIZE-1 entries may be used. */
 #include <semaphore.h>
 #include "queue.h"
 
+queue_t *unyte_queue_init(size_t size)
+{
+  queue_t *queue = (queue_t *)malloc(sizeof(queue_t));
+  if (queue == NULL)
+  {
+    printf("Malloc failed.\n");
+    return NULL;
+  }
+
+  /* Filling queue and creating thread mem protections. */
+  queue->head = 0;
+  queue->tail = 0;
+  queue->size = size;
+  queue->data = malloc(sizeof(void *) * size);
+  if (queue->data == NULL)
+  {
+    printf("Malloc failed.\n");
+    return NULL;
+  }
+  sem_init(&queue->empty, 0, size);
+  sem_init(&queue->full, 0, 0);
+  pthread_mutex_init(&queue->lock, NULL);
+  return queue;
+}
+
 void *unyte_queue_read(queue_t *queue)
 {
   // printf("unyte_queue_read: sem_wait\n");

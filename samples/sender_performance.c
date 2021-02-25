@@ -76,9 +76,9 @@ int main(int argc, char *argv[])
   // struct buffer_to_send *bf_send = small_json_file();
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
 
-  struct timespec t;
-  t.tv_sec = 0;
-  t.tv_nsec = 999999 * 10;
+  // struct timespec t;
+  // t.tv_sec = 0;
+  // t.tv_nsec = 999999 * 10;
 
   while(messages_to_send--) {
     message->buffer = bf_send->buffer;

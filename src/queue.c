@@ -37,49 +37,39 @@ queue_t *unyte_queue_init(size_t size)
 
 void *unyte_queue_read(queue_t *queue)
 {
-  // printf("unyte_queue_read: sem_wait\n");
   sem_wait(&queue->full);
-  // printf("unyte_queue_read: lock\n");
   pthread_mutex_lock(&queue->lock);
+  // queue is empty
   if (queue->tail == queue->head)
   {
-    // pthread_mutex_unlock(&queue->lock);
+    // unlock mutex + unlock semaphore for reader
+    pthread_mutex_unlock(&queue->lock);
+    sem_post(&queue->full);
     return NULL;
   }
   void *handle = queue->data[queue->tail];
   queue->data[queue->tail] = NULL;
   queue->tail = (queue->tail + 1) % queue->size;
-  // printf("unyte_queue_read: %d|%d\n",queue->head, queue->tail);
-  // printf("unyte_queue_read: unlock\n");
   pthread_mutex_unlock(&queue->lock);
-  // printf("unyte_queue_read: sem_post\n");
   sem_post(&queue->empty);
   return handle;
 }
 
 int unyte_queue_write(queue_t *queue, void *handle)
 {
-  if (((queue->head + 1) % queue->size) == queue->tail)
-  { // queue full
-    return -2;
-  }
-  // printf("unyte_queue_write: sem_wait\n");
   sem_wait(&queue->empty);
-  // printf("unyte_queue_write: pthread_mutex_lock\n");
   pthread_mutex_lock(&queue->lock);
+  // queue is full
   if (((queue->head + 1) % queue->size) == queue->tail)
   {
-    printf("should NEVER arrive HERE\n");
-    // pthread_mutex_unlock(&queue->lock);
-    // sem_post(&queue->full);
+    // unlock mutex + unlock semaphore for writer
+    pthread_mutex_unlock(&queue->lock);
+    sem_post(&queue->empty);
     return -1;
   }
   queue->data[queue->head] = handle;
   queue->head = (queue->head + 1) % queue->size;
-  // printf("unyte_queue_write: %d|%d\n",queue->head, queue->tail);
-  // printf("unyte_queue_write: pthread_mutex_unlock\n");
   pthread_mutex_unlock(&queue->lock);
-  // printf("unyte_queue_write: sem_post\n");
   sem_post(&queue->full);
   return 0;
 }

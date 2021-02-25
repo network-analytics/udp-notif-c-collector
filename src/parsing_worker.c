@@ -61,7 +61,9 @@ int parser(struct parser_thread_input *in)
     if (parsed_segment->header->header_length <= HEADER_BYTES)
     {
       int ret = unyte_queue_write(in->output, parsed_segment);
+      // ret == -1 queue already full, segment discarded
       if (ret < 0) {
+        //TODO: syslog drop package + count
         // printf("parsing 1:UnyteWrite fail %d\n", ret);
         free(parsed_segment->header);
         free(parsed_segment->metadata);
@@ -100,7 +102,9 @@ int parser(struct parser_thread_input *in)
         unyte_seg_met_t *parsed_msg = create_assembled_msg(complete_msg, parsed_segment, msg_seg_list->total_payload_byte_size);
 
         int ret = unyte_queue_write(in->output, parsed_msg);
+        // ret == -1 queue is full, we discard the message
         if (ret < 0) {
+          //TODO: syslog drop package + count
           // printf("parsing UnyteWrite fail %d\n", ret);
           free(parsed_msg->header);
           free(parsed_msg->metadata);

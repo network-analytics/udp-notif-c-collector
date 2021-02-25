@@ -194,8 +194,9 @@ int listener(struct listener_thread_input *in)
         }
         /* Dispatching by modulo on threads */
         int ret = unyte_queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
-        // if ret < 0 --> queue is full, we discard message
+        // if ret == -1 --> queue is full, we discard message
         if (ret < 0) {
+          //TODO: syslog + count stat
           free(seg->buffer);
           free(seg);
         }

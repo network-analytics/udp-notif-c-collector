@@ -72,8 +72,8 @@ int main(int argc, char *argv[])
   printf("Init sender on %s:%d|%d|sending:%d|gid:%d\n", options.address, options.port, MTU, messages_to_send, gen_id);
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
-  struct buffer_to_send *bf_send = big_json_file();
-  // struct buffer_to_send *bf_send = small_json_file();
+  // struct buffer_to_send *bf_send = big_json_file();
+  struct buffer_to_send *bf_send = small_json_file();
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
 
   // struct timespec t;
@@ -83,6 +83,8 @@ int main(int argc, char *argv[])
   while(messages_to_send--) {
     message->buffer = bf_send->buffer;
     message->buffer_len = bf_send->buffer_len;
+    // message->buffer = "A";
+    // message->buffer_len = 1;
     // UDP-notif
     message->version = 0;
     message->space = 0;

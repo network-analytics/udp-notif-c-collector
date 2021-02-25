@@ -44,7 +44,7 @@ for i in {1..1} ;
 do 
   ######## killing all client_performance collectors and scapy processes ########
   ./kill_performance_client.sh
-  ./kill_scapy.sh
+  # ./kill_scapy.sh
 
   sleep 1
   echo "###### Start test #######" >> $LOG_FOLDER/collector.log

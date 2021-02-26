@@ -5,7 +5,6 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <signal.h>
-#include "lib/hexdump.h"
 #include "unyte_utils.h"
 
 /**

@@ -59,13 +59,13 @@ sender_json: $(SAMPLES_ODIR)/sender_json.o $(OBJS) $(LIBS)
 sender_performance: $(SAMPLES_ODIR)/sender_performance.o $(OBJS) $(LIBS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
-test_listener: $(TDIR)/test.o $(OBJS)
+test_listener: $(TDIR)/test.o $(OBJS) $(LIBS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
-test_seg: $(TDIR)/test_segmentation.o $(OBJS)
+test_seg: $(TDIR)/test_segmentation.o $(OBJS) $(LIBS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
-test_queue: $(TDIR)/test_queue.o $(OBJS)
+test_queue: $(TDIR)/test_queue.o $(OBJS) $(LIBS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
 clean:

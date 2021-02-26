@@ -12,9 +12,8 @@
 #include "listening_worker.h"
 #include "segmentation_buffer.h"
 #include "parsing_worker.h"
-#include "lib/hexdump.h"
 #include "unyte_utils.h"
-#include "unyte.h"
+#include "unyte_collector.h"
 #include "queue.h"
 #include "cleanup_worker.h"
 
@@ -90,27 +89,12 @@ int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *
 int create_parse_worker(struct parse_worker *parser, struct listener_thread_input *in)
 {
 
-  parser->queue = (queue_t *)malloc(sizeof(queue_t));
+  parser->queue = unyte_queue_init(QUEUE_SIZE);
   if (parser->queue == NULL)
   {
-    printf("Malloc failed \n");
+    // malloc failed
     return -1;
   }
-
-  /* Filling queue and creating thread mem protections. */
-  parser->queue->head = 0;
-  parser->queue->tail = 0;
-  parser->queue->size = QUEUE_SIZE;
-  parser->queue->data = malloc(sizeof(void *) * QUEUE_SIZE);
-  if (parser->queue->data == NULL)
-  {
-    printf("Malloc failed \n");
-    return -1;
-  }
-
-  sem_init(&parser->queue->empty, 0, QUEUE_SIZE);
-  sem_init(&parser->queue->full, 0, 0);
-  pthread_mutex_init(&parser->queue->lock, NULL);
 
   parser->worker = (pthread_t *)malloc(sizeof(pthread_t));
   // Define the struct passed to the next parser
@@ -208,7 +192,13 @@ int listener(struct listener_thread_input *in)
           return -1;
         }
         /* Dispatching by modulo on threads */
-        unyte_queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
+        int ret = unyte_queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
+        // if ret == -1 --> queue is full, we discard message
+        if (ret < 0) {
+          //TODO: syslog + count stat
+          free(seg->buffer);
+          free(seg);
+        }
       }
       else
       {
@@ -220,7 +210,6 @@ int listener(struct listener_thread_input *in)
     {
       free(messages[i].msg_hdr.msg_name);
     }
-    // free(messages);
   }
 
   // Never called cause while(1)

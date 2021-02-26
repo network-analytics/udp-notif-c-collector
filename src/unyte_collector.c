@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "queue.h"
-#include "unyte.h"
+#include "unyte_collector.h"
 #include "unyte_utils.h"
 #include "listening_worker.h"
 
@@ -77,26 +77,11 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
 {
   set_default_options(options);
 
-  queue_t *output_queue = (queue_t *)malloc(sizeof(queue_t));
-  if (output_queue == NULL)
-  {
-    printf("Malloc failed.\n");
+  queue_t *output_queue = unyte_queue_init(OUTPUT_QUEUE_SIZE);
+  if (output_queue == NULL) {
+    // malloc errors
     exit(EXIT_FAILURE);
   }
-
-  /* Filling queue and creating thread mem protections. */
-  output_queue->head = 0;
-  output_queue->tail = 0;
-  output_queue->size = OUTPUT_QUEUE_SIZE;
-  output_queue->data = malloc(sizeof(void *) * OUTPUT_QUEUE_SIZE);
-  if (output_queue->data == NULL)
-  {
-    printf("Malloc failed.\n");
-    exit(EXIT_FAILURE);
-  }
-  sem_init(&output_queue->empty, 0, OUTPUT_QUEUE_SIZE);
-  sem_init(&output_queue->full, 0, 0);
-  pthread_mutex_init(&output_queue->lock, NULL);
 
   pthread_t *udpListener = (pthread_t *)malloc(sizeof(pthread_t));
   if (udpListener == NULL)

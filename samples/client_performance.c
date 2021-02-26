@@ -7,7 +7,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "../src/lib/hexdump.h"
-#include "../src/unyte.h"
+#include "../src/unyte_collector.h"
 #include "../src/unyte_utils.h"
 #include "../src/queue.h"
 
@@ -15,7 +15,7 @@
 #define ADDR "192.168.0.17"
 #define MAX_TO_RECEIVE 10000
 #define USED_VLEN 10
-#define TIME_BETWEEN 200
+#define TIME_BETWEEN 1000
 #define LAST_GEN_ID 49993648
 
 struct message_obs_id

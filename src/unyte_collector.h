@@ -2,8 +2,8 @@
 #include "queue.h"
 #include "unyte_utils.h"
 
-#ifndef H_UNYTE
-#define H_UNYTE
+#ifndef H_UNYTE_COLLECTOR
+#define H_UNYTE_COLLECTOR
 
 #define DEFAULT_VLEN 10
 

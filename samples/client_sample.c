@@ -6,14 +6,14 @@
 #include <signal.h>
 #include <unistd.h>
 #include "../src/lib/hexdump.h"
-#include "../src/unyte.h"
+#include "../src/unyte_collector.h"
 #include "../src/unyte_utils.h"
 #include "../src/queue.h"
 
 #define PORT 8081
 #define ADDR "192.168.0.17"
-#define USED_VLEN 5
-#define MAX_TO_RECEIVE 100
+#define USED_VLEN 50
+#define MAX_TO_RECEIVE 200
 
 int main()
 {
@@ -32,11 +32,18 @@ int main()
   while (recv_count < max)
   {
     /* Read queue */
-    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
+    void *seg_pointer = unyte_queue_read(collector->queue);
+    if (seg_pointer == NULL)
+    {
+      printf("seg_pointer null\n");
+      fflush(stdout);
+    }
+    unyte_seg_met_t *seg = (unyte_seg_met_t *)seg_pointer;
 
     /* Processing sample */
     recv_count++;
     printHeader(seg->header, stdout);
+    // printf("REc:%d\n", seg->header->message_id);
     // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
     // printf("counter : %d\n", recv_count);
     fflush(stdout);
@@ -59,6 +66,6 @@ int main()
 
   // freeing collector mallocs
   unyte_free_collector(collector);
-
+  fflush(stdout);
   return 0;
 }

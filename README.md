@@ -153,12 +153,12 @@ int main()
 }
 ```
 
-### Exemples
+### Examples
 There are some samples implemented during the development of the project [here](samples).
-- `client_sample.c` : simple exemple for minimal usage of the collector library.
+- `client_sample.c` : simple example for minimal usage of the collector library.
 - `client_performance.c` : sample to test performance of data collection.
 - `client_loss.c` : sample to test data loss during data collection.
-- `sender_sample.c` : simple exemple for minimal usage of the sender library.
+- `sender_sample.c` : simple example for minimal usage of the sender library.
 - `sender_json.c` : sample reading a json file and sending the bytes by the library.
 - `sender_performance.c` : sample to test performance againts the collector.
 

@@ -32,8 +32,8 @@ int main()
   while (recv_count < max)
   {
     /* Read queue */
-    void * seg_pointer = unyte_queue_read(collector->queue);
-    if (seg_pointer == NULL) 
+    void *seg_pointer = unyte_queue_read(collector->queue);
+    if (seg_pointer == NULL)
     {
       printf("seg_pointer null\n");
       fflush(stdout);
@@ -42,7 +42,7 @@ int main()
 
     /* Processing sample */
     recv_count++;
-    // printHeader(seg->header, stdout);
+    printHeader(seg->header, stdout);
     // printf("REc:%d\n", seg->header->message_id);
     // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
     // printf("counter : %d\n", recv_count);

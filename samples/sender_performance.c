@@ -57,11 +57,11 @@ int main(int argc, char *argv[])
   options.port = PORT;
   options.default_mtu = MTU;
 
-  uint messages_to_send = 100000;
+  uint messages_to_send = 10000;
   uint gen_id = 0;
   uint msg_id = 0;
 
-  if (argc == 5) 
+  if (argc == 5)
   {
     options.address = argv[1];
     options.port = atoi(argv[2]);
@@ -78,13 +78,15 @@ int main(int argc, char *argv[])
 
   // struct timespec t;
   // t.tv_sec = 0;
-  // t.tv_nsec = 999999 * 10;
+  // t.tv_nsec = 999999 * 100; // 100 ms sleep
 
-  while(messages_to_send--) {
+  while (messages_to_send--)
+  {
     message->buffer = bf_send->buffer;
     message->buffer_len = bf_send->buffer_len;
     // message->buffer = "A";
     // message->buffer_len = 1;
+
     // UDP-notif
     message->version = 0;
     message->space = 0;
@@ -92,14 +94,19 @@ int main(int argc, char *argv[])
     message->generator_id = gen_id;
     message->message_id = msg_id;
     message->used_mtu = 0; // use default configured
+
     unyte_send(sender_sk, message);
+
+    // To slow down the sender
     // int sleep_mod = 10000;
     // if (messages_to_send % sleep_mod == 0) {
     //   nanosleep(&t, NULL);
     //   printf("Sent %d\n", sleep_mod);
     //   fflush(stdout);
     // }
-    if (gen_id != LAST_GEN_ID) {
+
+    if (gen_id != LAST_GEN_ID)
+    {
       gen_id++;
     }
   }

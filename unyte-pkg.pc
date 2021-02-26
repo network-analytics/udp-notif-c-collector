@@ -1,0 +1,10 @@
+prefix=<<install>>
+exec_prefix=${prefix}
+includedir=${prefix}/<<include>>
+libdir=${exec_prefix}/<<lib>>
+
+Name: unyte
+Description: Unyte UDP-notif protocol library
+Version: 0.3.0
+Cflags: -I${includedir}/unyte
+Libs: -L${libdir} -lunyte

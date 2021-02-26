@@ -22,3 +22,4 @@ docker/tmp
 /.vscode
 /download
 vgcore.*
+unyte.pc

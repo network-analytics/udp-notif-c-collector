@@ -1,7 +1,7 @@
 ###### GCC options ######
 CC=gcc
 LDFLAGS=-g
-CFLAGS= -Wextra -Wall -ansi -g -std=c99 -D_GNU_SOURCE -fPIC
+CFLAGS= -Wextra -Wall -ansi -g -std=c99 -D_GNU_SOURCE -fPIC 
 
 ###### c-collector source code ######
 SDIR = src
@@ -20,7 +20,8 @@ SAMPLES_ODIR = samples/obj
 ###### c-collector test files ######
 TDIR = test
 
-BINS = client_sample client_performance client_loss test_listener test_seg sender_sample sender_json sender_performance test_queue
+# BINS = client_sample client_performance client_loss test_listener test_seg sender_sample sender_json sender_performance test_queue
+BINS = client_sample
 
 all: $(BINS)
 
@@ -31,10 +32,10 @@ $(LODIR)/%.o: $(LDIR)/%.c
 	$(CC) -c -o $@ $< $(CFLAGS) 
 
 $(SAMPLES_ODIR)/%.o: $(SAMPLES_DIR)/%.c 
-	$(CC) -c -o $@ $< $(CFLAGS) 
+	$(CC) -c -o $@ $< $(CFLAGS) $(shell pkg-config --cflags --libs unyte)
 
-client_sample: $(SAMPLES_ODIR)/client_sample.o $(OBJS)
-	$(CC) -pthread -o $@ $^ $(LDFLAGS)
+client_sample: $(SAMPLES_ODIR)/client_sample.o
+	$(CC) -pthread -o $@ $^ $(LDFLAGS) $(shell pkg-config --cflags --libs unyte)
 
 client_performance: $(SAMPLES_ODIR)/client_performance.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
@@ -60,7 +61,7 @@ test_seg: $(TDIR)/test_segmentation.o $(OBJS)
 test_queue: $(TDIR)/test_queue.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
-build: 
+build: $(OBJS)
 	$(CC) -shared -o libunyte.so $(OBJS)
 
 clean:

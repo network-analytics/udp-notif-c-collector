@@ -5,7 +5,11 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include "../src/lib/hexdump.h"
+// #include <unyte_collector.h>
+// #include <unyte_utils.h>
+// #include <queue.h>
+// #include <hexdump.h>
+#include "../src/hexdump.h"
 #include "../src/unyte_collector.h"
 #include "../src/unyte_utils.h"
 #include "../src/queue.h"
@@ -44,7 +48,7 @@ int main()
     recv_count++;
     printHeader(seg->header, stdout);
     // printf("REc:%d\n", seg->header->message_id);
-    // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
+    hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
     // printf("counter : %d\n", recv_count);
     fflush(stdout);
 

@@ -8,6 +8,7 @@ test_seg
 test_queue
 sender_performance
 sender_json
+libunyte.so
 
 docker/tmp
 
@@ -21,3 +22,4 @@ docker/tmp
 /.vscode
 /download
 vgcore.*
+unyte.pc

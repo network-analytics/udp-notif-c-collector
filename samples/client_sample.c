@@ -5,10 +5,16 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include "../src/lib/hexdump.h"
-#include "../src/unyte_collector.h"
-#include "../src/unyte_utils.h"
-#include "../src/queue.h"
+
+#include <unyte/unyte_collector.h>
+#include <unyte/unyte_utils.h>
+#include <unyte/queue.h>
+
+// #include <hexdump.h>
+// #include "../src/hexdump.h"
+// #include "../src/unyte_collector.h"
+// #include "../src/unyte_utils.h"
+// #include "../src/queue.h"
 
 #define PORT 8081
 #define ADDR "192.168.0.17"

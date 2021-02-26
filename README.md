@@ -1,8 +1,16 @@
 # C-Collector for UDP-notif
 Library for collecting UDP-notif protocol messages.
 
-## Build
+## Build & install
 To build the project and test example clients, just `make` on root folder. Il will compile with gcc all dependences and the clients.
+
+### Installing
+To install the library on a machine, run `install.sh` with sudo and `export.sh` without sudo. Export script will export the LD_LIBRARY_PATH on user space.
+```
+sudo ./install.sh
+export.sh
+```
+After running this commands, restart the terminal to have the LD_LIBRARY_PATH up to date.
 
 ## Usage
 ### Usage of the UDP-notif collector

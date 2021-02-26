@@ -20,8 +20,7 @@ SAMPLES_ODIR = samples/obj
 ###### c-collector test files ######
 TDIR = test
 
-# BINS = client_sample client_performance client_loss test_listener test_seg sender_sample sender_json sender_performance test_queue
-BINS = client_sample
+BINS = client_sample client_performance client_loss test_listener test_seg sender_sample sender_json sender_performance test_queue
 
 all: $(BINS)
 

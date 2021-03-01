@@ -30,9 +30,10 @@ Simple exemple of usage :
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
-#include "src/unyte_collector.h"
-#include "src/unyte_utils.h"
-#include "src/queue.h"
+
+#include <unyte/unyte_collector.h>
+#include <unyte/unyte_utils.h>
+#include <unyte/queue.h>
 
 #define PORT 8081
 #define ADDR "192.168.0.17"
@@ -118,8 +119,9 @@ Simple usage of the sender :
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../src/unyte_sender.h"
-#include "../src/unyte_utils.h"
+
+#include <unyte/unyte_sender.h>
+#include <unyte/unyte_utils.h>
 
 #define PORT 8081
 #define ADDR "192.168.0.17"

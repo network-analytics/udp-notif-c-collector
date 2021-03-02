@@ -16,7 +16,7 @@ echo "Building and installing unyte shared lib in: $INSTALL_DIR/$LIB_DIR"
 make build
 
 echo "Moving build file to $INSTALL_DIR/$LIB_DIR"
-cp libunyte.so $INSTALL_DIR/$LIB_DIR
+cp libunyte-udp-notif.so $INSTALL_DIR/$LIB_DIR
 
 if [ $? -ne 0 ]
 then
@@ -25,14 +25,14 @@ then
   exit 1
 fi
 
-if [ ! -d "$INSTALL_DIR/$H_DIR/unyte" ]
+if [ ! -d "$INSTALL_DIR/$H_DIR/unyte-udp-notif" ]
 then
-  echo "Creating $INSTALL_DIR/$H_DIR/unyte directory"
-  mkdir -p $INSTALL_DIR/$H_DIR/unyte
+  echo "Creating $INSTALL_DIR/$H_DIR/unyte-udp-notif directory"
+  mkdir -p $INSTALL_DIR/$H_DIR/unyte-udp-notif
 fi
 
-echo "Copying headers to $INSTALL_DIR/$H_DIR/unyte"
-cp src/*.h $INSTALL_DIR/$H_DIR/unyte
+echo "Copying headers to $INSTALL_DIR/$H_DIR/unyte-udp-notif"
+cp src/*.h $INSTALL_DIR/$H_DIR/unyte-udp-notif
 
 if [ $? -ne 0 ]
 then
@@ -42,8 +42,8 @@ then
 fi
 
 echo "Copying pkg-config file to $PKG_DIR"
-sed -e "s/<<install>>/${INSTALL_DIR//\//\\/}/g" -e "s/<<include>>/$H_DIR/g" -e "s/<<lib>>/$LIB_DIR/g" unyte-pkg.pc > unyte.pc
-cp unyte.pc $PKG_DIR
+sed -e "s/<<install>>/${INSTALL_DIR//\//\\/}/g" -e "s/<<include>>/$H_DIR/g" -e "s/<<lib>>/$LIB_DIR/g" unyte-pkg.pc > unyte-udp-notif.pc
+cp unyte-udp-notif.pc $PKG_DIR
 
 if [ $? -ne 0 ]
 then

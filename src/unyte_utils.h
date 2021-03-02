@@ -22,7 +22,7 @@ typedef struct unyte_header
   uint32_t generator_id;
   uint32_t message_id;
 
-  /* Fragmentation options */
+  /* Segmentation options */
   uint8_t f_type;
   uint8_t f_len;
   uint32_t f_num : 31;

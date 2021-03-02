@@ -5,6 +5,7 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+
 #include "../src/hexdump.h"
 #include "../src/unyte_collector.h"
 #include "../src/unyte_utils.h"

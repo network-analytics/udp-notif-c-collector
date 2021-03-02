@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "../src/unyte_sender.h"
 #include "../src/unyte_utils.h"
 
@@ -62,7 +63,7 @@ int main(int argc, char *argv[])
   uint msg_id = 0;
 
   if (argc == 5)
-  {
+  { // Usage: ./sender_performance <address> <port> <message_to_send> <gen_id>
     options.address = argv[1];
     options.port = atoi(argv[2]);
     messages_to_send = atoi(argv[3]);
@@ -72,8 +73,8 @@ int main(int argc, char *argv[])
   printf("Init sender on %s:%d|%d|sending:%d|gid:%d\n", options.address, options.port, MTU, messages_to_send, gen_id);
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
-  // struct buffer_to_send *bf_send = big_json_file();
-  struct buffer_to_send *bf_send = small_json_file();
+  struct buffer_to_send *bf_send = big_json_file();
+  // struct buffer_to_send *bf_send = small_json_file();
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
 
   // struct timespec t;

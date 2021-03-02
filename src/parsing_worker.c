@@ -64,10 +64,7 @@ int parser(struct parser_thread_input *in)
       if (ret < 0) {
         //TODO: syslog drop package + count
         // printf("parsing 1:UnyteWrite fail %d\n", ret);
-        free(parsed_segment->header);
-        free(parsed_segment->metadata);
-        free(parsed_segment->payload);
-        free(parsed_segment);
+        unyte_free_all(parsed_segment);
       }
     }
     // Fragmented message
@@ -83,14 +80,17 @@ int parser(struct parser_thread_input *in)
       if (insert_res == -1)
       {
         // Content was already present for this seqnum (f_num)
+        unyte_free_all(parsed_segment);
         continue;
       }
       else if (insert_res == -3)
       {
         // malloc error: try 3 mallocs, if error break while
         max_malloc_errs--;
-        if (max_malloc_errs <= 0)
+        if (max_malloc_errs <= 0) {
+          unyte_free_all(parsed_segment);
           return -1;
+        }
       }
       // completed message
       if (insert_res == 1 || insert_res == -2)
@@ -105,10 +105,7 @@ int parser(struct parser_thread_input *in)
         if (ret < 0) {
           //TODO: syslog drop package + count
           // printf("parsing UnyteWrite fail %d\n", ret);
-          free(parsed_msg->header);
-          free(parsed_msg->metadata);
-          free(parsed_msg->payload);
-          free(parsed_msg);
+          unyte_free_all(parsed_msg);
         }
         clear_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         segment_buff->count--;
@@ -116,7 +113,7 @@ int parser(struct parser_thread_input *in)
 
       if (segment_buff->cleanup == 1 && segment_buff->count > CLEAN_COUNT_MAX)
       {
-        cleanup_seg_buff(segment_buff);
+        cleanup_seg_buff(segment_buff, CLEAN_UP_PASS_SIZE);
       }
 
       fflush(stdout);

@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <time.h>
 #include <unistd.h>
+
 #include "../src/hexdump.h"
 #include "../src/unyte_collector.h"
 #include "../src/unyte_utils.h"
@@ -118,7 +119,7 @@ int main(int argc, char *argv[])
     }
 
     received_gids[seg->header->generator_id] = 1;
-
+    
     // printHeader(seg->header, stdout);
     // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
     // printf("counter : %d\n", recv_count);

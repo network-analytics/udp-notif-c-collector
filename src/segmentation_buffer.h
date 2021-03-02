@@ -6,7 +6,7 @@
 #include "unyte_utils.h"
 
 // Segmentation_buffer parameters
-#define SIZE_BUF 10000           // size of buffer
+#define SIZE_BUF 10000          // size of buffer
 #define CLEAN_UP_PASS_SIZE 500  // number of iterations to clean up
 #define CLEAN_COUNT_MAX 50      // clean up segment buffer when count > CLEAN_COUNT_MAX
 #define EXPIRE_MSG 3            // seconds to consider the segmented message in the buffer expired (not receiving segments anymore)
@@ -128,6 +128,6 @@ struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint
 /**
  * Clean segmentation buffer messages.
  * Sets flag of a message to "read" to be removed next iteration cleanup.
- * Cleans up the "read" messages.
+ * Cleans up the "read" messages by <cleanup_pass_size> size.
  */
-void cleanup_seg_buff(struct segment_buffer *buf);
+void cleanup_seg_buff(struct segment_buffer *buf, int cleanup_pass_size);

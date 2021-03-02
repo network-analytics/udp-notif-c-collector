@@ -23,6 +23,10 @@ void *t_clean_up(void *in_seg_cleanup)
   }
 
   // printf("Thread %ld: killing clean up thread\n", pthread_self());
+  // TODO: should clean up before exiting programme ?
+  // cleanup_in->seg_buff->cleanup_start_index = 0;
+  // cleanup_in->seg_buff->cleanup = 1;
+  // cleanup_seg_buff(cleanup_in->seg_buff, SIZE_BUF);
 
   free(cleanup_in);
   return 0;

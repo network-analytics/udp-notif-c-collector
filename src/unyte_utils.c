@@ -45,7 +45,6 @@ unyte_min_t *minimal_parse(char *segment, struct sockaddr_in *source, struct soc
 
   um->buffer = segment;
 
-  /* Do I need to reverse all theses ? */
   um->src_port = ntohs(source->sin_port);
   um->src_addr = ntohl(source->sin_addr.s_addr);
   um->collector_addr = ntohl(collector->sin_addr.s_addr);
@@ -74,15 +73,13 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   header->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
   header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
   /* Header contains options */
-  /* TODO: handle something else than fragmentaion ? */
+  // TODO: handle something else than segmentation ? --> check if option type == 1 (define in draft)
   if (header->header_length > HEADER_BYTES)
   {
     header->f_type = segment[12];
     header->f_len = segment[13];
 
-    /* WARN : Modifying directly segment, is it a pb ? + Not sure it works well*/
-    /* If last = TRUE */
-
+    // If last = TRUE
     if ((uint8_t)(segment[15] & 0b00000001) == 1)
     {
       header->f_last = 1;
@@ -91,7 +88,8 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
     {
       header->f_last = 0;
     }
-    header->f_num = (ntohs(deserialize_uint16((char *)segment, 14)) >> 1);
+    // FIXME: Works only if segmentation option is the first option -> check option type == 1 (to define in draft)
+    header->f_num = (ntohs(deserialize_uint16((char *)segment, HEADER_BYTES + 2)) >> 1);
   }
   int pSize = header->message_length - header->header_length;
 

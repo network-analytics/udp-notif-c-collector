@@ -42,8 +42,8 @@ $(LODIR)/%.o: $(LDIR)/%.c
 $(SAMPLES_ODIR)/%.o: $(SAMPLES_DIR)/%.c 
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-client_sample: $(SAMPLES_ODIR)/client_sample.o $(OBJS)
-	$(CC) -pthread $(LDFLAGS) -o $@ $^
+client_sample: $(SAMPLES_ODIR)/client_sample.o
+	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
 client_performance: $(SAMPLES_ODIR)/client_performance.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
@@ -72,6 +72,9 @@ test_queue: $(TDIR)/test_queue.o $(OBJS)
 
 test_malloc: $(TDIR)/test_malloc.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
+
+install: build
+	./install.sh
 
 build: $(OBJS)
 	$(CC) -shared -o libunyte-udp-notif.so $(OBJS)

@@ -13,6 +13,7 @@ struct parser_thread_input
   struct segment_buffer *segment_buff;
   unyte_seg_counters_t *counters;
   int monitoring_running;
+  struct unyte_pool *pool; // for struct message_segment_list_cell
 };
 
 /**

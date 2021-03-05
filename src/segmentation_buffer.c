@@ -45,7 +45,7 @@ uint32_t hashKey(uint32_t gid, uint32_t mid)
   return (gid ^ mid) % SIZE_BUF;
 }
 
-int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content)
+int insert_segment(struct unyte_pool *pool, struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content)
 {
   uint32_t hk = hashKey(gid, mid);
   if (buf->hash_array[hk] == NULL)
@@ -70,13 +70,13 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
       return -3;
     cur->next->gid = gid;
     cur->next->mid = mid;
-    cur->next->head = create_message_segment_list(gid, mid);
+    cur->next->head = create_message_segment_list(pool, gid, mid);
     if (cur->next->head == NULL)
       return -3;
     buf->count++;
     cur->next->next = NULL;
   }
-  return insert_into_msl(cur->next->head, seqnum, last, payload_size, content);
+  return insert_into_msl(pool, cur->next->head, seqnum, last, payload_size, content);
 }
 
 /**
@@ -92,7 +92,7 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
  * returns -2 if a content was already present and message is complete
  * returns -3 if a memory allocation failed
  */
-int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content)
+int insert_into_msl(struct unyte_pool *pool, struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content)
 {
   //If the segment is the last, we now know the total size of the message.
   if (last == 1)
@@ -109,7 +109,8 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
     */
   if (cur->next == NULL)
   {
-    cur->next = malloc(sizeof(struct message_segment_list_cell));
+    cur->next = unyte_malloc(pool);
+    // malloc(sizeof(struct message_segment_list_cell));
     if (cur->next == NULL)
       return -3;
     cur->next->seqnum = seqnum;
@@ -140,7 +141,8 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
     {
       // not a duplicate insert. create intermediate cell and make it point to the rest of the list;
       struct message_segment_list_cell *temp = cur->next;
-      cur->next = malloc(sizeof(struct message_segment_list_cell));
+      cur->next = unyte_malloc(pool);
+      // malloc(sizeof(struct message_segment_list_cell));
       if (cur->next == NULL)
         return -3;
       cur->next->seqnum = seqnum;
@@ -210,9 +212,10 @@ void print_segment_list_string(struct message_segment_list_cell *head)
   }
 }
 
-struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint32_t mid)
+struct message_segment_list_cell *create_message_segment_list(struct unyte_pool *pool, uint32_t gid, uint32_t mid)
 {
-  struct message_segment_list_cell *res = malloc(sizeof(struct message_segment_list_cell));
+  struct message_segment_list_cell *res = unyte_malloc(pool);
+  // malloc(sizeof(struct message_segment_list_cell));
   if (res == NULL)
     return NULL;
   res->gid = gid;
@@ -233,7 +236,7 @@ struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint
  * tant que cur->next!=NULL
  *     next 
  */
-void clear_msl(struct message_segment_list_cell *head)
+void clear_msl(struct unyte_pool *pool, struct message_segment_list_cell *head)
 {
   struct message_segment_list_cell *cur = head->next;
   struct message_segment_list_cell *temp;
@@ -241,13 +244,15 @@ void clear_msl(struct message_segment_list_cell *head)
   {
     temp = cur->next;
     free(cur->content);
-    free(cur);
+    unyte_free(pool, cur);
+    // free(cur);
     cur = temp;
   }
-  free(head);
+  unyte_free(pool, head);
+  // free(head);
 }
 
-int clear_collision_list(struct segment_buffer *buf, struct collision_list_cell *head)
+int clear_collision_list(struct unyte_pool *pool, struct segment_buffer *buf, struct collision_list_cell *head)
 {
   int res = 0;
   struct collision_list_cell *cur = head->next;
@@ -256,14 +261,14 @@ int clear_collision_list(struct segment_buffer *buf, struct collision_list_cell 
   {
     res++;
     temp = cur->next;
-    clear_segment_list(buf, cur->head->gid, cur->head->mid);
+    clear_segment_list(pool, buf, cur->head->gid, cur->head->mid);
     cur = temp;
   }
   free(head);
   return res;
 }
 
-int clear_buffer(struct segment_buffer *buf)
+int clear_buffer(struct unyte_pool *pool, struct segment_buffer *buf)
 {
   int res = 0;
   for (int i = 0; i < SIZE_BUF; i++)
@@ -272,7 +277,7 @@ int clear_buffer(struct segment_buffer *buf)
     {
       //There is a collision list header cell at hasharray[i]
       //The collision list is not empty. Clear it.
-      res += clear_collision_list(buf, buf->hash_array[i]);
+      res += clear_collision_list(pool, buf, buf->hash_array[i]);
     }
   }
   free(buf);
@@ -292,7 +297,7 @@ void print_collision_list_int(struct collision_list_cell *cell)
   }
 }
 
-int clear_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid)
+int clear_segment_list(struct unyte_pool *pool, struct segment_buffer *buf, uint32_t gid, uint32_t mid)
 {
   uint32_t hk = hashKey(gid, mid);
   if (buf->hash_array[hk] == NULL)
@@ -310,7 +315,7 @@ int clear_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid)
     return -1;
   //if next is not NULL, that means we stopped before the end so gid and mid of cur->next are the ones to delete. So we bypass cur->next from cur-> and free the content of cur->next
   cur->next = next->next;
-  clear_msl(next->head);
+  clear_msl(pool, next->head);
   free(next);
   return 0;
 }
@@ -328,7 +333,7 @@ void print_segment_buffer_int(struct segment_buffer *buf)
   }
 }
 
-void cleanup_seg_buff(struct segment_buffer *buf, int cleanup_pass_size)
+void cleanup_seg_buff(struct unyte_pool *pool, struct segment_buffer *buf, int cleanup_pass_size)
 {
   int count = 0;
   // printf("Cleaning up starting on %d | count: %d \n", (buf->cleanup_start_index + count) % SIZE_BUF, buf->count);
@@ -360,7 +365,7 @@ void cleanup_seg_buff(struct segment_buffer *buf, int cleanup_pass_size)
           if ((now - next->head->timestamp) > EXPIRE_MSG)
           {
             // printf("Actually clearing message (%d|%d) %ld\n", next->gid, next->mid, next->head->timestamp);
-            clear_segment_list(buf, next->gid, next->mid);
+            clear_segment_list(pool, buf, next->gid, next->mid);
             next = t;
             buf->count--;
           }

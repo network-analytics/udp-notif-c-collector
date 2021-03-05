@@ -14,6 +14,7 @@
 #include "parsing_worker.h"
 #include "unyte_udp_collector.h"
 #include "cleanup_worker.h"
+#include "unyte_pooling.h"
 
 void stop_parsers_and_monitoring(struct parse_worker *parsers, struct listener_thread_input *in, struct monitoring_worker *monitoring)
 {
@@ -44,7 +45,8 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
     free((parsers + i)->queue->data);
     free((parsers + i)->worker);
     free((parsers + i)->queue);
-    clear_buffer((parsers + i)->input->segment_buff);
+    clear_buffer(NULL, (parsers + i)->input->segment_buff);
+    unyte_free_pool((parsers + i)->input->pool);
     free((parsers + i)->input);
   }
 
@@ -133,6 +135,7 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   }
 
   parser_input->monitoring_running = monitoring_running;
+  parser_input->pool = unyte_pool_init(sizeof(struct message_segment_list_cell));
 
   if (parser_input->segment_buff == NULL || parser_input->counters->active_gids == NULL)
   {

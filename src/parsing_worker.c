@@ -7,6 +7,7 @@
 #include "parsing_worker.h"
 #include "unyte_udp_collector.h"
 #include "cleanup_worker.h"
+#include "unyte_pooling.h"
 
 /**
  * Assembles a message from all segments.
@@ -57,6 +58,7 @@ int parser(struct parser_thread_input *in)
   struct segment_buffer *segment_buff = in->segment_buff;
   int max_malloc_errs = 3;
   unyte_seg_counters_t *counters = in->counters;
+  struct unyte_pool *pool = in->pool;
   while (1)
   {
     void *queue_bef = unyte_udp_queue_read(in->input);
@@ -96,7 +98,8 @@ int parser(struct parser_thread_input *in)
     // Segmented message
     else
     {
-      int insert_res = insert_segment(segment_buff,
+      int insert_res = insert_segment(pool,
+                                      segment_buff,
                                       parsed_segment->header->generator_id,
                                       parsed_segment->header->message_id,
                                       parsed_segment->header->f_num,
@@ -147,13 +150,13 @@ int parser(struct parser_thread_input *in)
         }
 
       clear_and_cleanup_buffer:
-        clear_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
+        clear_segment_list(pool, segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         segment_buff->count--;
       }
 
       if (segment_buff->cleanup == 1 && segment_buff->count > CLEAN_COUNT_MAX)
       {
-        cleanup_seg_buff(segment_buff, CLEAN_UP_PASS_SIZE);
+        cleanup_seg_buff(pool, segment_buff, CLEAN_UP_PASS_SIZE);
       }
 
       fflush(stdout);

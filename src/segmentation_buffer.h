@@ -7,6 +7,7 @@
 #include <string.h>
 #include <time.h>
 #include "unyte_udp_utils.h"
+#include "unyte_pooling.h"
 
 // Segmentation_buffer parameters
 #define SIZE_BUF 10000          // size of buffer
@@ -50,6 +51,7 @@ struct segment_buffer
   struct collision_list_cell *hash_array[SIZE_BUF];
   uint8_t cleanup;                // 1 should clean up
   uint8_t cleanup_start_index;
+  // struct unyte_pool *segment_pool;
 };
 
 struct cleanup_thread_input
@@ -67,7 +69,7 @@ struct segment_buffer *create_segment_buffer();
 /**
  * Clear a buffer of any collision list, collision list header, and clear the buffer itself
  */
-int clear_buffer(struct segment_buffer *buf);
+int clear_buffer(struct unyte_pool *pool, struct segment_buffer *buf);
 
 /**
  * Reassembles the payload from a segment_list
@@ -89,7 +91,7 @@ char *reassemble_payload(struct message_segment_list_cell *);
  * returns -2 if a content was already present and message is complete
  * returns -3 if a memory allocation failed
 */
-int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content);
+int insert_segment(struct unyte_pool *pool, struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content);
 
 // Segment buffer management
 
@@ -100,7 +102,7 @@ struct message_segment_list_cell *get_segment_list(struct segment_buffer *buf, u
 /**
  * Clear a list of segments
  */
-int clear_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid);
+int clear_segment_list(struct unyte_pool *pool, struct segment_buffer *buf, uint32_t gid, uint32_t mid);
 /**
  * Hash function used on segmentation buffer hashmap
  * uint32_t gid: generator id / observation domain id
@@ -117,22 +119,22 @@ void print_segment_list_string(struct message_segment_list_cell *head);
 /**
  * Adds a message segment in a list of segments of a given message
  */
-int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content);
+int insert_into_msl(struct unyte_pool *pool, struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content);
 /**
  * Destroys a message
  */
-void clear_msl(struct message_segment_list_cell *head);
+void clear_msl(struct unyte_pool *pool, struct message_segment_list_cell *head);
 
 /**
  * Initialise a message segment list 
  */
-struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint32_t mid);
+struct message_segment_list_cell *create_message_segment_list(struct unyte_pool *pool, uint32_t gid, uint32_t mid);
 
 /**
  * Clean segmentation buffer messages.
  * Sets flag of a message to "read" to be removed next iteration cleanup.
  * Cleans up the "read" messages by <cleanup_pass_size> size.
  */
-void cleanup_seg_buff(struct segment_buffer *buf, int cleanup_pass_size);
+void cleanup_seg_buff(struct unyte_pool *pool, struct segment_buffer *buf, int cleanup_pass_size);
 
 #endif

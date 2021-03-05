@@ -5,7 +5,8 @@ LDFLAGS=-g
 CFLAGS=-Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC
 
 ## TCMALLOCFLAGS for tcmalloc
-TCMALLOCFLAGS=-ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
+# TCMALLOCFLAGS=-ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
+# TCMALLOCFLAGS=-ljemalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
 TCMALLOCFLAGS=
 
 ## For test third parties lib
@@ -15,11 +16,11 @@ USE_LIB=
 ###### c-collector source code ######
 SDIR=src
 ODIR=obj
-_OBJS=hexdump.o listening_worker.o unyte_udp_utils.o unyte_udp_queue.o parsing_worker.o unyte_udp_collector.o segmentation_buffer.o cleanup_worker.o unyte_sender.o monitoring_worker.o
+_OBJS=hexdump.o listening_worker.o unyte_udp_utils.o unyte_udp_queue.o parsing_worker.o unyte_udp_collector.o segmentation_buffer.o cleanup_worker.o unyte_sender.o monitoring_worker.o unyte_pooling.o
 OBJS=$(patsubst %,$(ODIR)/%,$(_OBJS))
 
 ###### c-collector source headers ######
-_DEPS=hexdump.h listening_worker.h unyte_udp_utils.h unyte_udp_queue.h parsing_worker.h unyte_udp_collector.h segmentation_buffer.h cleanup_worker.h unyte_sender.h monitoring_worker.h
+_DEPS=hexdump.h listening_worker.h unyte_udp_utils.h unyte_udp_queue.h parsing_worker.h unyte_udp_collector.h segmentation_buffer.h cleanup_worker.h unyte_sender.h monitoring_worker.h unyte_pooling.h
 DEPS=$(patsubst %,$(SDIR)/%,$(_DEPS))
 
 ###### c-collector examples ######
@@ -30,15 +31,15 @@ SAMPLES_ODIR=samples/obj
 TDIR=test
 
 BINS=client_sample sender_sample sender_json client_monitoring
-TESTBINS=test_malloc test_queue test_seg test_listener test_version
+TESTBINS=test_malloc test_queue test_seg test_listener test_version test_pooling
 
 all: libunyte-udp-notif.so $(BINS)
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) $(TCMALLOCFLAGS)
 
 $(SAMPLES_ODIR)/%.o: $(SAMPLES_DIR)/%.c 
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) $(TCMALLOCFLAGS)
 
 libunyte-udp-notif.so: $(OBJS)
 	$(CC) -shared -o libunyte-udp-notif.so $(OBJS)
@@ -66,7 +67,10 @@ test_queue: $(TDIR)/test_queue.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
 test_malloc: $(TDIR)/test_malloc.o $(OBJS)
-	$(CC) -pthread -o $@ $^ $(LDFLAGS)
+	$(CC) -pthread -o $@ $^ $(LDFLAGS) $(TCMALLOCFLAGS)
+
+test_pooling: $(TDIR)/test_pooling.o $(OBJS)
+	$(CC) -pthread -o $@ $^ $(LDFLAGS) $(TCMALLOCFLAGS)
 
 test_version: $(TDIR)/test_version.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)

@@ -7,6 +7,8 @@ test_queue
 test_malloc
 test_segmentation
 test_version
+test_pooling
+sender_performance
 sender_json
 libunyte-udp-notif.so
 scripts/resources

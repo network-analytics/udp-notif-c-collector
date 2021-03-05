@@ -4,10 +4,8 @@ This is because the head and tail "pointers" are only written by the producer an
 Demonstrated with void pointers and no memory management.
 Note that empty is head==tail, thus only QUEUE_SIZE-1 entries may be used. */
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include <semaphore.h>
 #include "queue.h"
 
 queue_t *unyte_queue_init(size_t size)

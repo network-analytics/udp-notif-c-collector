@@ -3,11 +3,9 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "queue.h"
 #include "unyte_utils.h"
 #include "parsing_worker.h"
 #include "unyte_collector.h"
-#include "segmentation_buffer.h"
 #include "cleanup_worker.h"
 
 /**

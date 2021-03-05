@@ -1,8 +1,8 @@
-#include <stdint.h>
-#include "unyte_utils.h"
-
 #ifndef H_UNYTE_SENDER
 #define H_UNYTE_SENDER
+
+#include <stdint.h>
+#include "unyte_utils.h"
 
 #define DEFAULT_MTU 1500
 

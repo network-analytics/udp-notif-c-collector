@@ -6,7 +6,6 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include "unyte_sender.h"
-#include "unyte_utils.h"
 
 struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
 {

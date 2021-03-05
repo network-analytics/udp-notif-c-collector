@@ -12,9 +12,7 @@
 #include "listening_worker.h"
 #include "segmentation_buffer.h"
 #include "parsing_worker.h"
-#include "unyte_utils.h"
 #include "unyte_collector.h"
-#include "queue.h"
 #include "cleanup_worker.h"
 
 /**

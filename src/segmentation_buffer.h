@@ -1,3 +1,6 @@
+#ifndef H_SEGMENTATION_BUFFER
+#define H_SEGMENTATION_BUFFER
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -131,3 +134,5 @@ struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint
  * Cleans up the "read" messages by <cleanup_pass_size> size.
  */
 void cleanup_seg_buff(struct segment_buffer *buf, int cleanup_pass_size);
+
+#endif

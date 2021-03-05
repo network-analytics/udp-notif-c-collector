@@ -1,9 +1,9 @@
+#ifndef H_LISTENING_WORKER
+#define H_LISTENING_WORKER
+
 #include <stdint.h>
 #include "queue.h"
 #include "unyte_utils.h"
-
-#ifndef H_LISTENING_WORKER
-#define H_LISTENING_WORKER
 
 #define UDP_SIZE 65535          // max UDP packet size
 #define QUEUE_SIZE 50           // input queue size

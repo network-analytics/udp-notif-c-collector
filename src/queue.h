@@ -1,9 +1,9 @@
+#ifndef H_QUEUE
+#define H_QUEUE
+
 #include <stdlib.h>
 #include <semaphore.h>
 #include <pthread.h>
-
-#ifndef H_QUEUE
-#define H_QUEUE
 
 typedef struct
 {

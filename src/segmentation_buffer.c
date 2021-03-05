@@ -1,9 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
 #include "segmentation_buffer.h"
-#include "unyte_utils.h"
 
 struct segment_buffer *create_segment_buffer()
 {

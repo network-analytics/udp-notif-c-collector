@@ -1,9 +1,9 @@
+#ifndef UNYTE_UTILS_H
+#define UNYTE_UTILS_H
+
 #include <stdint.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-
-#ifndef UNYTE_UTILS_H
-#define UNYTE_UTILS_H
 
 #define SPACE_MASK 0b00010000
 #define ET_MASK 0b00001111

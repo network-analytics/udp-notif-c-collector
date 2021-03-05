@@ -16,6 +16,12 @@ $ ./export.sh
 ```
 After running this commands, restart the terminal to have the LD_LIBRARY_PATH up to date.
 
+### Uninstalling
+```
+$ sudo ./uninstall.sh
+```
+You should remove the export of the lib in your bashrc manually yourself to fully remove the lib.
+
 ## Usage
 ### Usage of the UDP-notif collector
 The collector allows to read and parse UDP-notif protocol messages from a ip/port specified on the parameters. It allows to get directly the buffer and the metadata of the message in a struct.

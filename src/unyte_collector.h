@@ -1,9 +1,9 @@
+#ifndef H_UNYTE_COLLECTOR
+#define H_UNYTE_COLLECTOR
+
 #include <pthread.h>
 #include "queue.h"
 #include "unyte_utils.h"
-
-#ifndef H_UNYTE_COLLECTOR
-#define H_UNYTE_COLLECTOR
 
 #define DEFAULT_VLEN 10
 

@@ -1,7 +1,8 @@
-#include "queue.h"
-
 #ifndef H_PARSING_WORKER
 #define H_PARSING_WORKER
+
+#include "queue.h"
+#include "segmentation_buffer.h"
 
 struct parser_thread_input
 {

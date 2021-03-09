@@ -72,14 +72,20 @@ void set_default_options(unyte_options_t *options)
   {
     options->recvmmsg_vlen = DEFAULT_VLEN;
   }
-  // printf("Options: %s:%d | vlen: %d\n", options->address, options->port, options->recvmmsg_vlen);
+  if (options->output_queue_size == 0) {
+    options->output_queue_size = OUTPUT_QUEUE_SIZE;
+  }
+  if (options->nb_parsers == 0) {
+    options->nb_parsers = DEFAULT_NB_PARSERS;
+  }
+  // printf("Options: %s:%d | vlen: %d|outputqueue: %d| parsers:%d\n", options->address, options->port, options->recvmmsg_vlen, options->output_queue_size, options->nb_parsers);
 }
 
 unyte_collector_t *unyte_start_collector(unyte_options_t *options)
 {
   set_default_options(options);
 
-  queue_t *output_queue = unyte_queue_init(OUTPUT_QUEUE_SIZE);
+  queue_t *output_queue = unyte_queue_init(options->output_queue_size);
   if (output_queue == NULL) {
     // malloc errors
     exit(EXIT_FAILURE);
@@ -105,6 +111,7 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   listener_input->output_queue = output_queue;
   listener_input->conn = conn;
   listener_input->recvmmsg_vlen = options->recvmmsg_vlen;
+  listener_input->nb_parsers = options->nb_parsers;
 
   /*Threaded UDP listener*/
   pthread_create(udpListener, NULL, t_listener, (void *)listener_input);

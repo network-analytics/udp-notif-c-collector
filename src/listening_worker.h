@@ -6,8 +6,8 @@
 #include "unyte_utils.h"
 
 #define UDP_SIZE 65535          // max UDP packet size
-#define QUEUE_SIZE 500           // input queue size
-#define PARSER_NUMBER 10        // number of parser workers instances
+#define QUEUE_SIZE 5000           // input queue size
+#define DEFAULT_NB_PARSERS 10   // number of parser workers instances
 #define CLEANUP_FLAG_CRON 1000  // clean up cron in milliseconds
 
 /**
@@ -19,6 +19,7 @@ struct listener_thread_input
   uint16_t port;          /* The port to initialize the interface on. */
   unyte_sock_t *conn;     /* Connection with addr, sockfd */
   uint16_t recvmmsg_vlen; /* The recvmmsg buffer array size */
+  uint nb_parsers;        /* Number of parsers instances to init */
 };
 
 struct parse_worker

@@ -51,6 +51,23 @@ struct buffer_to_send *big_json_file()
   return bf;
 }
 
+struct buffer_to_send *medium_json_file()
+{
+  struct buffer_to_send *bf = (struct buffer_to_send *)malloc(sizeof(struct buffer_to_send));
+  bf->buffer = (char *)malloc(1450);
+  bf->buffer_len = 1450;
+  FILE *fptr;
+  if ((fptr = fopen("resources/json-1450.json", "r")) == NULL)
+  {
+    printf("Error! opening file");
+    // Program exits if the file pointer returns NULL.
+    exit(1);
+  }
+  fread(bf->buffer, 1450, 1, fptr);
+  fclose(fptr);
+  return bf;
+}
+
 int main(int argc, char *argv[])
 {
   // Initialize collector options
@@ -75,8 +92,8 @@ int main(int argc, char *argv[])
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
   // struct buffer_to_send *bf_send = big_json_file();
-  struct buffer_to_send *bf_send = small_json_file();
-  // struct buffer_to_send *bf_send = medium_json_file();
+  // struct buffer_to_send *bf_send = small_json_file();
+  struct buffer_to_send *bf_send = medium_json_file();
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
 
   // struct timespec t;
@@ -96,7 +113,7 @@ int main(int argc, char *argv[])
     message->encoding_type = 1;
     message->generator_id = gen_id;
     message->message_id = msg_id;
-    message->used_mtu = 0; // use default configured
+    message->used_mtu = 9000; // use default configured
 
     unyte_send(sender_sk, message);
 

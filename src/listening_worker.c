@@ -20,13 +20,13 @@
  */
 void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in, struct mmsghdr *messages)
 {
-  for (int i = 0; i < PARSER_NUMBER; i++)
+  for (uint i = 0; i < in->nb_parsers; i++)
   {
     // stopping all clean up thread first
     (parsers + i)->cleanup_worker->cleanup_in->stop_cleanup_thread = 1;
   }
   /* Kill every workers here */
-  for (int i = 0; i < PARSER_NUMBER; i++)
+  for (uint i = 0; i < in->nb_parsers; i++)
   {
     // Kill clean up thread
     pthread_join(*(parsers + i)->cleanup_worker->cleanup_thread, NULL);
@@ -135,14 +135,14 @@ int listener(struct listener_thread_input *in)
   errno = 0;
 
   /* Create parsing workers */
-  struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * PARSER_NUMBER);
+  struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * in->nb_parsers);
   if (parsers == NULL)
   {
     printf("Malloc failed \n");
     return -1;
   }
 
-  for (int i = 0; i < PARSER_NUMBER; i++)
+  for (uint i = 0; i < in->nb_parsers; i++)
   {
     int created = create_parse_worker((parsers + i), in);
     if (created < 0)
@@ -194,13 +194,14 @@ int listener(struct listener_thread_input *in)
           return -1;
         }
         /* Dispatching by modulo on threads */
-        int ret = unyte_queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
+        int ret = unyte_queue_write((parsers + (seg->generator_id % in->nb_parsers))->queue, seg);
         // if ret == -1 --> queue is full, we discard message
         if (ret < 0) {
           printf("1.losing message on parser queue\n");
           //TODO: syslog + count stat
           free(seg->buffer);
           free(seg);
+
         }
       }
       else

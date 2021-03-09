@@ -47,6 +47,8 @@ void parse_arguments(unyte_options_t *options, struct messages_max_log *msg_max_
   options->address = ADDR;
   options->port = PORT;
   options->recvmmsg_vlen = USED_VLEN;
+  options->output_queue_size = 1005;
+  options->nb_parsers = 11;
   msg_max_log->max_to_receive = MAX_TO_RECEIVE;
   msg_max_log->time_between_log = TIME_BETWEEN;
 

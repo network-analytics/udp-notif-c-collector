@@ -19,12 +19,18 @@ typedef struct
 
 typedef struct
 {
+  // global
   char *address;
   uint16_t port;
+  // listener
   uint16_t recvmmsg_vlen;
+  // parsers
+  uint nb_parsers;          // number of parsers to instantiate
+  // queues sizes
+  uint output_queue_size;   // output queue size in bytes
 } unyte_options_t;
 
-#define OUTPUT_QUEUE_SIZE 100
+#define OUTPUT_QUEUE_SIZE 1000
 
 /**
  * Start all the subprocesses of the collector on the given port and return the output segment queue.

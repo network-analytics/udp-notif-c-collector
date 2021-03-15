@@ -35,6 +35,10 @@ unyte_sock_t *unyte_init_socket(char *addr, uint16_t port)
   int optval = 1;
   setsockopt(*sock, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int));
 
+  //TODO: socket buffer as an argument
+  uint64_t receive_buf_size = 20*1024*1024; //20 MB
+  setsockopt(*sock, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size));
+
   adresse->sin_family = AF_INET;
   adresse->sin_port = htons(port);
   inet_pton(AF_INET, addr, &adresse->sin_addr);

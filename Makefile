@@ -31,7 +31,7 @@ TDIR=test
 BINS=client_sample client_performance client_loss sender_sample sender_json sender_performance
 TESTBINS=test_malloc test_queue test_seg test_listener
 
-all: build $(BINS)
+all: libunyte-udp-notif.so $(BINS)
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -41,6 +41,9 @@ $(LODIR)/%.o: $(LDIR)/%.c
 
 $(SAMPLES_ODIR)/%.o: $(SAMPLES_DIR)/%.c 
 	$(CC) -c -o $@ $< $(CFLAGS)
+
+libunyte-udp-notif.so: $(OBJS)
+	$(CC) -shared -o libunyte-udp-notif.so $(OBJS)
 
 client_sample: $(SAMPLES_ODIR)/client_sample.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
@@ -73,11 +76,10 @@ test_queue: $(TDIR)/test_queue.o $(OBJS)
 test_malloc: $(TDIR)/test_malloc.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
-install: build
+install: libunyte-udp-notif.so
 	./install.sh
 
-build: $(OBJS)
-	$(CC) -shared -o libunyte-udp-notif.so $(OBJS)
+build: libunyte-udp-notif.so
 
 clean:
 	rm $(ODIR)/*.o $(SAMPLES_ODIR)/*.o $(TDIR)/*.o $(BINS) $(TESTBINS) libunyte-udp-notif.so

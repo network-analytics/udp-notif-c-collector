@@ -37,9 +37,14 @@ CS_DEST_IP=$DEST_IP
 CS_PORT=$DEST_PORT
 CS_MESSAGES=$C_MESSAGES
 CS_GEN_ID=0
+CS_RESOURCES="resources"
+
+if ! ([ -L ${CS_RESOURCES} ] && [ -e ${CS_RESOURCES} ]) ; then
+  echo "Creating symlink to resources"
+  ln -s ../resources resources
+fi
 
 ######## Test ########
-
 for i in {1..1} ;
 do 
   ######## killing all client_performance collectors and scapy processes ########

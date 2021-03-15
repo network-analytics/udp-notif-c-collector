@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
   free(th_input);
 
   printf("Shutdown the socket\n");
-  shutdown(*collector->sockfd, SHUT_RDWR); //TODO: à valider/force empty queue (?)
+  shutdown(*collector->sockfd, SHUT_RDWR);
   close(*collector->sockfd);
   pthread_join(*collector->main_thread, NULL);
 

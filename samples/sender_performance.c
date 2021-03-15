@@ -20,16 +20,16 @@ struct buffer_to_send
 struct buffer_to_send *small_json_file()
 {
   struct buffer_to_send *bf = (struct buffer_to_send *)malloc(sizeof(struct buffer_to_send));
-  bf->buffer = (char *)malloc(716);
-  bf->buffer_len = 716;
+  bf->buffer = (char *)malloc(700);
+  bf->buffer_len = 700;
   FILE *fptr;
-  if ((fptr = fopen("resources/small.json", "r")) == NULL)
+  if ((fptr = fopen("resources/json-700.json", "r")) == NULL)
   {
     printf("Error! opening file");
     // Program exits if the file pointer returns NULL.
     exit(1);
   }
-  fread(bf->buffer, 716, 1, fptr);
+  fread(bf->buffer, 700, 1, fptr);
   fclose(fptr);
   return bf;
 }
@@ -37,16 +37,16 @@ struct buffer_to_send *small_json_file()
 struct buffer_to_send *big_json_file()
 {
   struct buffer_to_send *bf = (struct buffer_to_send *)malloc(sizeof(struct buffer_to_send));
-  bf->buffer = (char *)malloc(7151);
-  bf->buffer_len = 7151;
+  bf->buffer = (char *)malloc(8950);
+  bf->buffer_len = 8950;
   FILE *fptr;
-  if ((fptr = fopen("resources/big.json", "r")) == NULL)
+  if ((fptr = fopen("resources/json-8950.json", "r")) == NULL)
   {
     printf("Error! opening file");
     // Program exits if the file pointer returns NULL.
     exit(1);
   }
-  fread(bf->buffer, 7151, 1, fptr);
+  fread(bf->buffer, 8950, 1, fptr);
   fclose(fptr);
   return bf;
 }

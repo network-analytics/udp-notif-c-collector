@@ -104,7 +104,7 @@ void test_segment_lists()
 void test_segment_buffers()
 {
   int i = 0;
-  struct segment_buffer *buf = create_segment_buffer();
+  struct segment_buffer *buf = create_segment_buffer(SEG_BUF_SIZE);
   for (i = 0; i < 10; i++)
   {
     int *val = malloc(sizeof(int));

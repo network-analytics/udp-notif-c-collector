@@ -124,7 +124,6 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   /* Fill the struct */
   parser_input->input = parser->queue;
   parser_input->output = in->output_queue;
-  parser_input->segment_buff = create_segment_buffer();
   parser_input->counters = counters;
   parser_input->counters->type = PARSER_WORKER;
   for (uint i = 0; i < ACTIVE_GIDS; i++)
@@ -133,6 +132,8 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   }
 
   parser_input->monitoring_running = monitoring_running;
+  parser_input->segment_buff = create_segment_buffer(SEG_BUF_SIZE);
+  // parser_input->segment_buff = create_segment_buffer((in->seg_buff_size) > 0 ? in->seg_buff_size : SEG_BUF_SIZE); //TODO: 
 
   if (parser_input->segment_buff == NULL || parser_input->counters->active_gids == NULL)
   {

@@ -9,7 +9,7 @@
 #include "unyte_udp_utils.h"
 
 // Segmentation_buffer parameters
-#define SIZE_BUF 10000          // size of buffer
+#define SEG_BUF_SIZE 10000      // size of collision list 
 #define CLEAN_UP_PASS_SIZE 500  // number of iterations to clean up
 #define CLEAN_COUNT_MAX 50      // clean up segment buffer when count > CLEAN_COUNT_MAX
 #define EXPIRE_MSG 3            // seconds to consider the segmented message in the buffer expired (not receiving segments anymore)
@@ -47,7 +47,7 @@ struct collision_list_cell
 struct segment_buffer
 {
   uint32_t count;
-  struct collision_list_cell *hash_array[SIZE_BUF];
+  struct collision_list_cell *hash_array[SEG_BUF_SIZE];
   uint8_t cleanup;                // 1 should clean up
   uint8_t cleanup_start_index;
 };
@@ -62,7 +62,7 @@ struct cleanup_thread_input
 /**
  * Create a segment buffer to store UDP-notif message segments
  */
-struct segment_buffer *create_segment_buffer();
+struct segment_buffer *create_segment_buffer(uint buff_size);
 
 /**
  * Clear a buffer of any collision list, collision list header, and clear the buffer itself

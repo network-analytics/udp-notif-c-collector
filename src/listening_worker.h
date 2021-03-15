@@ -24,6 +24,7 @@ struct listener_thread_input
   uint nb_parsers;            /* Number of parsers instances to init */
   uint parser_queue_size;     /* Size of parser queue in bytes */
   uint monitoring_delay;      /* Monitoring frequence in seconds */
+  uint seg_buff_size;         /* Size of segmentation buffer in bytes */
 };
 
 struct parse_worker

@@ -146,6 +146,7 @@ unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)
   listener_input->nb_parsers = options->nb_parsers;
   listener_input->parser_queue_size = options->parsers_queue_size;
   listener_input->monitoring_delay = options->monitoring_delay;
+  listener_input->seg_buff_size = options->segmentation_buff_size;
 
   /*Threaded UDP listener*/
   pthread_create(udpListener, NULL, t_listener, (void *)listener_input);

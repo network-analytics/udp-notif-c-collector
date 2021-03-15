@@ -38,6 +38,8 @@ typedef struct
   // monitoring
   uint monitoring_queue_size; // monitoring queue size
   uint monitoring_delay;      // monitoring queue frequence in seconds
+  // segmentation
+  uint segmentation_buff_size; // segmentation collision list size
 } unyte_udp_options_t;
 
 /**

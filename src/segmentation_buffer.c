@@ -1,6 +1,6 @@
 #include "segmentation_buffer.h"
 
-struct segment_buffer *create_segment_buffer()
+struct segment_buffer *create_segment_buffer(uint buff_size)
 {
   struct segment_buffer *res = malloc(sizeof(struct segment_buffer));
   if (res == NULL)
@@ -9,7 +9,7 @@ struct segment_buffer *create_segment_buffer()
     return NULL;
   }
 
-  for (int i = 0; i < SIZE_BUF; i++)
+  for (uint i = 0; i < buff_size; i++)
   {
     res->hash_array[i] = NULL;
   }
@@ -42,7 +42,7 @@ char *reassemble_payload(struct message_segment_list_cell *msg_seg_list)
 
 uint32_t hashKey(uint32_t gid, uint32_t mid)
 {
-  return (gid ^ mid) % SIZE_BUF;
+  return (gid ^ mid) % SEG_BUF_SIZE;
 }
 
 int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content)
@@ -266,7 +266,7 @@ int clear_collision_list(struct segment_buffer *buf, struct collision_list_cell 
 int clear_buffer(struct segment_buffer *buf)
 {
   int res = 0;
-  for (int i = 0; i < SIZE_BUF; i++)
+  for (int i = 0; i < SEG_BUF_SIZE; i++)
   {
     if (buf->hash_array[i] != NULL)
     {
@@ -318,7 +318,7 @@ int clear_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid)
 void print_segment_buffer_int(struct segment_buffer *buf)
 {
   int i = 0;
-  for (i = 0; i < SIZE_BUF; i++)
+  for (i = 0; i < SEG_BUF_SIZE; i++)
   {
     if (buf->hash_array[i] != NULL)
     {
@@ -331,11 +331,11 @@ void print_segment_buffer_int(struct segment_buffer *buf)
 void cleanup_seg_buff(struct segment_buffer *buf, int cleanup_pass_size)
 {
   int count = 0;
-  // printf("Cleaning up starting on %d | count: %d \n", (buf->cleanup_start_index + count) % SIZE_BUF, buf->count);
+  // printf("Cleaning up starting on %d | count: %d \n", (buf->cleanup_start_index + count) % SEG_BUF_SIZE, buf->count);
   time_t now = time(NULL);
   while (count < cleanup_pass_size)
   {
-    int current_index = (buf->cleanup_start_index + count) % SIZE_BUF;
+    int current_index = (buf->cleanup_start_index + count) % SEG_BUF_SIZE;
     // printf("CurrentIndex : %d\n", current_index);
     struct collision_list_cell *next = buf->hash_array[current_index];
     if (next != NULL)
@@ -376,5 +376,5 @@ void cleanup_seg_buff(struct segment_buffer *buf, int cleanup_pass_size)
 
   // reset cleanup
   buf->cleanup = 0;
-  buf->cleanup_start_index = (buf->cleanup_start_index + CLEAN_UP_PASS_SIZE) % SIZE_BUF;
+  buf->cleanup_start_index = (buf->cleanup_start_index + CLEAN_UP_PASS_SIZE) % SEG_BUF_SIZE;
 }

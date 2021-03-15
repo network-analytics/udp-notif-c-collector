@@ -193,6 +193,7 @@ int listener(struct listener_thread_input *in)
         int ret = unyte_queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
         // if ret == -1 --> queue is full, we discard message
         if (ret < 0) {
+          printf("1.losing message\n");
           //TODO: syslog + count stat
           free(seg->buffer);
           free(seg);

@@ -9,6 +9,7 @@
 #define ADDR "192.168.0.17"
 #define MTU 1500
 #define LAST_GEN_ID 49993648
+#define MAX_TO_SEND 1000
 
 struct buffer_to_send
 {
@@ -58,7 +59,7 @@ int main(int argc, char *argv[])
   options.port = PORT;
   options.default_mtu = MTU;
 
-  uint messages_to_send = 10000;
+  uint messages_to_send = MAX_TO_SEND;
   uint gen_id = 0;
   uint msg_id = 0;
 
@@ -73,8 +74,9 @@ int main(int argc, char *argv[])
   printf("Init sender on %s:%d|%d|sending:%d|gid:%d\n", options.address, options.port, MTU, messages_to_send, gen_id);
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
-  struct buffer_to_send *bf_send = big_json_file();
-  // struct buffer_to_send *bf_send = small_json_file();
+  // struct buffer_to_send *bf_send = big_json_file();
+  struct buffer_to_send *bf_send = small_json_file();
+  // struct buffer_to_send *bf_send = medium_json_file();
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
 
   // struct timespec t;

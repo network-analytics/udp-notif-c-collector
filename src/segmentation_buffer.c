@@ -318,7 +318,7 @@ void print_segment_buffer_int(struct segment_buffer *buf)
 void cleanup_seg_buff(struct segment_buffer *buf, int cleanup_pass_size)
 {
   int count = 0;
-  printf("Cleaning up starting on %d | count: %d \n", (buf->cleanup_start_index + count) % SIZE_BUF, buf->count);
+  // printf("Cleaning up starting on %d | count: %d \n", (buf->cleanup_start_index + count) % SIZE_BUF, buf->count);
   time_t now = time(NULL);
   while (count < cleanup_pass_size)
   {

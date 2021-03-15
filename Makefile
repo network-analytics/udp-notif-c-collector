@@ -31,7 +31,7 @@ TDIR=test
 BINS=client_sample client_performance client_loss sender_sample sender_json sender_performance
 TESTBINS=test_malloc test_queue test_seg test_listener
 
-all: build $(BINS) $(TESTBINS)
+all: build $(BINS)
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -42,7 +42,7 @@ $(LODIR)/%.o: $(LDIR)/%.c
 $(SAMPLES_ODIR)/%.o: $(SAMPLES_DIR)/%.c 
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-client_sample: $(SAMPLES_ODIR)/client_sample.o
+client_sample: $(SAMPLES_ODIR)/client_sample.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
 client_performance: $(SAMPLES_ODIR)/client_performance.o $(OBJS)

@@ -60,6 +60,7 @@ int parser(struct parser_thread_input *in)
       int ret = unyte_queue_write(in->output, parsed_segment);
       // ret == -1 queue already full, segment discarded
       if (ret < 0) {
+        printf("2.losing message on output queue\n");
         //TODO: syslog drop package + count
         // printf("parsing 1:UnyteWrite fail %d\n", ret);
         unyte_free_all(parsed_segment);
@@ -101,6 +102,7 @@ int parser(struct parser_thread_input *in)
         int ret = unyte_queue_write(in->output, parsed_msg);
         // ret == -1 queue is full, we discard the message
         if (ret < 0) {
+          printf("3.losing message on output queue\n");
           //TODO: syslog drop package + count
           // printf("parsing UnyteWrite fail %d\n", ret);
           unyte_free_all(parsed_msg);

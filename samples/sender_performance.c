@@ -9,6 +9,7 @@
 #define ADDR "192.168.0.17"
 #define MTU 1500
 #define LAST_GEN_ID 49993648
+#define MAX_TO_SEND 1000
 
 struct buffer_to_send
 {
@@ -19,16 +20,16 @@ struct buffer_to_send
 struct buffer_to_send *small_json_file()
 {
   struct buffer_to_send *bf = (struct buffer_to_send *)malloc(sizeof(struct buffer_to_send));
-  bf->buffer = (char *)malloc(716);
-  bf->buffer_len = 716;
+  bf->buffer = (char *)malloc(700);
+  bf->buffer_len = 700;
   FILE *fptr;
-  if ((fptr = fopen("resources/small.json", "r")) == NULL)
+  if ((fptr = fopen("resources/json-700.json", "r")) == NULL)
   {
     printf("Error! opening file");
     // Program exits if the file pointer returns NULL.
     exit(1);
   }
-  fread(bf->buffer, 716, 1, fptr);
+  fread(bf->buffer, 700, 1, fptr);
   fclose(fptr);
   return bf;
 }
@@ -36,16 +37,16 @@ struct buffer_to_send *small_json_file()
 struct buffer_to_send *big_json_file()
 {
   struct buffer_to_send *bf = (struct buffer_to_send *)malloc(sizeof(struct buffer_to_send));
-  bf->buffer = (char *)malloc(7151);
-  bf->buffer_len = 7151;
+  bf->buffer = (char *)malloc(8950);
+  bf->buffer_len = 8950;
   FILE *fptr;
-  if ((fptr = fopen("resources/big.json", "r")) == NULL)
+  if ((fptr = fopen("resources/json-8950.json", "r")) == NULL)
   {
     printf("Error! opening file");
     // Program exits if the file pointer returns NULL.
     exit(1);
   }
-  fread(bf->buffer, 7151, 1, fptr);
+  fread(bf->buffer, 8950, 1, fptr);
   fclose(fptr);
   return bf;
 }
@@ -58,7 +59,7 @@ int main(int argc, char *argv[])
   options.port = PORT;
   options.default_mtu = MTU;
 
-  uint messages_to_send = 10000;
+  uint messages_to_send = MAX_TO_SEND;
   uint gen_id = 0;
   uint msg_id = 0;
 
@@ -73,8 +74,9 @@ int main(int argc, char *argv[])
   printf("Init sender on %s:%d|%d|sending:%d|gid:%d\n", options.address, options.port, MTU, messages_to_send, gen_id);
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
-  struct buffer_to_send *bf_send = big_json_file();
-  // struct buffer_to_send *bf_send = small_json_file();
+  // struct buffer_to_send *bf_send = big_json_file();
+  struct buffer_to_send *bf_send = small_json_file();
+  // struct buffer_to_send *bf_send = medium_json_file();
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
 
   // struct timespec t;

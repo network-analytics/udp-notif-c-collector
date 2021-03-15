@@ -37,9 +37,14 @@ CS_DEST_IP=$DEST_IP
 CS_PORT=$DEST_PORT
 CS_MESSAGES=$C_MESSAGES
 CS_GEN_ID=0
+CS_RESOURCES="resources"
+
+if ! ([ -L ${CS_RESOURCES} ] && [ -e ${CS_RESOURCES} ]) ; then
+  echo "Creating symlink to resources"
+  ln -s ../resources resources
+fi
 
 ######## Test ########
-
 for i in {1..1} ;
 do 
   ######## killing all client_performance collectors and scapy processes ########
@@ -48,12 +53,17 @@ do
 
   sleep 1
   echo "###### Start test #######" >> $LOG_FOLDER/collector.log
-  taskset -a -c 0 $($UNYTE_COLLECTOR/$COLLECTOR_CLIENT $C_MESSAGES $C_TIME_BETWEEN $C_VLEN $C_SRC $C_PORT >> $LOG_FOLDER/collector.log) &
+  $UNYTE_COLLECTOR/$COLLECTOR_CLIENT $C_MESSAGES $C_TIME_BETWEEN $C_VLEN $C_SRC $C_PORT >> $LOG_FOLDER/collector.log &
+  sleep 2
+  taskset -a -p 0x0000000F $!
 
   sleep 2
 
-  taskset -a -c 1-7 $UNYTE_COLLECTOR/$C_SENDER $DEST_IP $CS_PORT $CS_MESSAGES $CS_GEN_ID
-  taskset -a -c 1-7 $UNYTE_COLLECTOR/$C_SENDER $DEST_IP $CS_PORT $C_VLEN 49993648
+  $UNYTE_COLLECTOR/$C_SENDER $DEST_IP $CS_PORT $CS_MESSAGES $CS_GEN_ID &
+  taskset -a -p 0x000000f0 $!
+  sleep 7
+  $UNYTE_COLLECTOR/$C_SENDER $DEST_IP $CS_PORT $C_VLEN 49993648 &
+  taskset -a -p 0x000000f0 $!
 
   # sudo $UNYTE_SCAPY/$SCAPY_SCRIPT $INSTANCES $MESSAGES $JSON $C_VLEN $DEST_IP $DEST_PORT -y
 

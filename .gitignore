@@ -10,6 +10,7 @@ test_malloc
 sender_performance
 sender_json
 libunyte-udp-notif.so
+scripts/resources
 
 docker/tmp
 

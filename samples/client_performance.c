@@ -18,7 +18,7 @@
 #define USED_VLEN 50
 #define TIME_BETWEEN 1000
 #define LAST_GEN_ID 49993648
-#define NB_THREADS 10
+#define NB_THREADS 4
 
 struct messages_max_log
 {
@@ -125,6 +125,7 @@ void *t_read(void *in)
     /* Struct frees */
     unyte_free_all(seg);
   }
+
   return 0;
 }
 
@@ -191,6 +192,7 @@ int main(int argc, char *argv[])
   struct collector_threads *collectors = create_collectors(NB_THREADS, th_input);
   join_collectors(collectors);
   clean_collector_threads(collectors);
+
   free(th_input);
 
   printf("Shutdown the socket\n");

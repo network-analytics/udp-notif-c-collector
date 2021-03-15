@@ -20,11 +20,15 @@
  */
 void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in, struct mmsghdr *messages)
 {
+  for (int i = 0; i < PARSER_NUMBER; i++)
+  {
+    // stopping all clean up thread first
+    (parsers + i)->cleanup_worker->cleanup_in->stop_cleanup_thread = 1;
+  }
   /* Kill every workers here */
   for (int i = 0; i < PARSER_NUMBER; i++)
   {
     // Kill clean up thread
-    (parsers + i)->cleanup_worker->cleanup_in->stop_cleanup_thread = 1;
     pthread_join(*(parsers + i)->cleanup_worker->cleanup_thread, NULL);
     free((parsers + i)->cleanup_worker->cleanup_thread);
     free((parsers + i)->cleanup_worker);
@@ -193,7 +197,7 @@ int listener(struct listener_thread_input *in)
         int ret = unyte_queue_write((parsers + (seg->generator_id % PARSER_NUMBER))->queue, seg);
         // if ret == -1 --> queue is full, we discard message
         if (ret < 0) {
-          printf("1.losing message\n");
+          printf("1.losing message on parser queue\n");
           //TODO: syslog + count stat
           free(seg->buffer);
           free(seg);

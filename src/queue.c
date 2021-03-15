@@ -2,7 +2,7 @@
 This implementation \should be\ "thread safe" for single producer/consumer with atomic writes of size_t.
 This is because the head and tail "pointers" are only written by the producer and consumer respectively.
 Demonstrated with void pointers and no memory management.
-Note that empty is head==tail, thus only QUEUE_SIZE-1 entries may be used. */
+Note that empty is head==tail, thus only PARSER_QUEUE_SIZE-1 entries may be used. */
 
 #include <stdio.h>
 #include <assert.h>

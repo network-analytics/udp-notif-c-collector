@@ -78,7 +78,11 @@ void set_default_options(unyte_options_t *options)
   if (options->nb_parsers == 0) {
     options->nb_parsers = DEFAULT_NB_PARSERS;
   }
+  if (options->parsers_queue_size == 0) {
+    options->parsers_queue_size = PARSER_QUEUE_SIZE;
+  }
   // printf("Options: %s:%d | vlen: %d|outputqueue: %d| parsers:%d\n", options->address, options->port, options->recvmmsg_vlen, options->output_queue_size, options->nb_parsers);
+  // printf("Options: parser_queue_size:%d\n", options->parsers_queue_size);
 }
 
 unyte_collector_t *unyte_start_collector(unyte_options_t *options)
@@ -112,6 +116,7 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   listener_input->conn = conn;
   listener_input->recvmmsg_vlen = options->recvmmsg_vlen;
   listener_input->nb_parsers = options->nb_parsers;
+  listener_input->parser_queue_size = options->parsers_queue_size;
 
   /*Threaded UDP listener*/
   pthread_create(udpListener, NULL, t_listener, (void *)listener_input);

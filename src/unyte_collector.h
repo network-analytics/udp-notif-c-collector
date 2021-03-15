@@ -28,6 +28,7 @@ typedef struct
   uint nb_parsers;          // number of parsers to instantiate
   // queues sizes
   uint output_queue_size;   // output queue size in bytes
+  uint parsers_queue_size;  // input queue size in bytes for every parser
 } unyte_options_t;
 
 #define OUTPUT_QUEUE_SIZE 1000

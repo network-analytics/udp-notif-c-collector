@@ -90,8 +90,7 @@ int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *
  */
 int create_parse_worker(struct parse_worker *parser, struct listener_thread_input *in)
 {
-
-  parser->queue = unyte_queue_init(QUEUE_SIZE);
+  parser->queue = unyte_queue_init(in->parser_queue_size);
   if (parser->queue == NULL)
   {
     // malloc failed

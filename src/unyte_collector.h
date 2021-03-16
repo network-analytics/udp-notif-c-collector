@@ -23,14 +23,14 @@ typedef struct
   // global
   char *address;
   uint16_t port;
-  uint socket_buff_size;        // user socket udp buffer in bytes
+  uint64_t socket_buff_size;    // user socket udp buffer in bytes
   // listener
   uint16_t recvmmsg_vlen;
   // parsers
   uint nb_parsers;              // number of parsers to instantiate
   // queues sizes
   uint output_queue_size;       // output queue size in bytes
-  uint64_t parsers_queue_size;  // input queue size in bytes for every parser
+  uint parsers_queue_size;      // input queue size in bytes for every parser
 } unyte_options_t;
 
 #define OUTPUT_QUEUE_SIZE 1000

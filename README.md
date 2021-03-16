@@ -47,7 +47,6 @@ Simple exemple of usage :
 
 #define PORT 8081
 #define ADDR "192.168.0.17"
-#define USED_VLEN 5
 
 int main()
 {
@@ -55,7 +54,11 @@ int main()
   unyte_options_t options = {0};
   options.address = ADDR;
   options.port = PORT;
-  options.recvmmsg_vlen = USED_VLEN;
+  options.recvmmsg_vlen = 0;          // Default vlen: 10
+  options.output_queue_size = 0;      // Default size: 1000
+  options.nb_parsers = 0;             // Default parsers: 10
+  options.socket_buff_size = 0;       // Default 20MB
+  options.parsers_queue_size = 0;     // Default parsers queue size 500
 
   // Initialize collector
   unyte_collector_t *collector = unyte_start_collector(&options);
@@ -176,7 +179,7 @@ int main()
 ### Examples
 There are some samples implemented during the development of the project [here](samples).
 - `client_sample.c` : simple example for minimal usage of the collector library.
-- `client_performance.c` : sample to test performance of data collection.
+- `client_performance.c` : sample to test performance of data collection. Multithreaded client to avoid bottleneck on read.
 - `client_loss.c` : sample to test data loss during data collection.
 - `sender_sample.c` : simple example for minimal usage of the sender library.
 - `sender_json.c` : sample reading a json file and sending the bytes by the library.

@@ -10,7 +10,7 @@
 /**
  * Not exposed function used to initialize the socket and return unyte_socket struct
  */
-unyte_sock_t *unyte_init_socket(char *addr, uint16_t port)
+unyte_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buff_size)
 {
   unyte_sock_t *conn = (unyte_sock_t *)malloc(sizeof(unyte_sock_t));
   if (conn == NULL)
@@ -35,8 +35,13 @@ unyte_sock_t *unyte_init_socket(char *addr, uint16_t port)
   int optval = 1;
   setsockopt(*sock, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int));
 
-  //TODO: socket buffer as an argument
-  uint64_t receive_buf_size = 20*1024*1024; //20 MB
+  uint64_t receive_buf_size;
+  if (sock_buff_size <= 0) {
+    receive_buf_size = DEFAULT_SK_BUFF_SIZE; // 20MB
+  } else {
+    receive_buf_size = sock_buff_size;
+  }
+  printf("Sock_buff:%ld\n", receive_buf_size);
   setsockopt(*sock, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size));
 
   adresse->sin_family = AF_INET;
@@ -102,7 +107,7 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
     exit(EXIT_FAILURE);
   }
 
-  unyte_sock_t *conn = unyte_init_socket(options->address, options->port);
+  unyte_sock_t *conn = unyte_init_socket(options->address, options->port, options->socket_buff_size);
 
   struct listener_thread_input *listener_input = (struct listener_thread_input *)malloc(sizeof(struct listener_thread_input));
   if (listener_input == NULL)

@@ -79,13 +79,19 @@ int main(int argc, char *argv[])
   uint messages_to_send = MAX_TO_SEND;
   uint gen_id = 0;
   uint msg_id = 0;
+  int msg_type = 0; // 0 = gen_id++ | 1 = msg_id++
 
-  if (argc == 5)
-  { // Usage: ./sender_performance <address> <port> <message_to_send> <gen_id>
+  if (argc == 6)
+  { // Usage: ./sender_performance <address> <port> <message_to_send> <gen_id> <type_msg>
     options.address = argv[1];
     options.port = atoi(argv[2]);
     messages_to_send = atoi(argv[3]);
     gen_id = atoi(argv[4]);
+    msg_type = atoi(argv[5]);
+    if (msg_type == 1) {
+      msg_id = atoi(argv[4]);
+      gen_id = 0;
+    }
   }
 
   printf("Init sender on %s:%d|%d|sending:%d|gid:%d\n", options.address, options.port, MTU, messages_to_send, gen_id);
@@ -124,10 +130,16 @@ int main(int argc, char *argv[])
     //   printf("Sent %d\n", sleep_mod);
     //   fflush(stdout);
     // }
-
-    if (gen_id != LAST_GEN_ID)
-    {
-      gen_id++;
+    if (msg_type == 0) {
+      if (gen_id != LAST_GEN_ID)
+      {
+        gen_id++;
+      }
+    } else {
+      if (msg_id != LAST_GEN_ID)
+      {
+        msg_id++;
+      }
     }
   }
 

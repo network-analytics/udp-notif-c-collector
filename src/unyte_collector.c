@@ -10,7 +10,7 @@
 /**
  * Not exposed function used to initialize the socket and return unyte_socket struct
  */
-unyte_sock_t *unyte_init_socket(char *addr, uint16_t port)
+unyte_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buff_size)
 {
   unyte_sock_t *conn = (unyte_sock_t *)malloc(sizeof(unyte_sock_t));
   if (conn == NULL)
@@ -35,8 +35,13 @@ unyte_sock_t *unyte_init_socket(char *addr, uint16_t port)
   int optval = 1;
   setsockopt(*sock, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int));
 
-  //TODO: socket buffer as an argument
-  uint64_t receive_buf_size = 20*1024*1024; //20 MB
+  uint64_t receive_buf_size;
+  if (sock_buff_size <= 0) {
+    receive_buf_size = DEFAULT_SK_BUFF_SIZE; // 20MB
+  } else {
+    receive_buf_size = sock_buff_size;
+  }
+  printf("Sock_buff:%ld\n", receive_buf_size);
   setsockopt(*sock, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size));
 
   adresse->sin_family = AF_INET;
@@ -72,14 +77,24 @@ void set_default_options(unyte_options_t *options)
   {
     options->recvmmsg_vlen = DEFAULT_VLEN;
   }
-  // printf("Options: %s:%d | vlen: %d\n", options->address, options->port, options->recvmmsg_vlen);
+  if (options->output_queue_size == 0) {
+    options->output_queue_size = OUTPUT_QUEUE_SIZE;
+  }
+  if (options->nb_parsers == 0) {
+    options->nb_parsers = DEFAULT_NB_PARSERS;
+  }
+  if (options->parsers_queue_size == 0) {
+    options->parsers_queue_size = PARSER_QUEUE_SIZE;
+  }
+  // printf("Options: %s:%d | vlen: %d|outputqueue: %d| parsers:%d\n", options->address, options->port, options->recvmmsg_vlen, options->output_queue_size, options->nb_parsers);
+  // printf("Options: parser_queue_size:%d\n", options->parsers_queue_size);
 }
 
 unyte_collector_t *unyte_start_collector(unyte_options_t *options)
 {
   set_default_options(options);
 
-  queue_t *output_queue = unyte_queue_init(OUTPUT_QUEUE_SIZE);
+  queue_t *output_queue = unyte_queue_init(options->output_queue_size);
   if (output_queue == NULL) {
     // malloc errors
     exit(EXIT_FAILURE);
@@ -92,7 +107,7 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
     exit(EXIT_FAILURE);
   }
 
-  unyte_sock_t *conn = unyte_init_socket(options->address, options->port);
+  unyte_sock_t *conn = unyte_init_socket(options->address, options->port, options->socket_buff_size);
 
   struct listener_thread_input *listener_input = (struct listener_thread_input *)malloc(sizeof(struct listener_thread_input));
   if (listener_input == NULL)
@@ -105,6 +120,8 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   listener_input->output_queue = output_queue;
   listener_input->conn = conn;
   listener_input->recvmmsg_vlen = options->recvmmsg_vlen;
+  listener_input->nb_parsers = options->nb_parsers;
+  listener_input->parser_queue_size = options->parsers_queue_size;
 
   /*Threaded UDP listener*/
   pthread_create(udpListener, NULL, t_listener, (void *)listener_input);

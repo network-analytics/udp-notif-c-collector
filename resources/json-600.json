@@ -1,0 +1,25 @@
+{
+  "_id": "6050e0c156f00f05b3a81177",
+  "index": 0,
+  "guid": "b8e092d7-5924-454f-981c-3d488b089b4f",
+  "isActive": false,
+  "balance": "$3,367.56",
+  "picture": "http://placehold.it/32x32",
+  "age": 21,
+  "eyeColor": "green",
+  "name": "Herman Mathis",
+  "gender": "male",
+  "company": "ELEMANTRA",
+  "email": "hermanmathis@elemantra.com",
+  "registered": "2016-01-12T12:57:48 -01:00",
+  "latitude": -47.335444,
+  "longitude": 2.5384,
+  "friends": [
+    {
+      "id": 0,
+      "name": "Hawkins Rhodes"
+    }
+  ],
+  "greeting": "Hello! You have 5 unread messages.",
+  "favoriteFruit": "strawberry"
+}

@@ -1,0 +1,12 @@
+{
+  "_id": "60565b81177",
+  "balance": "$3,367.56",
+  "friends": [
+    {
+      "id": 0,
+      "name": "Hawkins Rhodes"
+    }
+  ],
+  "greeting": "Hello! You have 5 A",
+  "favoriteFruit": "strawberry"
+}

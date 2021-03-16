@@ -1,0 +1,15 @@
+{
+  "_id": "60565b81177",
+  "index": 0,
+  "guid": "b8e092d7-5924-454f-981c-3d488b089b4f",
+  "isActive": false,
+  "balance": "$3,367.56",
+  "friends": [
+    {
+      "id": 0,
+      "name": "Hawkins Rhodes"
+    }
+  ],
+  "greeting": "Hello! You have 5 unread messages.",
+  "favoriteFruit": "strawberry"
+}

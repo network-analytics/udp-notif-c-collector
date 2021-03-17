@@ -18,6 +18,9 @@ C_PARSERS=10
 C_SOCKET_BUFF=20971520
 C_OUTPUT_Q_SIZE=1000
 C_PARSER_Q_SIZE=500
+CS_THREADS=1
+CS_SLP_SEC=0
+CS_SLP_MSG=1000
 
 ############## SENDER ARGUMENTS ##############
 #array of maximum transmission units
@@ -47,17 +50,17 @@ fi
 ############## TESTING ##############
 for MESSAGES in "${C_ARR_MESSAGES[@]}"
 do
-    for VLEN in "${C_ARR_VLEN[@]}"
-    do
-        $CLIENT $MESSAGES $C_INTERVAL $VLEN $IP $PORT $C_PARSERS $C_SOCKET_BUFF $C_OUTPUT_Q_SIZE $C_PARSER_Q_SIZE >> $LOG_FOLDER/collector.log &
-        sleep 2
-        taskset -a -p 0x0000000F $!
-        sleep 2
-        $SENDER $IP $PORT $MESSAGES $GEN_ID $CS_MSG_TYPE $MSG_SIZE $MSG_SIZE &
-        taskset -a -p 0x000000f0 $!
-        sleep 8
-        $SENDER $IP $PORT $VLEN $END_VAL $CS_MSG_TYPE $MSG_SIZE $MSG_SIZE &
-        taskset -a -p 0x000000f0 $!
-        wait
-    done
+  for VLEN in "${C_ARR_VLEN[@]}"
+  do
+    $CLIENT $MESSAGES $C_INTERVAL $VLEN $IP $PORT $C_PARSERS $C_SOCKET_BUFF $C_OUTPUT_Q_SIZE $C_PARSER_Q_SIZE >> $LOG_FOLDER/collector.log &
+    sleep 2
+    taskset -a -p 0x0000000F $!
+    sleep 2
+    $SENDER $IP $PORT $MESSAGES $GEN_ID $CS_MSG_TYPE $MSG_SIZE $MSG_SIZE $CS_THREADS $CS_SLP_SEC $CS_SLP_MSG &
+    taskset -a -p 0x000000f0 $!
+    sleep 8
+    $SENDER $IP $PORT $VLEN $END_VAL $CS_MSG_TYPE $MSG_SIZE $MSG_SIZE $CS_THREADS $CS_SLP_SEC $CS_SLP_MSG &
+    taskset -a -p 0x000000f0 $!
+    wait
+  done
 done

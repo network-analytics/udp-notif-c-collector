@@ -64,13 +64,20 @@ void parse_arguments(unyte_options_t *options, struct messages_max_log *msg_max_
     options->port = atoi(argv[5]);
 
     printf("PARAMS: %d|%d|%d|%s|%d\n", msg_max_log->max_to_receive, msg_max_log->time_between_log, options->recvmmsg_vlen, options->address, options->port);
-  } else if (argc == 10) { //TODO:
-    // Usage: ./client_perfomance <max_to_receive> <time_between_log> <vlen> <src_IP> <src_port>
+  } else if (argc == 10) {
+    // Usage: ./client_perfomance <max_to_receive> <time_between_log> <vlen> <src_IP> <src_port> <nb_parsers> <socket_buff_size> <output_q_size> <parser_q_size>
     msg_max_log->max_to_receive = atoi(argv[1]);
     msg_max_log->time_between_log = atoi(argv[2]);
     options->recvmmsg_vlen = atoi(argv[3]);
     options->address = argv[4];
     options->port = atoi(argv[5]);
+    options->nb_parsers = atoi(argv[6]);
+    options->socket_buff_size = atoi(argv[7]);
+    options->output_queue_size = atoi(argv[8]);
+    options->parsers_queue_size = atoi(argv[9]);
+    printf("PARAMS: %d|%d|%d|%s|%d|%d|%ld|%d|%d\n", msg_max_log->max_to_receive, msg_max_log->time_between_log, 
+      options->recvmmsg_vlen, options->address, options->port, options->nb_parsers, options->socket_buff_size,
+      options->output_queue_size, options->parsers_queue_size);
   }
   else
   {
@@ -214,7 +221,6 @@ int main(int argc, char *argv[])
   join_collectors(collectors);
   clean_collector_threads(collectors);
 
-  free(th_input);
 
   printf("Shutdown the socket\n");
   shutdown(*collector->sockfd, SHUT_RDWR);
@@ -252,5 +258,6 @@ int main(int argc, char *argv[])
   fflush(stdout);
 
   free(msg_max);
+  free(th_input);
   return 0;
 }

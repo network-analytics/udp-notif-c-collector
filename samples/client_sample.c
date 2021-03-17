@@ -13,7 +13,7 @@
 
 #define PORT 8081
 #define ADDR "192.168.0.17"
-#define USED_VLEN 50
+#define USED_VLEN 10
 #define MAX_TO_RECEIVE 20
 
 int main()
@@ -45,7 +45,7 @@ int main()
     recv_count++;
     printHeader(seg->header, stdout);
     // printf("REc:%d\n", seg->header->message_id);
-    // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
+    hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
     // printf("counter : %d\n", recv_count);
     fflush(stdout);
 

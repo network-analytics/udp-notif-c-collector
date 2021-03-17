@@ -221,7 +221,6 @@ int main(int argc, char *argv[])
   join_collectors(collectors);
   clean_collector_threads(collectors);
 
-
   printf("Shutdown the socket\n");
   shutdown(*collector->sockfd, SHUT_RDWR);
   close(*collector->sockfd);

@@ -98,6 +98,7 @@ void *t_send(void *in)
     if (input->sleep_messages->milisec > 0) {
       if (messages % input->sleep_messages->msg_mod == 0) {
         nanosleep(&t, NULL);
+        // printf("HERE\n");
         fflush(stdout);
       }
     }
@@ -220,7 +221,6 @@ int main(int argc, char *argv[])
       sleep.milisec = sleep_milis;
       sleep.msg_mod = atoi(argv[10]);
     }
-    printf("HERE: %d|%d\n", sleep.milisec, sleep.msg_mod);
   } else {
     printf("Using defaults\n");
   }

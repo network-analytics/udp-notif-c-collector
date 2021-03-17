@@ -12,13 +12,14 @@ PORT="8081"
 #array of vlen sizes for recv_mmsg
 C_ARR_VLEN=( 50 )
 C_ARR_MESSAGES=( 500000 )
-# TODO: tests differents params
 C_PARSERS=10
 #20MB
 C_SOCKET_BUFF=20971520
 C_OUTPUT_Q_SIZE=1000
 C_PARSER_Q_SIZE=500
+# sender threads to launch
 CS_THREADS=1
+# sleep miliseconds every <CS_SLP_MSG> messages
 CS_SLP_SEC=0
 CS_SLP_MSG=1000
 

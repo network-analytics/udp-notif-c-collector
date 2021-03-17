@@ -21,12 +21,11 @@ struct buffer_to_send *read_json_file(uint bytes)
   bf->buffer = (char *)malloc(bytes);
   bf->buffer_len = bytes;
   FILE *fptr;
-  char *filename;
   int filename_size = 24;
   if (bytes > 999) {
     filename_size = 25;
   } 
-  filename = (char *)malloc(filename_size); 
+  char *filename = (char *)malloc(filename_size);
   snprintf(filename, filename_size, "resources/json-%d.json", bytes);
   if ((fptr = fopen(filename, "r")) == NULL)
   {

@@ -23,12 +23,11 @@ struct buffer_to_send *read_json_file(uint bytes)
   bf->buffer = (char *)malloc(bytes);
   bf->buffer_len = bytes;
   FILE *fptr;
-  char *filename;
   int filename_size = 24;
   if (bytes > 999) {
     filename_size = 25;
   } 
-  filename = (char *)malloc(filename_size); 
+  char *filename = (char *)malloc(filename_size);
   snprintf(filename, filename_size, "resources/json-%d.json", bytes);
   if ((fptr = fopen(filename, "r")) == NULL)
   {
@@ -80,9 +79,9 @@ int main(int argc, char *argv[])
   struct buffer_to_send *bf_send = read_json_file(msg_size);
 
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
-  // struct timespec t;
-  // t.tv_sec = 0;
-  // t.tv_nsec = 999999 * 100; // 100 ms sleep
+  struct timespec t;
+  t.tv_sec = 0;
+  t.tv_nsec = 999999 * 30; // 100 ms sleep
 
   while (messages_to_send--)
   {
@@ -102,10 +101,10 @@ int main(int argc, char *argv[])
     unyte_send(sender_sk, message);
 
     // To slow down the sender
-    // int sleep_mod = 10000;
+    // int sleep_mod = 9000;
     // if (messages_to_send % sleep_mod == 0) {
     //   nanosleep(&t, NULL);
-    //   printf("Sent %d\n", sleep_mod);
+    //   // printf("Sent %d\n", sleep_mod);
     //   fflush(stdout);
     // }
     if (msg_type == 0) {

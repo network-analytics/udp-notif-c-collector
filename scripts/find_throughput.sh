@@ -8,7 +8,7 @@ C_VLEN=50
 C_IP="192.168.0.17"
 C_PORT="8081"
 C_PARSERS=10
-C_SOCKET_BUFF=20971520
+C_SOCKET_BUFF=26214400
 C_OUTPUT_Q_SIZE=1000
 C_PARSER_Q_SIZE=500
 
@@ -32,8 +32,8 @@ CLIENT=$(pwd)/../client_performance
 SENDER=$(pwd)/../sender_performance
 LOG_FOLDER=$(pwd)/../logs
 CS_RESOURCES="resources"
-LOG_FILE=$LOG_FOLDER/collector_$NOW.log
-# LOG_FILE=$LOG_FOLDER/collector.log
+# LOG_FILE=$LOG_FOLDER/collector_$NOW.log
+LOG_FILE=$LOG_FOLDER/collector.log
 
 if ! ([ -L ${CS_RESOURCES} ] && [ -e ${CS_RESOURCES} ]) ; then
   echo "Creating symlink to resources"
@@ -42,9 +42,14 @@ fi
 
 LOSS="0.000000"
 
-SLEEP_MS=( 300 150 170 60 50 40 30 20 10 0 )
-SLEEP_MSGS=( 3000 7000 )
+SLEEP_MS=( 1 )
+SLEEP_MSGS=( 100 200 250 300 500 700 )
 THREADS=( 2 3 4 )
+THRESHOLD=0.500000
+
+# TODO:
+# SLE_MSG plus petits
+# SLEEP_MS val+(rand(1-)) --> fixed gi
 
 # SLEEP_MS=( 100 )
 # SLEEP_MSGS=( 7000 8000 9000 10000 11000 )
@@ -66,15 +71,20 @@ do
       taskset -a -p 0x00000030 $!
       wait $!
 
+      # Change sl in your own computer
+      DROPS=$(cat /proc/net/udp | grep 2704)
+      DROPS=$(echo $DROPS | rev | cut -d" " -f1 | rev)
       $SENDER $CS_IP $CS_PORT $C_VLEN $CS_END_VAL $CS_TYPE $CS_MTU $CS_MSG_BYTES $THREAD $SL_MS $SL_MSG &
       taskset -a -p 0x00000030 $!
       wait
 
       FILE_LAST_LINE=$(tail -n 1 $LOG_FILE)
       LOSS=${FILE_LAST_LINE##*;}
+      echo "Drops;$DROPS" >> $LOG_FILE;
       echo "********* END $THREAD|$SL_MSG|$SL_MS ************" >> $LOG_FILE;
-      if [[ $LOSS != "0.000000" ]]; then
+      if [ $(echo "$LOSS > $THRESHOLD" | bc -l ) = 1 ]; then
         echo "Loss here: $LOSS %";
+        echo "Drops: $DROPS";
         break 3;
       fi
     done

@@ -58,6 +58,8 @@ struct sender_th_input
   uint init_gid;
   uint init_mid;
   struct sleep_msg *sleep_messages;
+  int sender_nb;
+  int total_threads;
 };
 
 void *t_send(void *in)
@@ -72,11 +74,15 @@ void *t_send(void *in)
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
   struct timespec t;
   t.tv_sec = 0;
-  t.tv_nsec = 999999 * input->sleep_messages->milisec; // 30 ms sleep
+  t.tv_nsec = 999999 * input->sleep_messages->milisec;
   uint messages = input->message_to_send;
   uint gen_id = input->init_gid;
   uint msg_id = input->init_mid;
   printf("Thread: %ld|%d|%d|%d|%d|%d|%d\n", thread_id, messages, gen_id, msg_id, input->msg_type, input->sleep_messages->milisec, input->sleep_messages->msg_mod);
+  // int first = 1;
+
+  time_t t_seed;
+  srand((unsigned) time(&t_seed) + input->sender_nb);
   while (messages--)
   {
     message->buffer = bf_send->buffer;
@@ -96,9 +102,19 @@ void *t_send(void *in)
 
     // To slow down the sender
     if (input->sleep_messages->milisec > 0) {
+      // To desynchronise the different senders
+      // if (first == 1) {
+      //   first = 0;
+      //   struct timespec t_first;
+      //   t_first.tv_sec = 0;
+      //   t_first.tv_nsec = 999999 * (input->sleep_messages->milisec/input->total_threads) * input->sender_nb;
+      //   nanosleep(&t_first, NULL);
+      // }
+
       if (messages % input->sleep_messages->msg_mod == 0) {
+        t.tv_nsec = 999999 * (input->sleep_messages->milisec + (rand() % 1));
+        // printf("t.tv_nsec: %ld\n", t.tv_nsec);
         nanosleep(&t, NULL);
-        // printf("HERE\n");
         fflush(stdout);
       }
     }
@@ -157,6 +173,8 @@ struct sender_threads *create_senders(uint count, struct sender_th_input *gl_sen
       cur_input->init_mid = msg_per_th * i;
     cur_input->message_to_send = msg_per_th;
     cur_input->sleep_messages = gl_sender_input->sleep_messages;
+    cur_input->sender_nb = i;
+    cur_input->total_threads = count;
     pthread_create(cur, NULL, t_send, (void *)cur_input);
     cur++;
     cur_input++;

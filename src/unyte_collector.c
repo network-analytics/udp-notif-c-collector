@@ -41,7 +41,6 @@ unyte_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buff_si
   } else {
     receive_buf_size = sock_buff_size;
   }
-  printf("Sock_buff:%ld\n", receive_buf_size);
   setsockopt(*sock, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size));
 
   adresse->sin_family = AF_INET;

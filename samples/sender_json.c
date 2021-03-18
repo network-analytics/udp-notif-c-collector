@@ -15,38 +15,39 @@ struct buffer_to_send
   uint buffer_len;
 };
 
-struct buffer_to_send *small_json_file()
+struct buffer_to_send *read_json_file(uint bytes)
 {
   struct buffer_to_send *bf = (struct buffer_to_send *)malloc(sizeof(struct buffer_to_send));
-  bf->buffer = (char *)malloc(700);
-  bf->buffer_len = 700;
+  bf->buffer = (char *)malloc(bytes);
+  bf->buffer_len = bytes;
   FILE *fptr;
-  if ((fptr = fopen("resources/json-700.json", "r")) == NULL)
+  int filename_size = 24;
+  if (bytes > 999) {
+    filename_size = 25;
+  } 
+  char *filename = (char *)malloc(filename_size);
+  snprintf(filename, filename_size, "resources/json-%d.json", bytes);
+  if ((fptr = fopen(filename, "r")) == NULL)
   {
     printf("Error! opening file");
+    free(filename);
     // Program exits if the file pointer returns NULL.
     exit(1);
   }
-  fread(bf->buffer, 700, 1, fptr);
+  free(filename);
+  fread(bf->buffer, bytes, 1, fptr);
   fclose(fptr);
   return bf;
 }
 
+struct buffer_to_send *small_json_file()
+{
+  return read_json_file(700);
+}
+
 struct buffer_to_send *big_json_file()
 {
-  struct buffer_to_send *bf = (struct buffer_to_send *)malloc(sizeof(struct buffer_to_send));
-  bf->buffer = (char *)malloc(8950);
-  bf->buffer_len = 8950;
-  FILE *fptr;
-  if ((fptr = fopen("resources/json-8950.json", "r")) == NULL)
-  {
-    printf("Error! opening file");
-    // Program exits if the file pointer returns NULL.
-    exit(1);
-  }
-  fread(bf->buffer, 8950, 1, fptr);
-  fclose(fptr);
-  return bf;
+  return read_json_file(8950);
 }
 
 int main()
@@ -61,6 +62,8 @@ int main()
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
   struct buffer_to_send *bf_send = big_json_file();
+  // struct buffer_to_send *bf_send = read_json_file(200);
+
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
   message->buffer = bf_send->buffer;
   message->buffer_len = bf_send->buffer_len;

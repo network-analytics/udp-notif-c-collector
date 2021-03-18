@@ -1,0 +1,86 @@
+[
+  {
+    "_id": "6050e07d0643e1081663c9e5",
+    "index": 0,
+    "guid": "30700f59-9c18-4a14-ab51-7490e5aa36c0",
+    "isActive": false,
+    "balance": "$1,852.70",
+    "picture": "http://placehold.it/32x32",
+    "age": 23,
+    "eyeColor": "brown",
+    "name": "Jennie Ortiz",
+    "gender": "female",
+    "company": "FURNIGEER",
+    "email": "jennieortiz@furnigeer.com",
+    "phone": "+1 (869) 501-3346",
+    "address": "131 Linden Street, Hailesboro, American Samoa, 7113",
+    "about": "Do duis velit mollit Lorem anim cillum in incididunt nulla et. Sit laboris est duis occaecat non occaecat tempor. Proident enim dolore cupidatat duis eu officia magna occaecat fugiat eiusmod non dolore.\r\n",
+    "registered": "2014-03-24T11:36:58 -01:00",
+    "latitude": 15.22025,
+    "longitude": -25.083346,
+    "friends": [
+      {
+        "id": 0,
+        "name": "Hillary Gross"
+      }
+    ],
+    "greeting": "Hello, Jennie Ortiz! You have 2 unread messages.",
+    "favoriteFruit": "banana"
+  },
+  {
+    "_id": "6050e07dec9e061dc423994c",
+    "index": 1,
+    "guid": "ce6daf79-0ec9-48cc-95ea-4b8f336d328f",
+    "isActive": true,
+    "balance": "$3,124.96",
+    "picture": "http://placehold.it/32x32",
+    "age": 26,
+    "eyeColor": "green",
+    "name": "Duncan Washington",
+    "gender": "male",
+    "company": "LYRIA",
+    "email": "duncanwashington@lyria.com",
+    "phone": "+1 (874) 503-2260",
+    "address": "258 Vanderbilt Street, Shelby, Mississippi, 2181",
+    "about": "Dolor labore pariatur esse culpa incididunt velit labore irure id deserunt in voluptate. Lorem enim eiusmod sunt commodo ullamco. Culpa duis sint duis excepteur excepteur enim do.\r\n",
+    "registered": "2014-01-02T08:41:08 -01:00",
+    "latitude": 28.93,
+    "longitude": -37.592914,
+    "friends": [
+      {
+        "id": 0,
+        "name": "Knapp Wolf"
+      }
+    ],
+    "greeting": "Hello, Duncan Washington! You have 2 unread messages.",
+    "favoriteFruit": "banana"
+  },
+  {
+    "_id": "6050e07d7445ba006f1789cd",
+    "index": 2,
+    "guid": "0c0f7e16-5a36-4def-b7f0-8a90a6f5f3e6",
+    "isActive": false,
+    "balance": "$3,632.63",
+    "picture": "http://placehold.it/32x32",
+    "age": 33,
+    "eyeColor": "blue",
+    "name": "Jewell Townsend",
+    "gender": "female",
+    "company": "COMBOGENE",
+    "email": "jewelltownsend@combogene.com",
+    "phone": "+1 (909) 542-2592",
+    "address": "911 McKibben Street, Titanic, Minnesota, 8587",
+    "about": "Dolor irure magna sunt elit labore molli. Cr incididunt exercitation incididunt adipisicing id esse officia occaecat mollit magna id qui. Voluptate sunt sunt sint dolor Lorem nulla in incididunt. In et excepteur labore veniam duis excepteur officia esse ex.\r\n",
+    "registered": "2016-06-12T12:31:08 -02:00",
+    "latitude": 61.538928,
+    "longitude": -25.490245,
+    "friends": [
+      {
+        "id": 0,
+        "name": "Kristi Cruz"
+      }
+    ],
+    "greeting": "Hello, Jewell Townsend! You have 2 unread messages.",
+    "favoriteFruit": "banana"
+  }
+]

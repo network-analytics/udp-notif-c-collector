@@ -26,7 +26,7 @@ struct messages_max_log
   int time_between_log;
 };
 
-void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *start, int messages)
+void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *start, int messages, pthread_t thread_id)
 {
   if (stop->tv_nsec < start->tv_nsec)
   {
@@ -39,7 +39,7 @@ void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *st
     diff->tv_sec = stop->tv_sec - start->tv_sec;
     diff->tv_nsec = stop->tv_nsec - start->tv_nsec;
   }
-  printf("%d;%ld,%06ld\n", messages, diff->tv_sec * 1000 + diff->tv_nsec / 1000000, diff->tv_nsec % 1000000);
+  printf("%ld;%d;%ld,%06ld\n", thread_id, messages, diff->tv_sec * 1000 + diff->tv_nsec / 1000000, diff->tv_nsec % 1000000);
 }
 
 void parse_arguments(unyte_options_t *options, struct messages_max_log *msg_max_log, int argc, char *argv[])
@@ -64,6 +64,20 @@ void parse_arguments(unyte_options_t *options, struct messages_max_log *msg_max_
     options->port = atoi(argv[5]);
 
     printf("PARAMS: %d|%d|%d|%s|%d\n", msg_max_log->max_to_receive, msg_max_log->time_between_log, options->recvmmsg_vlen, options->address, options->port);
+  } else if (argc == 10) {
+    // Usage: ./client_perfomance <max_to_receive> <time_between_log> <vlen> <src_IP> <src_port> <nb_parsers> <socket_buff_size> <output_q_size> <parser_q_size>
+    msg_max_log->max_to_receive = atoi(argv[1]);
+    msg_max_log->time_between_log = atoi(argv[2]);
+    options->recvmmsg_vlen = atoi(argv[3]);
+    options->address = argv[4];
+    options->port = atoi(argv[5]);
+    options->nb_parsers = atoi(argv[6]);
+    options->socket_buff_size = atoi(argv[7]);
+    options->output_queue_size = atoi(argv[8]);
+    options->parsers_queue_size = atoi(argv[9]);
+    printf("PARAMS: %d|%d|%d|%s|%d|%d|%ld|%d|%d\n", msg_max_log->max_to_receive, msg_max_log->time_between_log, 
+      options->recvmmsg_vlen, options->address, options->port, options->nb_parsers, options->socket_buff_size,
+      options->output_queue_size, options->parsers_queue_size);
   }
   else
   {
@@ -74,8 +88,9 @@ struct thread_input
 {
   queue_t *queue;
   int *count_total;
-  int *received_gids;
+  int *received_msgs;
   struct messages_max_log *msg_max_log;
+  int type_count; // 0 = generator_id | 1 = msg_id
 };
 
 void *t_read(void *in)
@@ -84,11 +99,13 @@ void *t_read(void *in)
   int count_thread = 0;
   struct messages_max_log *msg_max = input->msg_max_log;
   int first = 1;
-  int *received_gids = input->received_gids;
+  int *received_msgs = input->received_msgs;
   queue_t *queue = input->queue;
   struct timespec start;
   struct timespec stop;
   struct timespec diff;
+  pthread_t thread_id = pthread_self();
+  uint32_t msg_id = 0;
   // printf("Thread: %ld\n", pthread_self());
   while (*input->count_total < input->msg_max_log->max_to_receive)
   {
@@ -104,22 +121,28 @@ void *t_read(void *in)
       else
       {
         clock_gettime(CLOCK_MONOTONIC, &stop);
-        time_diff(&diff, &stop, &start, count_thread);
+        time_diff(&diff, &stop, &start, count_thread, thread_id);
         clock_gettime(CLOCK_MONOTONIC, &start);
       }
     }
     count_thread++;
     (*input->count_total)++;
 
+    if (input->type_count == 0) {
+      msg_id = seg->header->generator_id;
+    } else {
+      msg_id = seg->header->message_id;
+    }
+
     // break when receive last_gen_id from scapy
-    if (seg->header->generator_id == LAST_GEN_ID)
+    if (msg_id == LAST_GEN_ID)
     {
       fflush(stdout);
       unyte_free_all(seg);
       break;
     }
 
-    received_gids[seg->header->generator_id] = 1;
+    received_msgs[msg_id] = 1;
 
     // printHeader(seg->header, stdout);
     // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
@@ -184,33 +207,37 @@ int main(int argc, char *argv[])
   unyte_collector_t *collector = unyte_start_collector(&options);
   int recv_count = 0;
 
-  int received_gids[msg_max->max_to_receive];
-  memset(received_gids, -1, msg_max->max_to_receive * sizeof(int));
+  int received_msgs[msg_max->max_to_receive];
+  memset(received_msgs, -1, msg_max->max_to_receive * sizeof(int));
 
   struct thread_input *th_input = malloc(sizeof(struct thread_input));
   th_input->count_total = &recv_count;
   th_input->msg_max_log = msg_max;
   th_input->queue = collector->queue;
-  th_input->received_gids = received_gids;
+  th_input->received_msgs = received_msgs;
+  th_input->type_count = 0;
 
   struct collector_threads *collectors = create_collectors(NB_THREADS, th_input);
   join_collectors(collectors);
   clean_collector_threads(collectors);
 
-  free(th_input);
-
   printf("Shutdown the socket\n");
   shutdown(*collector->sockfd, SHUT_RDWR);
   close(*collector->sockfd);
   pthread_join(*collector->main_thread, NULL);
-
+  uint32_t msg_id = 0;
   /* Free last packets in the queue */
   while (is_queue_empty(collector->queue) != 0)
   {
     unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
-    if (seg->header->generator_id != LAST_GEN_ID)
+    if (th_input->type_count == 0) {
+      msg_id = seg->header->generator_id;
+    } else {
+      msg_id = seg->header->message_id;
+    }
+    if (msg_id != LAST_GEN_ID)
     {
-      received_gids[seg->header->generator_id] = 1;
+      received_msgs[msg_id] = 1;
     }
     unyte_free_all(seg);
   }
@@ -218,7 +245,7 @@ int main(int argc, char *argv[])
   int lost_messages = 0;
   for (int i = 0; i < msg_max->max_to_receive; i++)
   {
-    if (received_gids[i] == -1)
+    if (received_msgs[i] == -1)
     {
       lost_messages += 1;
     }
@@ -230,5 +257,6 @@ int main(int argc, char *argv[])
   fflush(stdout);
 
   free(msg_max);
+  free(th_input);
   return 0;
 }

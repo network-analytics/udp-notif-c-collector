@@ -1,0 +1,118 @@
+[
+  {
+    "_id": "6050e03a44c977f3ab7f2578",
+    "index": 0,
+    "guid": "42f3e1a4-94ff-4a4a-b043-701a8fa378de",
+    "isActive": true,
+    "balance": "$3,959.86",
+    "picture": "http://placehold.it/32x32",
+    "age": 21,
+    "eyeColor": "brown",
+    "name": "Duran Henry",
+    "gender": "male",
+    "company": "COSMETEX",
+    "email": "duranhenry@cosmetex.com",
+    "phone": "+1 (889) 473-2800",
+    "address": "890 Vandervoort Avenue, Wyano, Virgin Islands, 5484",
+    "about": "Sit dolore eiusmod ut nisi cillum offiscia ad. Amet reprehenderit consectetur enim ut do exercitation ad labore irure cillum sit est incididunt sunt. Cupidatat laboris exercitation adipisicing exercitation exercitation mollit voluptate occaecat duis. Laboris tempor fugiat nisi occaecat mollit. Culpa adipisicing tempor et Lorem labore incididunt officia excepteur et fugiat laboris. Sunt sint eu sit dolor elit ea. Consequat et voluptate nulla labore occaecat dolore ea sint aute labore in culpa eiusmod.\r\n",
+    "registered": "2015-05-12T11:18:01 -02:00",
+    "latitude": -25.86862,
+    "longitude": -158.188458,
+    "friends": [
+      {
+        "id": 0,
+        "name": "Hines Cochran"
+      },
+      {
+        "id": 1,
+        "name": "Johanna Woodard"
+      }
+    ],
+    "greeting": "Hello, Duran Henry! You have 7 unread messages.",
+    "favoriteFruit": "strawberry"
+  },
+  {
+    "_id": "6050e03acedce71e6df732c1",
+    "index": 1,
+    "guid": "c270884a-c138-4e6b-a2d5-3f91527d47ee",
+    "isActive": false,
+    "balance": "$3,648.10",
+    "picture": "http://placehold.it/32x32",
+    "age": 32,
+    "eyeColor": "brown",
+    "name": "Mathis Kent",
+    "gender": "male",
+    "company": "GAZAK",
+    "email": "mathiskent@gazak.com",
+    "phone": "+1 (983) 489-3455",
+    "address": "748 Highlawn Avenue, Torboy, Vermont, 5653",
+    "about": "Nulla est aute esse est amet non nostrud eu cillum duis adipisicing. Excepteur nostrud ex do ut deserunt. Elit non nostrud voluptate commodo quis culpa duis laboris cillum excepteur do aute. Deserunt est fugiat anim exercitation commodo et nostrud mollit fugiat ullamco. Commodo ad ea ad proident.\r\n",
+    "registered": "2018-11-18T08:16:10 -01:00",
+    "latitude": -75.838516,
+    "longitude": -55.699067,
+    "friends": [
+      {
+        "id": 0,
+        "name": "Augusta Barker"
+      }
+    ],
+    "greeting": "Hello, Mathis Kent! You have 6 unread messages.",
+    "favoriteFruit": "lemon"
+  },
+  {
+    "_id": "6050e03ad533feb73f473afb",
+    "index": 2,
+    "guid": "d35c08d2-c524-413b-9d63-98999417b783",
+    "isActive": true,
+    "balance": "$1,480.45",
+    "picture": "http://placehold.it/32x32",
+    "age": 30,
+    "eyeColor": "green",
+    "name": "Belinda Gonzales",
+    "gender": "female",
+    "company": "PAPRICUT",
+    "email": "belindagonzales@papricut.com",
+    "phone": "+1 (810) 521-2485",
+    "address": "862 Sharon Street, Chicopee, Iowa, 8323",
+    "about": "Proident pariatur dolore aliqua minim magna deserunt ullamco non incididunt aliqua sunt. Consectetur laborum ut ut excepteur reprehenderit anim labore officia deserunt ea aliquip ullamco. Et incididunt quis non tempor nisi consectetur mollit sunt.\r\n",
+    "registered": "2017-04-18T04:28:37 -02:00",
+    "latitude": -26.381712,
+    "longitude": 80.84935,
+    "friends": [
+      {
+        "id": 0,
+        "name": "Rebekah Wynn"
+      }
+    ],
+    "greeting": "Hello, Belinda Gonzales! You have 10 unread messages.",
+    "favoriteFruit": "strawberry"
+  },
+  {
+    "_id": "6050e03a710bd6d5a51ea65c",
+    "index": 3,
+    "guid": "25f0fdb6-fdd8-4c81-b6fa-3444cc8fa8e2",
+    "isActive": false,
+    "balance": "$3,642.04",
+    "picture": "http://placehold.it/32x32",
+    "age": 30,
+    "eyeColor": "green",
+    "name": "Madeline Caldwell",
+    "gender": "female",
+    "company": "CUJO",
+    "email": "madelinecaldwell@cujo.com",
+    "phone": "+1 (899) 568-3072",
+    "address": "147 Huntington Street, Guilford, Florida, 9173",
+    "about": "Reprehenderit cupidatat ea aliqua aute amet. Veniam sint ullamco commodo minim anim ea non dolor. Qui amet laborum eiusmod aute eiusmod quis cillum minim ipsum esse excepteur est. Mollit exercitation eiusmod consectetur nulla sint labore fugiat irure.\r\n",
+    "registered": "2017-08-03T08:14:42 -02:00",
+    "latitude": -71.39345,
+    "longitude": -11.01884,
+    "friends": [
+      {
+        "id": 0,
+        "name": "Francis Kelly"
+      }
+    ],
+    "greeting": "Hello, Madeline Caldwell! You have 5 unread messages.",
+    "favoriteFruit": "apple"
+  }
+]

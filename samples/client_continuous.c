@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <stdint.h>
 #include <signal.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -21,7 +22,9 @@
 #define SK_BUFF 20971520
 #define MAX_GEN_ID 1000
 #define MSG_ID_MAX 4294967295
-#define LOG_MSG_BETWEEN 200
+#define LOG_MSG_BETWEEN 50
+#define NB_GID 4
+#define MSG_TO_RECEIVE 200
 
 void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *start, int messages, pthread_t thread_id)
 {
@@ -39,49 +42,116 @@ void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *st
   printf("%ld;%d;%ld,%06ld\n", thread_id, messages, diff->tv_sec * 1000 + diff->tv_nsec / 1000000, diff->tv_nsec % 1000000);
 }
 
-struct message_stat
+struct received_msg
 {
-  uint last_msg_id;
-  uint packet_count;
-  uint packet_lost;
-  uint packet_reorder;
+  // int gid;
+  int first_mid;
+  int *messages;
+  uint total;
 };
 
-void update_message_stats(struct message_stat *message_stat, unyte_seg_met_t *seg)
+struct active_gids
 {
-  if (message_stat->last_msg_id == 0)
+  int it;
+  int *gids;
+};
+
+void add_gid(struct active_gids *actives, int gid)
+{
+  int exists = 0;
+  for (int i = 0; i < actives->it; i++)
   {
-    message_stat->last_msg_id = seg->header->message_id;
-    message_stat->packet_count += 1;
+    if (actives->gids[i] == gid)
+    {
+      exists = 1;
+      break;
+    }
   }
-  else if ((seg->header->message_id - message_stat->last_msg_id) == 1) // received 1 packet
+  if (exists == 0)
   {
-    message_stat->packet_count += 1;
-    message_stat->last_msg_id = seg->header->message_id;
-  }
-  else if ((seg->header->message_id - message_stat->last_msg_id) > 1) // packet lost
-  {
-    message_stat->packet_count += 1;
-    message_stat->packet_lost += seg->header->message_id - message_stat->last_msg_id - 1;
-    message_stat->last_msg_id = seg->header->message_id;
-  }
-  else // packet reorder
-  {
-    message_stat->packet_count += 1;
-    message_stat->packet_reorder += 1;
+    actives->gids[actives->it] = gid;
+    actives->it++;
   }
 }
 
-void restart_message_stats(struct message_stat *message_stat)
+int active_gids_full(struct active_gids *actives, int *full_index)
 {
-  message_stat->packet_count = 0;
-  message_stat->packet_lost = 0;
-  message_stat->packet_reorder = 0;
+  for (int i = 0; i < actives->it; i++)
+  {
+    if (full_index[actives->gids[i]] == 0)
+    {
+      return 0;
+    }
+  }
+  return 1;
 }
 
-void print_message_stats(uint gid, struct message_stat *message_stat)
+struct received_msg *init_stats(uint nb_gid, uint nb_messages)
 {
-  printf("%d;%d;%d;%d\n", gid, message_stat->packet_lost, message_stat->packet_reorder, message_stat->packet_count);
+  struct received_msg *messages = (struct received_msg *)malloc(sizeof(struct received_msg) * nb_gid);
+  struct received_msg *cur = messages;
+
+  for (uint i = 0; i < nb_gid; i++)
+  {
+    // cur->gid = -1;
+    cur->first_mid = -1;
+    cur->messages = (int *)malloc(sizeof(int) * (nb_messages + nb_gid));
+    memset(cur->messages, -1, sizeof(int) * (nb_messages + nb_gid));
+    cur->total = nb_messages;
+    cur++;
+  }
+  return messages;
+}
+
+void update_stats(struct received_msg *messages, uint index, uint mid, uint gid, int *full_index)
+{
+  struct received_msg *message_stats = messages + index;
+  if (message_stats->first_mid < 0)
+  {
+    message_stats->first_mid = mid;
+  }
+  if (message_stats->total > (mid - message_stats->first_mid))
+  {
+    // printf("%d|%d\n", message_stats->total, mid - message_stats->first_mid);
+    message_stats->messages[mid - message_stats->first_mid] = 1;
+  }
+  else
+  {
+    full_index[gid] = 1;
+  }
+}
+
+void clean_received_msg(struct received_msg *messages, uint nb_gid)
+{
+  for (uint i = 0; i < nb_gid; i++)
+  {
+    free((messages + i)->messages);
+  }
+  free(messages);
+}
+
+uint get_gid_index(int *indexes, uint gid, uint *cur_new)
+{
+  if (indexes[gid] < 0)
+  {
+    indexes[gid] = *cur_new;
+    *cur_new += 1;
+  }
+  return indexes[gid];
+}
+
+uint get_lost_messages(struct received_msg *messages, uint index)
+{
+  struct received_msg *message_stats = messages + index;
+  uint lost = 0;
+  for (uint i = 0; i < message_stats->total; i++)
+  {
+    if (message_stats->messages[i] < 0)
+    {
+      lost++;
+    }
+  }
+  return lost;
 }
 
 int main(int argc, char *argv[])
@@ -99,8 +169,27 @@ int main(int argc, char *argv[])
   /* Initialize collector */
   unyte_collector_t *collector = unyte_start_collector(&options);
 
-  struct message_stat message_stats[MAX_GEN_ID];
+  uint number_gids = NB_GID;
+  uint messages_to_recv = MSG_TO_RECEIVE;
 
+  uint cur_new = 0;
+  struct received_msg *message_stats = init_stats(number_gids, messages_to_recv);
+  uint max_gid = 1000;
+  int *indexes = (int *)malloc(sizeof(int) * max_gid);
+  int *full_index = (int *)malloc(sizeof(int) * max_gid);
+  struct active_gids *actives = (struct active_gids *)malloc(sizeof(struct active_gids));
+  actives->it = 0;
+  actives->gids = (int *)malloc(sizeof(int) * max_gid);
+
+  memset(indexes, -1, sizeof(int) * max_gid);
+  memset(full_index, 0, sizeof(int) * max_gid);
+
+  uint counter = 0;
+  int first = 1;
+
+  struct timespec start;
+  struct timespec stop;
+  struct timespec diff;
   while (1)
   {
     /* Read queue */
@@ -111,17 +200,34 @@ int main(int argc, char *argv[])
       fflush(stdout);
     }
     unyte_seg_met_t *seg = (unyte_seg_met_t *)seg_pointer;
-    struct message_stat *current_stat = &message_stats[seg->header->generator_id];
-    update_message_stats(current_stat, seg);
 
-    if ((current_stat->packet_count % LOG_MSG_BETWEEN) == 0)
+    uint gid_index = get_gid_index(indexes, seg->header->generator_id, &cur_new);
+    update_stats(message_stats, gid_index, seg->header->message_id, seg->header->generator_id, full_index);
+
+    add_gid(actives, seg->header->generator_id);
+
+    if ((counter % LOG_MSG_BETWEEN) == 0)
     {
-      print_message_stats(seg->header->generator_id, current_stat);
-      restart_message_stats(current_stat);
+      if (first)
+      {
+        first = 0;
+        clock_gettime(CLOCK_MONOTONIC, &start);
+      }
+      else
+      {
+        clock_gettime(CLOCK_MONOTONIC, &stop);
+        time_diff(&diff, &stop, &start, counter, 0);
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        if (active_gids_full(actives, full_index))
+        {
+          fflush(stdout);
+          unyte_free_all(seg);
+          break;
+        }
+      }
     }
-
+    counter++;
     // printHeader(seg->header, stdout);
-    // printf("REc:%d\n", seg->header->message_id);
     // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
     // printf("counter : %d\n", recv_count);
     fflush(stdout);
@@ -129,5 +235,33 @@ int main(int argc, char *argv[])
     /* Struct frees */
     unyte_free_all(seg);
   }
+
+  printf("Shutdown the socket\n");
+  shutdown(*collector->sockfd, SHUT_RDWR); //TODO: à valider/force empty queue (?)
+  close(*collector->sockfd);
+  pthread_join(*collector->main_thread, NULL);
+
+  for (uint i = 0; i < max_gid; i++)
+  {
+    if (indexes[i] < 0)
+      continue;
+
+    uint lost = get_lost_messages(message_stats, indexes[i]);
+    printf("Lost;%d;%d;%d\n", i, lost, (message_stats + indexes[i])->total);
+  }
+
+  /* Free last packets in the queue */
+  while (is_queue_empty(collector->queue) != 0)
+  {
+    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
+    unyte_free_all(seg);
+  }
+
+  unyte_free_collector(collector);
+  clean_received_msg(message_stats, number_gids);
+  free(indexes);
+  free(full_index);
+  free(actives->gids);
+  free(actives);
   return 0;
 }

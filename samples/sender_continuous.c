@@ -8,9 +8,9 @@
 #define PORT 8081
 #define ADDR "192.168.0.17"
 #define MTU 1500
-#define GEN_ID 3
+#define GEN_ID 232
 #define MSG_SIZE 8950
-#define SLEEP_MS 700
+#define SLEEP_MS 300
 #define SLEEP_MSG 20
 #define SLEEP_JITTER 0.3
 

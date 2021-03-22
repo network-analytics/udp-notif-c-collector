@@ -275,9 +275,6 @@ int main(int argc, char *argv[])
   options.parsers_queue_size = PARSER_QUEUE;
   options.socket_buff_size = SK_BUFF;
 
-  /* Initialize collector */
-  unyte_collector_t *collector = unyte_start_collector(&options);
-
   uint number_gids = NB_GID;
   uint messages_to_recv = MSG_TO_RECEIVE;
   uint time_between = LOG_MSG_BETWEEN;
@@ -302,6 +299,9 @@ int main(int argc, char *argv[])
     printf("Using defaults\n");
   }
 
+  /* Initialize collector */
+  unyte_collector_t *collector = unyte_start_collector(&options);
+
   uint cur_new = 0;
   struct received_msg *message_stats = init_stats(number_gids, messages_to_recv);
   uint max_gid = 1000;
@@ -323,7 +323,7 @@ int main(int argc, char *argv[])
   th_input->queue = collector->queue;
   th_input->time_between = time_between;
 
-  struct collector_threads *collectors = create_collectors(NB_THREADS, th_input);
+  struct collector_threads *collectors = create_collectors(nb_threads, th_input);
   join_collectors(collectors);
   clean_collector_threads(collectors);
 

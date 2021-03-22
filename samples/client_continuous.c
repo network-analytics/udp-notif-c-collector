@@ -25,6 +25,7 @@
 #define LOG_MSG_BETWEEN 50
 #define NB_GID 4
 #define MSG_TO_RECEIVE 200
+#define NB_THREADS 5
 
 void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *start, int messages, pthread_t thread_id)
 {
@@ -154,6 +155,111 @@ uint get_lost_messages(struct received_msg *messages, uint index)
   return lost;
 }
 
+struct thread_input {
+  queue_t *queue;
+  uint *cur_new;
+  int *indexes;
+  int *full_index;
+  struct received_msg *message_stats;
+  struct active_gids *actives;
+};
+
+void *t_read(void *in)
+{
+  struct thread_input *input = (struct thread_input *)in;
+
+  uint counter = 0;
+  int first = 1;
+
+  struct timespec start;
+  struct timespec stop;
+  struct timespec diff;
+  while (1)
+  {
+    /* Read queue */
+    void *seg_pointer = unyte_queue_read(input->queue);
+    if (seg_pointer == NULL)
+    {
+      printf("seg_pointer null\n");
+      fflush(stdout);
+    }
+    unyte_seg_met_t *seg = (unyte_seg_met_t *)seg_pointer;
+
+    uint gid_index = get_gid_index(input->indexes, seg->header->generator_id, input->cur_new);
+    update_stats(input->message_stats, gid_index, seg->header->message_id, seg->header->generator_id, input->full_index);
+
+    add_gid(input->actives, seg->header->generator_id);
+
+    if ((counter % LOG_MSG_BETWEEN) == 0)
+    {
+      if (first)
+      {
+        first = 0;
+        clock_gettime(CLOCK_MONOTONIC, &start);
+      }
+      else
+      {
+        clock_gettime(CLOCK_MONOTONIC, &stop);
+        time_diff(&diff, &stop, &start, counter, 0);
+        clock_gettime(CLOCK_MONOTONIC, &start);
+        if (active_gids_full(input->actives, input->full_index))
+        {
+          fflush(stdout);
+          unyte_free_all(seg);
+          break;
+        }
+      }
+    }
+    counter++;
+    // printHeader(seg->header, stdout);
+    // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
+    // printf("counter : %d\n", recv_count);
+    fflush(stdout);
+
+    /* Struct frees */
+    unyte_free_all(seg);
+  }
+  return NULL;
+}
+
+struct collector_threads
+{
+  pthread_t *threads;
+  uint count;
+};
+
+struct collector_threads *create_collectors(uint count, struct thread_input *th_input)
+{
+  struct collector_threads *readers = (struct collector_threads *)malloc(sizeof(struct collector_threads));
+
+  pthread_t *threads = (pthread_t *)malloc(sizeof(pthread_t) * count);
+  pthread_t *cur = threads;
+  for (uint i = 0; i < count; i++)
+  {
+    pthread_create(cur, NULL, t_read, (void *)th_input);
+    cur++;
+  }
+  readers->count = count;
+  readers->threads = threads;
+  return readers;
+}
+
+void join_collectors(struct collector_threads *threads)
+{
+  pthread_t *cur = threads->threads;
+  for (uint i = 0; i < threads->count; i++)
+  {
+    pthread_join(*cur, NULL);
+    cur++;
+  }
+}
+
+void clean_collector_threads(struct collector_threads *threads)
+{
+  free(threads->threads);
+  free(threads);
+}
+
 int main(int argc, char *argv[])
 {
   // Initialize collector options
@@ -184,60 +290,20 @@ int main(int argc, char *argv[])
   memset(indexes, -1, sizeof(int) * max_gid);
   memset(full_index, 0, sizeof(int) * max_gid);
 
-  uint counter = 0;
-  int first = 1;
+  struct thread_input *th_input = malloc(sizeof(struct thread_input));
+  th_input->actives = actives;
+  th_input->cur_new = &cur_new;
+  th_input->full_index = full_index;
+  th_input->indexes = indexes;
+  th_input->message_stats = message_stats;
+  th_input->queue = collector->queue;
 
-  struct timespec start;
-  struct timespec stop;
-  struct timespec diff;
-  while (1)
-  {
-    /* Read queue */
-    void *seg_pointer = unyte_queue_read(collector->queue);
-    if (seg_pointer == NULL)
-    {
-      printf("seg_pointer null\n");
-      fflush(stdout);
-    }
-    unyte_seg_met_t *seg = (unyte_seg_met_t *)seg_pointer;
-
-    uint gid_index = get_gid_index(indexes, seg->header->generator_id, &cur_new);
-    update_stats(message_stats, gid_index, seg->header->message_id, seg->header->generator_id, full_index);
-
-    add_gid(actives, seg->header->generator_id);
-
-    if ((counter % LOG_MSG_BETWEEN) == 0)
-    {
-      if (first)
-      {
-        first = 0;
-        clock_gettime(CLOCK_MONOTONIC, &start);
-      }
-      else
-      {
-        clock_gettime(CLOCK_MONOTONIC, &stop);
-        time_diff(&diff, &stop, &start, counter, 0);
-        clock_gettime(CLOCK_MONOTONIC, &start);
-        if (active_gids_full(actives, full_index))
-        {
-          fflush(stdout);
-          unyte_free_all(seg);
-          break;
-        }
-      }
-    }
-    counter++;
-    // printHeader(seg->header, stdout);
-    // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
-    // printf("counter : %d\n", recv_count);
-    fflush(stdout);
-
-    /* Struct frees */
-    unyte_free_all(seg);
-  }
+  struct collector_threads *collectors = create_collectors(NB_THREADS, th_input);
+  join_collectors(collectors);
+  clean_collector_threads(collectors);
 
   printf("Shutdown the socket\n");
-  shutdown(*collector->sockfd, SHUT_RDWR); //TODO: à valider/force empty queue (?)
+  shutdown(*collector->sockfd, SHUT_RDWR);
   close(*collector->sockfd);
   pthread_join(*collector->main_thread, NULL);
 
@@ -263,5 +329,7 @@ int main(int argc, char *argv[])
   free(full_index);
   free(actives->gids);
   free(actives);
+  free(th_input);
+  // free(thread);
   return 0;
 }

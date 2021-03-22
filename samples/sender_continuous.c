@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "../src/unyte_sender.h"
 #include "../src/unyte_utils.h"
@@ -70,7 +71,7 @@ int main(int argc, char *argv[])
   sleep.jitter = SLEEP_JITTER;
   
   if (argc == 9)
-  { // Usage: ./sender_performance <address> <port> <gen_id> <mtu> <msg_bytes_size> <milisec_sleep> <messages_mod> <jitter>
+  { // Usage: ./sender_continuous <address> <port> <gen_id> <mtu> <msg_bytes_size> <milisec_sleep> <messages_mod> <jitter>
     options.address = argv[1];
     options.port = atoi(argv[2]);
     gen_id = atoi(argv[3]);
@@ -79,14 +80,15 @@ int main(int argc, char *argv[])
     options.default_mtu = used_mtu;
     sleep.milisec = atoi(argv[6]);
     sleep.msg_mod = atoi(argv[7]);
-    sleep.jitter = atoi(argv[8]);
+    sleep.jitter = atof(argv[8]);
   }
   else
   {
     printf("Using defaults\n");
   }
+  pid_t pid = getpid();
 
-  printf("Sender;%s:%d|%d|gid:%d|size:%d\n", options.address, options.port, options.default_mtu, gen_id, msg_size);
+  printf("Sender %d;%s:%d|%d|gid:%d|size:%d|sleep:%d|sleep_mod:%d|jitter:%f\n", pid, options.address, options.port, options.default_mtu, gen_id, msg_size, sleep.milisec, sleep.msg_mod, sleep.jitter);
 
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
@@ -122,7 +124,7 @@ int main(int argc, char *argv[])
     if (sleep.milisec > 0) {
       if (msg_id % sleep.msg_mod == 0) {
         t.tv_nsec = (rand() % (upper_sleep - lower_sleep + 1)) + lower_sleep;
-        printf("t.tv_nsec: %ld\n", t.tv_nsec/999999);
+        // printf("%d: t.tv_nsec: %ld\n", pid, t.tv_nsec/999999);
         nanosleep(&t, NULL);
         fflush(stdout);
       }

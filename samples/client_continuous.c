@@ -162,6 +162,7 @@ struct thread_input {
   int *full_index;
   struct received_msg *message_stats;
   struct active_gids *actives;
+  uint time_between;
 };
 
 void *t_read(void *in)
@@ -174,6 +175,8 @@ void *t_read(void *in)
   struct timespec start;
   struct timespec stop;
   struct timespec diff;
+
+  pthread_t thread_id = pthread_self();
   while (1)
   {
     /* Read queue */
@@ -190,7 +193,7 @@ void *t_read(void *in)
 
     add_gid(input->actives, seg->header->generator_id);
 
-    if ((counter % LOG_MSG_BETWEEN) == 0)
+    if ((counter % input->time_between) == 0)
     {
       if (first)
       {
@@ -200,7 +203,7 @@ void *t_read(void *in)
       else
       {
         clock_gettime(CLOCK_MONOTONIC, &stop);
-        time_diff(&diff, &stop, &start, counter, 0);
+        time_diff(&diff, &stop, &start, counter, thread_id);
         clock_gettime(CLOCK_MONOTONIC, &start);
         if (active_gids_full(input->actives, input->full_index))
         {
@@ -277,6 +280,27 @@ int main(int argc, char *argv[])
 
   uint number_gids = NB_GID;
   uint messages_to_recv = MSG_TO_RECEIVE;
+  uint time_between = LOG_MSG_BETWEEN;
+  uint nb_threads = NB_THREADS;
+
+  if (argc == 12)
+  { // Usage: ./client_continuous <address> <port> <vlen> <nb_parsers> <output_queue> <parser_queue> <socket_buff> <number_gids> <messages_to_recv> <time_between> <nb_threads>
+    options.address = argv[1];
+    options.port = atoi(argv[2]);
+    options.recvmmsg_vlen = atoi(argv[3]);
+    options.nb_parsers = atoi(argv[4]);
+    options.output_queue_size = atoi(argv[5]);
+    options.parsers_queue_size = atoi(argv[6]);
+    options.socket_buff_size = atoi(argv[7]);
+    number_gids = atoi(argv[8]);
+    messages_to_recv = atoi(argv[9]);
+    time_between = atoi(argv[10]);
+    nb_threads = atoi(argv[11]);
+  }
+  else
+  {
+    printf("Using defaults\n");
+  }
 
   uint cur_new = 0;
   struct received_msg *message_stats = init_stats(number_gids, messages_to_recv);
@@ -297,6 +321,7 @@ int main(int argc, char *argv[])
   th_input->indexes = indexes;
   th_input->message_stats = message_stats;
   th_input->queue = collector->queue;
+  th_input->time_between = time_between;
 
   struct collector_threads *collectors = create_collectors(NB_THREADS, th_input);
   join_collectors(collectors);
@@ -330,6 +355,5 @@ int main(int argc, char *argv[])
   free(actives->gids);
   free(actives);
   free(th_input);
-  // free(thread);
   return 0;
 }

@@ -13,6 +13,17 @@ C_NB_GIDS=5
 C_MESSAGES=50000
 C_TIME_BETWEEN=10000
 
+if [[ $# -eq 0 ]]; then
+  echo "No IP supplied. Using default $CS_IP:$CS_PORT";
+elif [[ $# -eq 1 ]]; then
+  CS_IP=$1
+  echo "Using IP supplied: $CS_IP:$CS_PORT";
+else
+  CS_IP=$1
+  CS_PORT=$2
+  echo "Using IP:port supplied: $CS_IP:$CS_PORT";
+fi
+
 NOW=$(date '+%d%m%y_%H%M%S')
 CLIENT=$(pwd)/../client_continuous
 LOG_FOLDER=$(pwd)/../logs

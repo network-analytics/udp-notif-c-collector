@@ -10,6 +10,17 @@ CS_SLEEP_MS=70
 CS_SLEEP_MSG=300
 CS_JITTER=0.3
 
+if [[ $# -eq 0 ]]; then
+  echo "No IP supplied. Using default $CS_IP:$CS_PORT";
+elif [[ $# -eq 1 ]]; then
+  CS_IP=$1
+  echo "Using IP supplied: $CS_IP:$CS_PORT";
+else
+  CS_IP=$1
+  CS_PORT=$2
+  echo "Using IP:port supplied: $CS_IP:$CS_PORT";
+fi
+
 SENDER=$(pwd)/../sender_continuous
 CS_RESOURCES="resources"
 

@@ -32,8 +32,8 @@ CLIENT=$(pwd)/../client_performance
 SENDER=$(pwd)/../sender_performance
 LOG_FOLDER=$(pwd)/../logs
 CS_RESOURCES="resources"
-# LOG_FILE=$LOG_FOLDER/collector_$NOW.log
-LOG_FILE=$LOG_FOLDER/collector.log
+LOG_FILE=$LOG_FOLDER/collector_$NOW.log
+# LOG_FILE=$LOG_FOLDER/collector.log
 
 if ! ([ -L ${CS_RESOURCES} ] && [ -e ${CS_RESOURCES} ]) ; then
   echo "Creating symlink to resources"
@@ -42,9 +42,9 @@ fi
 
 LOSS="0.000000"
 
-SLEEP_MS=( 1 )
-SLEEP_MSGS=( 100 200 250 300 500 700 )
-THREADS=( 2 3 4 )
+SLEEP_MS=( 100 )
+SLEEP_MSGS=( 7000 )
+THREADS=( 1 2 3 4 )
 THRESHOLD=0.500000
 
 # TODO:

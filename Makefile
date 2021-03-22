@@ -28,7 +28,7 @@ SAMPLES_ODIR=samples/obj
 ###### c-collector test files ######
 TDIR=test
 
-BINS=client_sample client_performance client_loss sender_sample sender_json sender_performance sender_continuous
+BINS=client_sample client_performance client_loss sender_sample sender_json sender_performance sender_continuous client_continuous
 TESTBINS=test_malloc test_queue test_seg test_listener
 
 all: libunyte-udp-notif.so $(BINS)
@@ -52,6 +52,9 @@ client_performance: $(SAMPLES_ODIR)/client_performance.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
 client_loss: $(SAMPLES_ODIR)/client_loss.o $(OBJS)
+	$(CC) -pthread -o $@ $^ $(LDFLAGS)
+
+client_continuous: $(SAMPLES_ODIR)/client_continuous.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
 sender_sample: $(SAMPLES_ODIR)/sender_sample.o $(OBJS)

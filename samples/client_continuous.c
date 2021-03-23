@@ -46,7 +46,7 @@ void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *st
 struct received_msg
 {
   // int gid;
-  int first_mid;
+  uint32_t first_mid;
   int *messages;
   uint total;
 };
@@ -95,7 +95,7 @@ struct received_msg *init_stats(uint nb_gid, uint nb_messages)
   for (uint i = 0; i < nb_gid; i++)
   {
     // cur->gid = -1;
-    cur->first_mid = -1;
+    cur->first_mid = 0;
     cur->messages = (int *)malloc(sizeof(int) * (nb_messages + nb_gid));
     memset(cur->messages, -1, sizeof(int) * (nb_messages + nb_gid));
     cur->total = nb_messages;
@@ -104,17 +104,17 @@ struct received_msg *init_stats(uint nb_gid, uint nb_messages)
   return messages;
 }
 
-void update_stats(struct received_msg *messages, uint index, uint mid, uint gid, int *full_index)
+void update_stats(struct received_msg *messages, uint index, uint32_t mid, uint gid, int *full_index)
 {
   struct received_msg *message_stats = messages + index;
-  if (message_stats->first_mid < 0)
+  if (message_stats->first_mid == 0)
   {
     message_stats->first_mid = mid;
   }
-  if (message_stats->total > (mid - message_stats->first_mid))
+  uint32_t mid_index = mid - message_stats->first_mid;
+  if (message_stats->total > (mid_index))
   {
-    // printf("%d|%d\n", message_stats->total, mid - message_stats->first_mid);
-    message_stats->messages[mid - message_stats->first_mid] = 1;
+    message_stats->messages[mid_index] = 1;
   }
   else
   {
@@ -216,7 +216,7 @@ void *t_read(void *in)
     counter++;
     // printHeader(seg->header, stdout);
     // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
-    // printf("counter : %d\n", recv_count);
+    // printf("counter : %d\n", seg->header->message_id);
     fflush(stdout);
 
     /* Struct frees */

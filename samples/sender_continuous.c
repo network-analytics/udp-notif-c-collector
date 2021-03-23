@@ -102,8 +102,7 @@ int main(int argc, char *argv[])
   struct buffer_to_send *bf_send = read_json_file(msg_size);
 
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
-  uint msg_id = 0;
-
+  uint32_t msg_id = 0;
   struct timespec t;
   t.tv_sec = 0;
 

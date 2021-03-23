@@ -14,6 +14,7 @@
 #define SLEEP_MS 300
 #define SLEEP_MSG 20
 #define SLEEP_JITTER 0.3
+#define INTERFACE ""
 
 struct buffer_to_send
 {
@@ -61,6 +62,7 @@ int main(int argc, char *argv[])
   options.address = ADDR;
   options.port = PORT;
   options.default_mtu = MTU;
+  options.interface = INTERFACE;
 
   uint gen_id = GEN_ID;
   uint used_mtu = 0;
@@ -69,9 +71,9 @@ int main(int argc, char *argv[])
   sleep.milisec = SLEEP_MS;
   sleep.msg_mod = SLEEP_MSG;
   sleep.jitter = SLEEP_JITTER;
-  
-  if (argc == 9)
-  { // Usage: ./sender_continuous <address> <port> <gen_id> <mtu> <msg_bytes_size> <milisec_sleep> <messages_mod> <jitter>
+
+  if (argc == 10 || argc == 9)
+  { // Usage: ./sender_continuous <address> <port> <gen_id> <mtu> <msg_bytes_size> <milisec_sleep> <messages_mod> <jitter> <interface>
     options.address = argv[1];
     options.port = atoi(argv[2]);
     gen_id = atoi(argv[3]);
@@ -81,6 +83,11 @@ int main(int argc, char *argv[])
     sleep.milisec = atoi(argv[6]);
     sleep.msg_mod = atoi(argv[7]);
     sleep.jitter = atof(argv[8]);
+    if (argc == 10) {
+      options.interface = argv[9];
+    } else {
+      options.interface = "";
+    }
   }
   else
   {

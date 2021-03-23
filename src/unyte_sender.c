@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <linux/if.h>
 #include <string.h>
 #include "unyte_sender.h"
 
@@ -28,6 +29,25 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
   addr->sin_port = htons(options->port);
   inet_pton(AF_INET, options->address, &addr->sin_addr);
 
+  // Binding socket to an interface
+  const char *interface = options->interface;
+  if (options->interface != NULL && (strlen(interface) > 0))
+  {
+    printf("Setting interface: %s\n", interface);
+    int len = strnlen(interface, IFNAMSIZ);
+    if (len == IFNAMSIZ)
+    {
+      fprintf(stderr, "Too long iface name");
+      exit(EXIT_FAILURE);
+    }
+    if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, interface, len) < 0)
+    {
+      perror("Bind socket to interface failed");
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  // connect socket to destination address
   if (connect(sockfd, addr, sizeof(struct sockaddr_in)) == -1)
   {
     perror("Bind failed");

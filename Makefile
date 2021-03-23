@@ -1,6 +1,7 @@
 ###### GCC options ######
 CC=gcc
-LDFLAGS=-g -L./ -lunyte-udp-notif
+# LDFLAGS=-g -L./ -lunyte-udp-notif
+LDFLAGS=-g
 CFLAGS=-Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC
 
 ## TCMALLOCFLAGS for tcmalloc

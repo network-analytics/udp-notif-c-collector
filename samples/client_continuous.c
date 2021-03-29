@@ -23,9 +23,9 @@
 #define MAX_GEN_ID 1000
 #define MSG_ID_MAX 4294967295
 #define LOG_MSG_BETWEEN 50
-#define NB_GID 4
+#define NB_GID 8
 #define MSG_TO_RECEIVE 200
-#define NB_THREADS 5
+#define NB_THREADS 9
 
 void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *start, int messages, pthread_t thread_id)
 {

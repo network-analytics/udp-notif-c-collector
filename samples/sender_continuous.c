@@ -6,8 +6,8 @@
 #include "../src/unyte_sender.h"
 #include "../src/unyte_utils.h"
 
-#define PORT 8081
-#define ADDR "192.168.0.17"
+#define PORT 10000
+#define ADDR "192.168.122.1"
 #define MTU 1500
 #define GEN_ID 232
 #define MSG_SIZE 8950

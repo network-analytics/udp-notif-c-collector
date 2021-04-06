@@ -12,7 +12,7 @@
 #include "../src/unyte_utils.h"
 #include "../src/queue.h"
 
-#define PORT 8081
+#define PORT 10000
 #define ADDR "192.168.0.17"
 #define USED_VLEN 10
 #define PARSERS_NB 10

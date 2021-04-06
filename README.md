@@ -4,14 +4,11 @@ Library for collecting UDP-notif protocol messages.
 ## Build & install
 To build the project and test example clients, just `make` on root folder. Il will compile with gcc all dependences and the clients.
 
-### Prerequisites
-This project depends on third parties open-source libraries :
-- [tcmalloc](https://github.com/google/tcmalloc)
-
 ### Installing
 To install the library on a machine, run `install.sh` with sudo and `export.sh` without sudo. Export script will export the LD_LIBRARY_PATH on user space.
 ```
-$ sudo ./install.sh
+$ make
+$ sudo make install
 $ ./export.sh
 ```
 After running this commands, restart the terminal to have the LD_LIBRARY_PATH up to date.

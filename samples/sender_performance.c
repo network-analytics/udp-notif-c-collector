@@ -5,11 +5,12 @@
 #include "../src/unyte_sender.h"
 #include "../src/unyte_utils.h"
 
-#define PORT 8081
+#define PORT 10000
 #define ADDR "192.168.0.17"
 #define MTU 1500
 #define LAST_GEN_ID 49993648
 #define MAX_TO_SEND 1000
+#define INTERFACE ""
 
 struct buffer_to_send
 {
@@ -209,6 +210,7 @@ int main(int argc, char *argv[])
   options.address = ADDR;
   options.port = PORT;
   options.default_mtu = MTU;
+  options.interface = INTERFACE;
 
   uint messages_to_send = MAX_TO_SEND;
   uint gen_id = 0;

@@ -11,6 +11,7 @@ typedef struct
   char *address;
   uint16_t port;
   uint default_mtu;
+  char *interface;
 } unyte_sender_options_t;
 
 struct unyte_sender_socket

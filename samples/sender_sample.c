@@ -5,7 +5,7 @@
 #include "../src/unyte_sender.h"
 #include "../src/unyte_utils.h"
 
-#define PORT 8081
+#define PORT 10000
 #define ADDR "192.168.0.17"
 #define MTU 1500
 

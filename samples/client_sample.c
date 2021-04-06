@@ -11,8 +11,8 @@
 #include "../src/unyte_utils.h"
 #include "../src/queue.h"
 
-#define PORT 8081
-#define ADDR "192.168.0.17"
+#define PORT 10000
+#define ADDR "192.168.122.1"
 #define USED_VLEN 10
 #define MAX_TO_RECEIVE 20
 

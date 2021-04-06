@@ -71,4 +71,6 @@ int unyte_free_metadata(unyte_seg_met_t *seg);
  */
 int unyte_free_collector(unyte_collector_t *collector);
 
+char *unyte_udp_notif_version();
+
 #endif

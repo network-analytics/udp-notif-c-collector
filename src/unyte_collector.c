@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include "unyte_collector.h"
 #include "listening_worker.h"
+#include "unyte_version.h"
 
 /**
  * Not exposed function used to initialize the socket and return unyte_socket struct
@@ -36,9 +37,12 @@ unyte_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buff_si
   setsockopt(*sock, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int));
 
   uint64_t receive_buf_size;
-  if (sock_buff_size <= 0) {
+  if (sock_buff_size <= 0)
+  {
     receive_buf_size = DEFAULT_SK_BUFF_SIZE; // 20MB
-  } else {
+  }
+  else
+  {
     receive_buf_size = sock_buff_size;
   }
   setsockopt(*sock, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size));
@@ -76,13 +80,16 @@ void set_default_options(unyte_options_t *options)
   {
     options->recvmmsg_vlen = DEFAULT_VLEN;
   }
-  if (options->output_queue_size == 0) {
+  if (options->output_queue_size == 0)
+  {
     options->output_queue_size = OUTPUT_QUEUE_SIZE;
   }
-  if (options->nb_parsers == 0) {
+  if (options->nb_parsers == 0)
+  {
     options->nb_parsers = DEFAULT_NB_PARSERS;
   }
-  if (options->parsers_queue_size == 0) {
+  if (options->parsers_queue_size == 0)
+  {
     options->parsers_queue_size = PARSER_QUEUE_SIZE;
   }
   // printf("Options: %s:%d | vlen: %d|outputqueue: %d| parsers:%d\n", options->address, options->port, options->recvmmsg_vlen, options->output_queue_size, options->nb_parsers);
@@ -94,7 +101,8 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   set_default_options(options);
 
   queue_t *output_queue = unyte_queue_init(options->output_queue_size);
-  if (output_queue == NULL) {
+  if (output_queue == NULL)
+  {
     // malloc errors
     exit(EXIT_FAILURE);
   }
@@ -180,4 +188,26 @@ int unyte_free_collector(unyte_collector_t *collector)
   free(collector->main_thread);
   free(collector);
   return 0;
+}
+
+int get_int_len(int value)
+{
+  int l = 1;
+  while (value > 9)
+  {
+    l++;
+    value /= 10;
+  }
+  return l;
+}
+
+char *unyte_udp_notif_version()
+{
+  int major_len = get_int_len(UNYTE_UDP_NOTIF_VERSION_MAJOR);
+  int minor_len = get_int_len(UNYTE_UDP_NOTIF_VERSION_MINOR);
+  int patch_len = get_int_len(UNYTE_UDP_NOTIF_VERSION_PATCH);
+  uint len = major_len + minor_len + patch_len + 3; // 2 points and 1 end of string
+  char *version = (char *)malloc(len * sizeof(char));
+  sprintf(version, "%d.%d.%d", UNYTE_UDP_NOTIF_VERSION_MAJOR, UNYTE_UDP_NOTIF_VERSION_MINOR, UNYTE_UDP_NOTIF_VERSION_PATCH);
+  return version;
 }

@@ -24,6 +24,7 @@ docker/tmp
 # !README
 
 **/*.log
+**/logs/run*
 /.vscode
 /download
 vgcore.*

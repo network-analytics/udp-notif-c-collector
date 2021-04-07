@@ -2,16 +2,15 @@
 
 ############## SENDER ARGUMENTS ##############
 # <address> <port> <gen_id> <mtu> <msg_bytes_size> <milisec_sleep> <messages_mod> <jitter>
-# CS_IP="192.168.0.17"
-CS_IP="10.212.252.11"
-CS_PORT=8081
+CS_IP="192.168.1.89"
+# CS_IP="10.212.226.66"
+CS_PORT=10001
 CS_MTU=9000
-CS_MSG_BYTES=8950
-CS_SLEEP_MS=70
-CS_SLEEP_MSG=300
-CS_JITTER=0.3
-# 50MB
 CS_SK_BUFF=52428800
+CS_MSG_BYTES=1450
+CS_SLEEP_MS=100
+CS_SLEEP_MSG=90
+CS_JITTER=0.1
 CS_INTERFACE=""
 
 if [[ $# -eq 0 ]]; then

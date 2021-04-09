@@ -35,6 +35,13 @@ void *unyte_queue_read(queue_t *queue);
 int unyte_queue_write(queue_t *queue, void *handle);
 
 /**
+ * Writes a buffer pointer to a queue destroying the oldest buffer if it is full.
+ * Return 0 if message is written correctly.
+ * Return 1 if queue is full and last message has been destroyed.
+ */
+int unyte_queue_destructive_write(queue_t *queue, void *handle);
+
+/**
  * Check wether or not the queue is empty.
  * Return 1 for not empty. 
  * Return 0 for empty.

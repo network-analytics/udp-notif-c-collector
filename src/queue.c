@@ -72,6 +72,30 @@ int unyte_queue_write(queue_t *queue, void *handle)
   return 0;
 }
 
+int unyte_queue_destructive_write(queue_t *queue, void *handle)
+{
+  sem_wait(&queue->empty);
+  pthread_mutex_lock(&queue->lock);
+  // queue is full --> we destroy the oldest and add the new one on the head cell
+  if (((queue->head + 1) % queue->size) == queue->tail)
+  {
+    free(queue->data[queue->tail]);
+    queue->data[queue->head] = handle;
+    queue->head = (queue->head + 1) % queue->size;
+    queue->tail = (queue->tail + 1) % queue->size;
+
+    // unlock mutex + unlock semaphore for writer
+    pthread_mutex_unlock(&queue->lock);
+    sem_post(&queue->empty);
+    return 1;
+  }
+  queue->data[queue->head] = handle;
+  queue->head = (queue->head + 1) % queue->size;
+  pthread_mutex_unlock(&queue->lock);
+  sem_post(&queue->full);
+  return 0;
+}
+
 /**
  * Check wether or not the queue is empty and return 1 for not empty 0 for empty
  */

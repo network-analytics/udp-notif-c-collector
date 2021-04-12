@@ -1,9 +1,7 @@
 #!/bin/bash
 
-echo "Message size in bytes: "
-read SIZE
-echo "Nb client threads: "
-read THREADS
+SIZE=$1
+THREADS=$2
 
 NOW=$(date '+%d%m%y_%H%M%S')
 LOG_FILE=$LOG_FOLDER/collector_$NOW.log

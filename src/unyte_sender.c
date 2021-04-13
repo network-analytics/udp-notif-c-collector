@@ -47,6 +47,16 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
     }
   }
 
+  uint64_t send_buf_size = DEFAULT_SK_SND_BUFF_SIZE;
+  if (options->socket_buff_size > 0)
+    send_buf_size = options->socket_buff_size;
+
+  if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &send_buf_size, sizeof(send_buf_size)))
+  {
+    perror("Set socket buffer size");
+    exit(EXIT_FAILURE);
+  }
+
   // connect socket to destination address
   if (connect(sockfd, addr, sizeof(struct sockaddr_in)) == -1)
   {

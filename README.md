@@ -91,14 +91,14 @@ int main()
   // wait for main_tread to finish
   pthread_join(*collector->main_thread, NULL);
 
-  // Free last packets in the queue
+  // Consume last packets in the queue if wanted to read it
   while (is_queue_empty(collector->queue) != 0)
   {
     unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
     unyte_free_all(seg);
   }
 
-  // freeing collector mallocs
+  // Freeing collector mallocs and last messages for every queue if there is any message not consumed
   unyte_free_collector(collector);
 
   return 0;

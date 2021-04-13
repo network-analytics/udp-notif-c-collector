@@ -201,6 +201,14 @@ int unyte_free_metadata(unyte_seg_met_t *seg)
 
 int unyte_free_collector(unyte_collector_t *collector)
 {
+  // Freeing last collector queue
+  while (is_queue_empty(collector->queue) != 0)
+    unyte_free_all((unyte_seg_met_t *)unyte_queue_read(collector->queue));
+
+  // Freeing last monitoring counter queue
+  while (is_queue_empty(collector->monitoring_queue) != 0)
+    free(unyte_queue_read(collector->monitoring_queue));
+
   free(collector->queue->data);
   free(collector->queue);
   free(collector->monitoring_queue->data);

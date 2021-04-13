@@ -36,7 +36,7 @@ int main()
   options.address = ADDR;
   options.port = PORT;
   options.recvmmsg_vlen = USED_VLEN;
-  options.monitoring_delay = 1;
+  options.monitoring_delay = 2;
 
   /* Initialize collector */
   unyte_collector_t *collector = unyte_start_collector(&options);
@@ -74,19 +74,6 @@ int main()
   pthread_cancel(*th_read);
   pthread_join(*th_read, NULL);
   pthread_join(*collector->main_thread, NULL);
-
-  /* Free last packets in the queue */
-  while (is_queue_empty(collector->queue) != 0)
-  {
-    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
-    unyte_free_all(seg);
-  }
-
-  while(is_queue_empty(collector->monitoring_queue) != 0)
-  {
-    void *counter_pointer = unyte_queue_read(collector->monitoring_queue);
-    free(counter_pointer);
-  }
 
   free(th_read);
   // freeing collector mallocs

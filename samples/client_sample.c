@@ -74,13 +74,6 @@ int main(int argc, char *argv[])
   close(*collector->sockfd);
   pthread_join(*collector->main_thread, NULL);
 
-  /* Free last packets in the queue */
-  while (is_queue_empty(collector->queue) != 0)
-  {
-    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
-    unyte_free_all(seg);
-  }
-
   // freeing collector mallocs
   unyte_free_collector(collector);
   fflush(stdout);

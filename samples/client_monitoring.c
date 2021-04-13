@@ -69,8 +69,9 @@ int main()
   }
 
   printf("Shutdown the socket\n");
-  pthread_cancel(*th_read);
   close(*collector->sockfd);
+
+  pthread_cancel(*th_read);
   pthread_join(*th_read, NULL);
   pthread_join(*collector->main_thread, NULL);
 

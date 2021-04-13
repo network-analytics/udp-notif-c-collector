@@ -85,8 +85,7 @@ int main()
     unyte_free_all(seg);
   }
 
-  // To shut down the collector, just shutdown and close the socket.
-  shutdown(*collector->sockfd, SHUT_RDWR);
+  // To shut down the collector, just close the socket.
   close(*collector->sockfd);
 
   // wait for main_tread to finish

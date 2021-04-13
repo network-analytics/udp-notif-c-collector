@@ -7,6 +7,7 @@
 #include "parsing_worker.h"
 #include "unyte_collector.h"
 #include "cleanup_worker.h"
+#include "monitoring_worker.h"
 
 /**
  * Assembles a message from all segments
@@ -38,6 +39,7 @@ int parser(struct parser_thread_input *in)
 {
   struct segment_buffer *segment_buff = in->segment_buff;
   int max_malloc_errs = 3;
+  struct seg_counters *counters = in->counters;
   while (1)
   {
     void *queue_bef = unyte_queue_read(in->input);
@@ -57,13 +59,18 @@ int parser(struct parser_thread_input *in)
     // Not fragmented message
     if (parsed_segment->header->header_length <= HEADER_BYTES)
     {
+      uint32_t gid = parsed_segment->header->generator_id;
+      uint32_t mid = parsed_segment->header->message_id;
       int ret = unyte_queue_write(in->output, parsed_segment);
       // ret == -1 queue already full, segment discarded
       if (ret < 0) {
-        printf("2.losing message on output queue\n");
+        update_lost_segment(counters, gid, mid);
+        // printf("2.losing message on output queue\n");
         //TODO: syslog drop package + count
         // printf("parsing 1:UnyteWrite fail %d\n", ret);
         unyte_free_all(parsed_segment);
+      } else {
+        update_ok_segment(counters, gid, mid);
       }
     }
     // Fragmented message
@@ -102,10 +109,13 @@ int parser(struct parser_thread_input *in)
         int ret = unyte_queue_write(in->output, parsed_msg);
         // ret == -1 queue is full, we discard the message
         if (ret < 0) {
-          printf("3.losing message on output queue\n");
+          update_lost_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
+          // printf("3.losing message on output queue\n");
           //TODO: syslog drop package + count
           // printf("parsing UnyteWrite fail %d\n", ret);
           unyte_free_all(parsed_msg);
+        } else {
+          update_ok_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         }
         clear_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         segment_buff->count--;

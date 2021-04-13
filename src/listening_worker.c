@@ -58,6 +58,16 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
   free(messages);
 }
 
+void free_monitoring_worker(struct monitoring_worker *monitoring)
+{
+  pthread_cancel(*monitoring->monitoring_thread);
+  pthread_join(*monitoring->monitoring_thread, NULL);
+  free(monitoring->monitoring_in->current);
+  free(monitoring->monitoring_in);
+  free(monitoring->monitoring_thread);
+  free(monitoring);
+}
+
 /**
  * Creates a thread with a cleanup cron worker
  */
@@ -66,7 +76,7 @@ int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *
   pthread_t *clean_up_thread = (pthread_t *)malloc(sizeof(pthread_t));
   struct cleanup_thread_input *cleanup_in = (struct cleanup_thread_input *)malloc(sizeof(struct cleanup_thread_input));
   parser->cleanup_worker = (struct cleanup_worker *)malloc(sizeof(struct cleanup_worker));
-  
+
   if (clean_up_thread == NULL || cleanup_in == NULL || parser->cleanup_worker == NULL)
   {
     printf("Malloc failed.\n");
@@ -88,7 +98,7 @@ int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *
 /**
  * Creates a thread with a parse worker.
  */
-int create_parse_worker(struct parse_worker *parser, struct listener_thread_input *in)
+int create_parse_worker(struct parse_worker *parser, struct listener_thread_input *in, struct seg_counters *counters)
 {
   parser->queue = unyte_queue_init(in->parser_queue_size);
   if (parser->queue == NULL)
@@ -110,8 +120,10 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   parser_input->input = parser->queue;
   parser_input->output = in->output_queue;
   parser_input->segment_buff = create_segment_buffer();
+  parser_input->counters = counters;
 
-  if (parser_input->segment_buff == NULL) {
+  if (parser_input->segment_buff == NULL)
+  {
     printf("Create segment buffer failed.\n");
     return -1;
   }
@@ -123,6 +135,35 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   parser->input = parser_input;
 
   return create_cleanup_thread(parser_input->segment_buff, parser);
+}
+
+int create_monitoring_thread(struct monitoring_worker *monitoring, queue_t *out_mnt_queue, uint delay)
+{
+  struct monitoring_thread_input *mnt_input = (struct monitoring_thread_input *)malloc(sizeof(struct monitoring_thread_input));
+  struct seg_counters *counters = (struct seg_counters *)malloc(sizeof(struct seg_counters));
+
+  pthread_t *th_monitoring = (pthread_t *)malloc(sizeof(pthread_t));
+
+  if (mnt_input == NULL || counters == NULL || th_monitoring == NULL)
+  {
+    printf("Malloc failed \n");
+    return -1;
+  }
+
+  reinit_counters(counters);
+
+  mnt_input->delay = delay;
+  mnt_input->output_queue = out_mnt_queue;
+  mnt_input->current = counters;
+
+  /* Create the thread */
+  pthread_create(th_monitoring, NULL, t_monitoring, (void *)mnt_input);
+
+  /* Store the pointer to be able to free it at the end */
+  monitoring->monitoring_in = mnt_input;
+  monitoring->monitoring_thread = th_monitoring;
+
+  return 0;
 }
 
 /**
@@ -141,15 +182,26 @@ int listener(struct listener_thread_input *in)
     return -1;
   }
 
+  struct monitoring_worker *monitoring = malloc(sizeof(struct monitoring_worker));
+  if (monitoring == NULL)
+  {
+    printf("Malloc failed \n");
+    return -1;
+  }
+
+  int monitoring_ret = create_monitoring_thread(monitoring, in->monitoring_queue, in->monitoring_delay);
+  if (monitoring_ret < 0)
+    return monitoring_ret;
+
   for (uint i = 0; i < in->nb_parsers; i++)
   {
-    int created = create_parse_worker((parsers + i), in);
+    int created = create_parse_worker((parsers + i), in, monitoring->monitoring_in->current);
     if (created < 0)
       return created;
   }
 
   struct mmsghdr *messages = (struct mmsghdr *)malloc(in->recvmmsg_vlen * sizeof(struct mmsghdr));
-  if (messages == NULL) 
+  if (messages == NULL)
   {
     printf("Malloc failed \n");
     return -1;
@@ -178,6 +230,7 @@ int listener(struct listener_thread_input *in)
       perror("recvmmsg failed");
       close(*in->conn->sockfd);
       free_parsers(parsers, in, messages);
+      free_monitoring_worker(monitoring);
       return -1;
     }
 
@@ -187,7 +240,7 @@ int listener(struct listener_thread_input *in)
       if (messages[i].msg_len > 0)
       {
         unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_in *)messages[i].msg_hdr.msg_name), in->conn->addr);
-        if (seg == NULL) 
+        if (seg == NULL)
         {
           printf("minimal_parse error\n");
           return -1;
@@ -195,12 +248,13 @@ int listener(struct listener_thread_input *in)
         /* Dispatching by modulo on threads */
         int ret = unyte_queue_write((parsers + (seg->generator_id % in->nb_parsers))->queue, seg);
         // if ret == -1 --> queue is full, we discard message
-        if (ret < 0) {
-          printf("1.losing message on parser queue\n");
+        if (ret < 0)
+        {
+          // printf("1.losing message on parser queue\n");
+          update_lost_segment(monitoring->monitoring_in->current, seg->generator_id, seg->message_id);
           //TODO: syslog + count stat
           free(seg->buffer);
           free(seg);
-
         }
       }
       else

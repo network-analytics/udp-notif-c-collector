@@ -10,6 +10,7 @@ struct parser_thread_input
   queue_t *input;  /* The feeding queue. */
   queue_t *output; /* The feeded queue */
   struct segment_buffer *segment_buff;
+  struct seg_counters *counters;
 };
 
 /**

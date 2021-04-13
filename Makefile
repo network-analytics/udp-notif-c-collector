@@ -15,11 +15,11 @@ USE_LIB=
 ###### c-collector source code ######
 SDIR=src
 ODIR=obj
-_OBJS=hexdump.o listening_worker.o unyte_utils.o queue.o parsing_worker.o unyte_collector.o segmentation_buffer.o cleanup_worker.o unyte_sender.o
+_OBJS=hexdump.o listening_worker.o unyte_utils.o queue.o parsing_worker.o unyte_collector.o segmentation_buffer.o cleanup_worker.o unyte_sender.o monitoring_worker.o
 OBJS=$(patsubst %,$(ODIR)/%,$(_OBJS))
 
 ###### c-collector source headers ######
-_DEPS=hexdump.h listening_worker.h unyte_utils.h queue.h parsing_worker.h unyte_collector.h segmentation_buffer.h cleanup_worker.h unyte_sender.h
+_DEPS=hexdump.h listening_worker.h unyte_utils.h queue.h parsing_worker.h unyte_collector.h segmentation_buffer.h cleanup_worker.h unyte_sender.h monitoring_worker.h
 DEPS=$(patsubst %,$(SDIR)/%,$(_DEPS))
 
 ###### c-collector examples ######
@@ -29,7 +29,7 @@ SAMPLES_ODIR=samples/obj
 ###### c-collector test files ######
 TDIR=test
 
-BINS=client_sample sender_sample sender_json
+BINS=client_sample sender_sample sender_json client_monitoring
 TESTBINS=test_malloc test_queue test_seg test_listener test_version
 
 all: libunyte-udp-notif.so $(BINS)
@@ -52,7 +52,10 @@ sender_sample: $(SAMPLES_ODIR)/sender_sample.o $(OBJS)
 sender_json: $(SAMPLES_ODIR)/sender_json.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 
-## test files
+client_monitoring: $(SAMPLES_ODIR)/client_monitoring.o $(OBJS)
+	$(CC) -pthread -o $@ $^ $(LDFLAGS)
+
+## own test files
 test_listener: $(TDIR)/test_listener.o $(OBJS)
 	$(CC) -pthread -o $@ $^ $(LDFLAGS)
 

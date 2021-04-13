@@ -91,7 +91,7 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
 
     if (res_send < 0)
     {
-      perror("send()");
+      // perror("send()");
     }
     free(parsed_packet);
     current_seg++;

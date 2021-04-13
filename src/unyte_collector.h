@@ -14,6 +14,7 @@
 typedef struct
 {
   queue_t *queue;
+  queue_t *monitoring_queue;
   pthread_t *main_thread;
   int *sockfd;
 } unyte_collector_t;
@@ -29,11 +30,15 @@ typedef struct
   // parsers
   uint nb_parsers;              // number of parsers to instantiate
   // queues sizes
-  uint output_queue_size;       // output queue size in bytes
-  uint parsers_queue_size;      // input queue size in bytes for every parser
+  uint output_queue_size;       // output queue size
+  uint parsers_queue_size;      // input queue size for every parser
+  uint monitoring_queue_size;   // monitoring queue size
+  uint monitoring_delay;        // monitoring queue frequence in seconds
 } unyte_options_t;
 
 #define OUTPUT_QUEUE_SIZE 1000
+#define MONITORING_QUEUE_SIZE 500
+#define MONITORING_DELAY 5          // in seconds
 
 /**
  * Start all the subprocesses of the collector on the given port and return the output segment queue.

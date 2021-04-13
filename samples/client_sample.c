@@ -12,7 +12,7 @@
 #include "../src/queue.h"
 
 #define USED_VLEN 10
-#define MAX_TO_RECEIVE 20
+#define MAX_TO_RECEIVE 200
 
 int main(int argc, char *argv[])
 {
@@ -71,8 +71,11 @@ int main(int argc, char *argv[])
   }
 
   printf("Shutdown the socket\n");
-  shutdown(*collector->sockfd, SHUT_RDWR); //TODO: à valider/force empty queue (?)
-  close(*collector->sockfd);
+  // int ret = shutdown(*collector->sockfd, SHUT_RDWR); //TODO: à valider/force empty queue (?)
+  perror("HERE\n");
+  // printf("HERE: %d|%d\n", *collector->sockfd, ret);
+  int ret = close(*collector->sockfd);
+  printf("HERE: %d|%d\n", *collector->sockfd, ret);
   pthread_join(*collector->main_thread, NULL);
 
   /* Free last packets in the queue */

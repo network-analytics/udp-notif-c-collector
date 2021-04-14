@@ -24,7 +24,10 @@ docker/tmp
 # !README
 
 **/*.log
+**/logs/run*
 /.vscode
 /download
 vgcore.*
 unyte-udp-notif.pc
+scripts/graph.eps
+

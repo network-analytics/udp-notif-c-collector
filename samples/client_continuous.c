@@ -40,7 +40,7 @@ void time_diff(struct timespec *diff, struct timespec *stop, struct timespec *st
     diff->tv_sec = stop->tv_sec - start->tv_sec;
     diff->tv_nsec = stop->tv_nsec - start->tv_nsec;
   }
-  printf("%ld;%d;%ld,%06ld\n", thread_id, messages, diff->tv_sec * 1000 + diff->tv_nsec / 1000000, diff->tv_nsec % 1000000);
+  printf("Data,%ld,%d,%ld.%06ld\n", thread_id, messages, diff->tv_sec * 1000 + diff->tv_nsec / 1000000, diff->tv_nsec % 1000000);
 }
 
 struct received_msg

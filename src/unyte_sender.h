@@ -5,6 +5,7 @@
 #include "unyte_utils.h"
 
 #define DEFAULT_MTU 1500
+#define DEFAULT_SK_SND_BUFF_SIZE 20971520 // 20MB of socket buffer size
 
 typedef struct
 {
@@ -12,6 +13,7 @@ typedef struct
   uint16_t port;
   uint default_mtu;
   char *interface;
+  uint64_t socket_buff_size;  // socket buffer size in bytes
 } unyte_sender_options_t;
 
 struct unyte_sender_socket

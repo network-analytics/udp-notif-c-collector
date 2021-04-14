@@ -187,3 +187,21 @@ See [Docker docs](docker)
 
 ## License
 See [License](LICENSE)
+
+## Testing
+
+Check used ports and change it in client_sample and sender_sample if necessary (preset : 8081). Hardcode your IP adress in client_sample and sender_sample. Make
+
+`sudo ./client_sample`
+
+`sudo ./sender_sample`
+
+## Profiling
+
+We use kcachegrind, a tool from the valgrind framework. The command to profile executable code is :
+
+`sudo valgrind --tool=callgrind --dump-instr=yes --simulate-cache=yes --collect-jumps=yes --callgrind-out-file=profiling/test.out <executable> <args>`
+
+There are premade kcachegrind .outs in the profiling folder, that employ client_sample, sender_sample, sender_json
+
+`sudo kcachegrind profiling/test.out`

@@ -62,7 +62,7 @@ void free_monitoring_worker(struct monitoring_worker *monitoring)
 {
   pthread_cancel(*monitoring->monitoring_thread);
   pthread_join(*monitoring->monitoring_thread, NULL);
-  free(monitoring->monitoring_in->current);
+  free(monitoring->monitoring_in->counters);
   free(monitoring->monitoring_in);
   free(monitoring->monitoring_thread);
   free(monitoring);
@@ -98,7 +98,7 @@ int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *
 /**
  * Creates a thread with a parse worker.
  */
-int create_parse_worker(struct parse_worker *parser, struct listener_thread_input *in, struct seg_counters *counters)
+int create_parse_worker(struct parse_worker *parser, struct listener_thread_input *in, unyte_seg_counters_t *counters)
 {
   parser->queue = unyte_queue_init(in->parser_queue_size);
   if (parser->queue == NULL)
@@ -137,24 +137,22 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   return create_cleanup_thread(parser_input->segment_buff, parser);
 }
 
-int create_monitoring_thread(struct monitoring_worker *monitoring, queue_t *out_mnt_queue, uint delay)
+int create_monitoring_thread(struct monitoring_worker *monitoring, queue_t *out_mnt_queue, uint delay, unyte_seg_counters_t *counters, uint nb_counters)
 {
   struct monitoring_thread_input *mnt_input = (struct monitoring_thread_input *)malloc(sizeof(struct monitoring_thread_input));
-  struct seg_counters *counters = (struct seg_counters *)malloc(sizeof(struct seg_counters));
 
   pthread_t *th_monitoring = (pthread_t *)malloc(sizeof(pthread_t));
 
-  if (mnt_input == NULL || counters == NULL || th_monitoring == NULL)
+  if (mnt_input == NULL || th_monitoring == NULL)
   {
     printf("Malloc failed \n");
     return -1;
   }
 
-  reinit_counters(counters);
-
   mnt_input->delay = delay;
   mnt_input->output_queue = out_mnt_queue;
-  mnt_input->current = counters;
+  mnt_input->counters = counters;
+  mnt_input->nb_counters = nb_counters;
 
   /* Create the thread */
   pthread_create(th_monitoring, NULL, t_monitoring, (void *)mnt_input);
@@ -189,13 +187,16 @@ int listener(struct listener_thread_input *in)
     return -1;
   }
 
-  int monitoring_ret = create_monitoring_thread(monitoring, in->monitoring_queue, in->monitoring_delay);
+  uint nb_counters = in->nb_parsers + 1;
+  unyte_seg_counters_t *counters = init_counters(nb_counters); // parsers + listening workers
+
+  int monitoring_ret = create_monitoring_thread(monitoring, in->monitoring_queue, in->monitoring_delay, counters, nb_counters);
   if (monitoring_ret < 0)
     return monitoring_ret;
 
   for (uint i = 0; i < in->nb_parsers; i++)
   {
-    int created = create_parse_worker((parsers + i), in, monitoring->monitoring_in->current);
+    int created = create_parse_worker((parsers + i), in, (monitoring->monitoring_in->counters + i));
     if (created < 0)
       return created;
   }
@@ -212,6 +213,8 @@ int listener(struct listener_thread_input *in)
     messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
     messages[i].msg_hdr.msg_iovlen = 1;
   }
+  unyte_seg_counters_t *listener_counter = monitoring->monitoring_in->counters + in->nb_parsers;
+  listener_counter->thread_id = pthread_self();
   while (1)
   {
     for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
@@ -251,7 +254,7 @@ int listener(struct listener_thread_input *in)
         if (ret < 0)
         {
           // printf("1.losing message on parser queue\n");
-          update_lost_segment(monitoring->monitoring_in->current, seg->generator_id, seg->message_id);
+          update_lost_segment(listener_counter, seg->generator_id, seg->message_id);
           //TODO: syslog + count stat
           free(seg->buffer);
           free(seg);

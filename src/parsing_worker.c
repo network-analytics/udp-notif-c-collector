@@ -7,7 +7,6 @@
 #include "parsing_worker.h"
 #include "unyte_collector.h"
 #include "cleanup_worker.h"
-#include "monitoring_worker.h"
 
 /**
  * Assembles a message from all segments
@@ -39,7 +38,7 @@ int parser(struct parser_thread_input *in)
 {
   struct segment_buffer *segment_buff = in->segment_buff;
   int max_malloc_errs = 3;
-  struct seg_counters *counters = in->counters;
+  unyte_seg_counters_t *counters = in->counters;
   while (1)
   {
     void *queue_bef = unyte_queue_read(in->input);
@@ -142,7 +141,10 @@ int parser(struct parser_thread_input *in)
  */
 void *t_parser(void *in)
 {
-  ((struct parser_thread_input *)in)->parser_thread_id = pthread_self();
+  pthread_t id = pthread_self();
+  ((struct parser_thread_input *)in)->parser_thread_id = id;
+  ((struct parser_thread_input *)in)->counters->thread_id = id;
+
   parser((struct parser_thread_input *)in);
 
   // seg_cleanup->stop_cleanup = 1;
@@ -151,6 +153,6 @@ void *t_parser(void *in)
   // free(seg_cleanup->seg_buff);
   // free(seg_cleanup);
   // free(clean_up_thread);
-  printf("Stopping t_parser %ld\n", pthread_self());
+  printf("Stopping t_parser %ld\n", id);
   pthread_exit(NULL);
 }

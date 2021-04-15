@@ -15,7 +15,7 @@
 #define PORT 10000
 #define ADDR "192.168.122.1"
 #define USED_VLEN 10
-#define MAX_TO_RECEIVE 5
+#define MAX_TO_RECEIVE 100
 
 void *t_read(void *input)
 {
@@ -56,13 +56,8 @@ int main()
       fflush(stdout);
     }
     unyte_seg_counters_t *counters = (unyte_seg_counters_t *)counter_pointer;
-    printf("*** Counters ***\n");
-    printf("OK: %u\n", counters->segments_count);
-    printf("Lost: %u\n", counters->segments_lost);
-    printf("Reorder: %u\n", counters->segments_reordered);
-    printf("Last gen id: %u\n", counters->last_generator_id);
-    printf("Last msg id: %u\n", counters->last_message_id);
-    printf("***** End ******\n");
+    // print_counters(counters, stdout);
+    printf("%lu|%u|%u|%u|%u|%u\n", counters->thread_id, counters->segments_count, counters->segments_lost, counters->segments_reordered, counters->last_generator_id, counters->last_message_id);
     recv_count++;
     fflush(stdout);
     free(counters);

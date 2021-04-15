@@ -3,6 +3,7 @@
 
 #include "queue.h"
 #include "segmentation_buffer.h"
+#include "monitoring_worker.h"
 
 struct parser_thread_input
 {
@@ -10,7 +11,7 @@ struct parser_thread_input
   queue_t *input;  /* The feeding queue. */
   queue_t *output; /* The feeded queue */
   struct segment_buffer *segment_buff;
-  struct seg_counters *counters;
+  unyte_seg_counters_t *counters;
 };
 
 /**

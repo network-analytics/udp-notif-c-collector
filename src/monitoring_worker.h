@@ -2,10 +2,12 @@
 #define H_MONITORING_WORKER
 
 #include <stdint.h>
+#include <stdio.h>
 #include "queue.h"
 
 typedef struct seg_counters
 {
+  pthread_t thread_id;
   uint32_t last_generator_id;
   uint32_t last_message_id;
   uint32_t segments_count;
@@ -15,15 +17,20 @@ typedef struct seg_counters
 
 struct monitoring_thread_input 
 {
-  struct seg_counters *current; // current counters
-  queue_t *output_queue;        // output queue of stats
-  uint delay;                   // in seconds
+  unyte_seg_counters_t *counters; // current counters for every thread (parsing workers + listening thread)
+  uint nb_counters;               // number of counters
+  queue_t *output_queue;          // output queue of stats
+  uint delay;                     // in seconds
 };
 
-void update_lost_segment(struct seg_counters *counters, uint32_t last_gid, uint32_t last_mid);
-void update_ok_segment(struct seg_counters *counters, uint32_t last_gid, uint32_t last_mid);
-void update_reordered_segment(struct seg_counters *counters, uint32_t last_gid, uint32_t last_mid);
-void reinit_counters(struct seg_counters *counters);
+unyte_seg_counters_t * init_counters(uint nb_threads);
+void update_lost_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
+void update_ok_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
+void update_reordered_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
+void reinit_counters(unyte_seg_counters_t *counters);
 void *t_monitoring(void *in);
+void print_counters(unyte_seg_counters_t *counter, FILE *std);
+
+//TODO: getters ?
 
 #endif

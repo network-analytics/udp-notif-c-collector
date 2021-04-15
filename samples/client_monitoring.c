@@ -17,10 +17,17 @@
 #define USED_VLEN 10
 #define MAX_TO_RECEIVE 100
 
+struct read_input
+{
+  queue_t *output_queue;
+  int stop;
+};
+
 void *t_read(void *input)
 {
-  queue_t *output_queue = (queue_t *)input;
-  while (1)
+  struct read_input *in = (struct read_input *)input;
+  queue_t *output_queue = in->output_queue;
+  while (in->stop == 0)
   {
     unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(output_queue);
     unyte_free_all(seg);
@@ -44,8 +51,11 @@ int main()
   int recv_count = 0;
   int max = MAX_TO_RECEIVE;
 
+  struct read_input input = {0};
+  input.output_queue = collector->queue;
+  input.stop = 0;
   pthread_t *th_read = (pthread_t *)malloc(sizeof(pthread_t));
-  pthread_create(th_read, NULL, t_read, (void *)collector->queue);
+  pthread_create(th_read, NULL, t_read, (void *)&input);
 
   while (recv_count < max)
   {
@@ -69,7 +79,7 @@ int main()
   printf("Shutdown the socket\n");
   close(*collector->sockfd);
 
-  pthread_cancel(*th_read);
+  input.stop = 1;
   pthread_join(*th_read, NULL);
   pthread_join(*collector->main_thread, NULL);
 

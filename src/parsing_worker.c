@@ -42,7 +42,8 @@ int parser(struct parser_thread_input *in)
   while (1)
   {
     void *queue_bef = unyte_queue_read(in->input);
-    if (queue_bef == NULL) {
+    if (queue_bef == NULL)
+    {
       printf("Error reading fron queue\n");
       fflush(stdout);
       continue;
@@ -62,13 +63,17 @@ int parser(struct parser_thread_input *in)
       uint32_t mid = parsed_segment->header->message_id;
       int ret = unyte_queue_write(in->output, parsed_segment);
       // ret == -1 queue already full, segment discarded
-      if (ret < 0) {
-        update_lost_segment(counters, gid, mid);
+      if (ret < 0)
+      {
+        if (in->monitoring_running)
+          update_lost_segment(counters, gid, mid);
         // printf("2.losing message on output queue\n");
         //TODO: syslog drop package + count
         // printf("parsing 1:UnyteWrite fail %d\n", ret);
         unyte_free_all(parsed_segment);
-      } else {
+      }
+      else if (in->monitoring_running)
+      {
         update_ok_segment(counters, gid, mid);
       }
     }
@@ -92,7 +97,8 @@ int parser(struct parser_thread_input *in)
       {
         // malloc error: try 3 mallocs, if error break while
         max_malloc_errs--;
-        if (max_malloc_errs <= 0) {
+        if (max_malloc_errs <= 0)
+        {
           unyte_free_all(parsed_segment);
           return -1;
         }
@@ -107,13 +113,17 @@ int parser(struct parser_thread_input *in)
 
         int ret = unyte_queue_write(in->output, parsed_msg);
         // ret == -1 queue is full, we discard the message
-        if (ret < 0) {
-          update_lost_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
+        if (ret < 0)
+        {
+          if (in->monitoring_running)
+            update_lost_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
           // printf("3.losing message on output queue\n");
           //TODO: syslog drop package + count
           // printf("parsing UnyteWrite fail %d\n", ret);
           unyte_free_all(parsed_msg);
-        } else {
+        }
+        else if (in->monitoring_running)
+        {
           update_ok_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         }
         clear_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);

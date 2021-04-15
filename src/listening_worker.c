@@ -101,7 +101,7 @@ int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *
 /**
  * Creates a thread with a parse worker.
  */
-int create_parse_worker(struct parse_worker *parser, struct listener_thread_input *in, unyte_seg_counters_t *counters)
+int create_parse_worker(struct parse_worker *parser, struct listener_thread_input *in, unyte_seg_counters_t *counters, int monitoring_running)
 {
   parser->queue = unyte_queue_init(in->parser_queue_size);
   if (parser->queue == NULL)
@@ -125,6 +125,7 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   parser_input->segment_buff = create_segment_buffer();
   parser_input->counters = counters;
   parser_input->counters->type = PARSER_WORKER;
+  parser_input->monitoring_running = monitoring_running;
 
   if (parser_input->segment_buff == NULL)
   {
@@ -208,7 +209,7 @@ int listener(struct listener_thread_input *in)
 
   for (uint i = 0; i < in->nb_parsers; i++)
   {
-    int created = create_parse_worker((parsers + i), in, (monitoring->monitoring_in->counters + i));
+    int created = create_parse_worker((parsers + i), in, (monitoring->monitoring_in->counters + i), monitoring->running);
     if (created < 0)
       return created;
   }
@@ -267,7 +268,8 @@ int listener(struct listener_thread_input *in)
         if (ret < 0)
         {
           // printf("1.losing message on parser queue\n");
-          update_lost_segment(listener_counter, seg->generator_id, seg->message_id);
+          if (monitoring->running)
+            update_lost_segment(listener_counter, seg->generator_id, seg->message_id);
           //TODO: syslog + count stat
           free(seg->buffer);
           free(seg);

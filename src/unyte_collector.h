@@ -37,7 +37,7 @@ typedef struct
 } unyte_options_t;
 
 #define OUTPUT_QUEUE_SIZE 1000
-#define MONITORING_QUEUE_SIZE 500
+#define MONITORING_QUEUE_SIZE 0     // queue monitoring default to 0 (not running monitoring thread)
 #define MONITORING_DELAY 5          // in seconds
 
 /**

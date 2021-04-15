@@ -37,6 +37,7 @@ int main()
   options.port = PORT;
   options.recvmmsg_vlen = USED_VLEN;
   options.monitoring_delay = 2;
+  options.monitoring_queue_size = 500;
 
   /* Initialize collector */
   unyte_collector_t *collector = unyte_start_collector(&options);
@@ -48,6 +49,8 @@ int main()
 
   while (recv_count < max)
   {
+    // sleep(10);
+    // break;
     /* Read queue */
     void *counter_pointer = unyte_queue_read(collector->monitoring_queue);
     if (counter_pointer == NULL)

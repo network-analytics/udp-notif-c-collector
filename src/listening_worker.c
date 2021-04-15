@@ -60,11 +60,14 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
 
 void free_monitoring_worker(struct monitoring_worker *monitoring)
 {
-  pthread_cancel(*monitoring->monitoring_thread);
-  pthread_join(*monitoring->monitoring_thread, NULL);
+  if (monitoring->running)
+  {
+    pthread_cancel(*monitoring->monitoring_thread);
+    pthread_join(*monitoring->monitoring_thread, NULL);
+  }
+  free(monitoring->monitoring_thread);
   free(monitoring->monitoring_in->counters);
   free(monitoring->monitoring_in);
-  free(monitoring->monitoring_thread);
   free(monitoring);
 }
 
@@ -154,8 +157,16 @@ int create_monitoring_thread(struct monitoring_worker *monitoring, queue_t *out_
   mnt_input->counters = counters;
   mnt_input->nb_counters = nb_counters;
 
-  /* Create the thread */
-  pthread_create(th_monitoring, NULL, t_monitoring, (void *)mnt_input);
+  if (out_mnt_queue->size != 0)
+  {
+    /* Create the thread */
+    pthread_create(th_monitoring, NULL, t_monitoring, (void *)mnt_input);
+    monitoring->running = 1;
+  }
+  else
+  {
+    monitoring->running = 0;
+  }
 
   /* Store the pointer to be able to free it at the end */
   monitoring->monitoring_in = mnt_input;

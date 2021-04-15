@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <pthread.h>
+#include <string.h>
 #include "monitoring_worker.h"
 
 unyte_seg_counters_t *init_counters(uint nb_threads)
@@ -47,12 +48,7 @@ void reinit_counters(unyte_seg_counters_t *counters)
 unyte_seg_counters_t *clone_counters(unyte_seg_counters_t *src)
 {
   unyte_seg_counters_t *counters = (unyte_seg_counters_t *)malloc(sizeof(unyte_seg_counters_t));
-  counters->last_generator_id = src->last_generator_id;
-  counters->last_message_id = src->last_message_id;
-  counters->segments_count = src->segments_count;
-  counters->segments_lost = src->segments_lost;
-  counters->segments_reordered = src->segments_reordered;
-  counters->thread_id = src->thread_id;
+  memcpy(counters, src, sizeof(unyte_seg_counters_t));
   return counters;
 }
 
@@ -60,6 +56,7 @@ void print_counters(unyte_seg_counters_t *counter, FILE *std)
 {
   fprintf(std, "\n*** Counters ***\n");
   fprintf(std, "Thread: %lu\n", counter->thread_id);
+  fprintf(std, "Type: %s\n", counter->type == PARSER_WORKER ? "PARSER_WORKER" : "LISTENER_WORKER");
   fprintf(std, "OK: %u\n", counter->segments_count);
   fprintf(std, "Lost: %u\n", counter->segments_lost);
   fprintf(std, "Reorder: %u\n", counter->segments_reordered);
@@ -86,3 +83,11 @@ void *t_monitoring(void *in)
   }
   return NULL;
 }
+
+pthread_t get_thread_id(unyte_seg_counters_t *counter) { return counter->thread_id; }
+uint32_t get_last_gen_id(unyte_seg_counters_t *counter) { return counter->last_generator_id; }
+uint32_t get_last_msg_id(unyte_seg_counters_t *counter) { return counter->last_message_id; }
+uint32_t get_ok_seg(unyte_seg_counters_t *counter) { return counter->segments_count; }
+uint32_t get_lost_seg(unyte_seg_counters_t *counter) { return counter->segments_lost; }
+uint32_t get_reordered_seg(unyte_seg_counters_t *counter) { return counter->segments_reordered; }
+thread_type_t get_th_type(unyte_seg_counters_t *counter) { return counter->type; }

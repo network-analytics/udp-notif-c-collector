@@ -60,7 +60,7 @@ int main()
     }
     unyte_seg_counters_t *counters = (unyte_seg_counters_t *)counter_pointer;
     // print_counters(counters, stdout);
-    printf("%lu|%u|%u|%u|%u|%u\n", counters->thread_id, counters->segments_count, counters->segments_lost, counters->segments_reordered, counters->last_generator_id, counters->last_message_id);
+    printf("%lu|type:%d|%u|%u|%u|%u|%u\n", counters->thread_id, counters->type, counters->segments_count, counters->segments_lost, counters->segments_reordered, counters->last_generator_id, counters->last_message_id);
     recv_count++;
     fflush(stdout);
     free(counters);

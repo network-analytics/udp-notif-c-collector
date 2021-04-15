@@ -124,6 +124,7 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   parser_input->output = in->output_queue;
   parser_input->segment_buff = create_segment_buffer();
   parser_input->counters = counters;
+  parser_input->counters->type = PARSER_WORKER;
 
   if (parser_input->segment_buff == NULL)
   {
@@ -226,6 +227,7 @@ int listener(struct listener_thread_input *in)
   }
   unyte_seg_counters_t *listener_counter = monitoring->monitoring_in->counters + in->nb_parsers;
   listener_counter->thread_id = pthread_self();
+  listener_counter->type = LISTENER_WORKER;
   while (1)
   {
     for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)

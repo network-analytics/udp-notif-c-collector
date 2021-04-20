@@ -124,4 +124,17 @@ void printPayload(char *p, int len, FILE *std);
 struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu);
 unsigned char *serialize_message(unyte_seg_met_t *message);
 
+uint8_t get_version(unyte_seg_met_t *message);
+uint8_t get_space(unyte_seg_met_t *message);
+uint8_t get_encoding_type(unyte_seg_met_t *message);
+uint16_t get_header_length(unyte_seg_met_t *message);
+uint16_t get_message_length(unyte_seg_met_t *message);
+uint32_t get_generator_id(unyte_seg_met_t *message);
+uint32_t get_message_id(unyte_seg_met_t *message);
+uint16_t get_src_port(unyte_seg_met_t *message);
+uint32_t get_src_addr(unyte_seg_met_t *message);
+uint32_t get_dest_addr(unyte_seg_met_t *message);
+char *get_payload(unyte_seg_met_t *message);
+uint16_t get_payload_length(unyte_seg_met_t *message);
+
 #endif

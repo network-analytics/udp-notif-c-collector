@@ -65,7 +65,20 @@ int main()
   {
     // Read message on queue
     unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
+
     // TODO: Process the UDP-notif message here
+    printf("get_version: %u\n", get_version(seg));
+    printf("get_space: %u\n", get_space(seg));
+    printf("get_encoding_type: %u\n", get_encoding_type(seg));
+    printf("get_header_length: %u\n", get_header_length(seg));
+    printf("get_message_length: %u\n", get_message_length(seg));
+    printf("get_generator_id: %u\n", get_generator_id(seg));
+    printf("get_message_id: %u\n", get_message_id(seg));
+    printf("get_src_port: %u\n", get_src_port(seg));
+    printf("get_src_addr: %u\n", get_src_addr(seg));
+    printf("get_dest_addr: %u\n", get_dest_addr(seg));
+    printf("get_payload: %s\n", get_payload(seg));
+    printf("get_payload_length: %u\n", get_payload_length(seg));
 
     // Free UDP-notif message after
     unyte_free_all(seg);
@@ -102,6 +115,19 @@ typedef struct unyte_segment_with_metadata
   char *payload;              // payload of message
 } unyte_seg_met_t;
 ```
+##### Getters for segments data
+- `uint8_t get_version(unyte_seg_met_t *message);` : encoding version
+- `uint8_t get_space(unyte_seg_met_t *message);` : space of encoding version
+- `uint8_t get_encoding_type(unyte_seg_met_t *message);` : dentifier to indicate the encoding type used for the Notification Message
+- `uint16_t get_header_length(unyte_seg_met_t *message);` : length of the message header in octets
+- `uint16_t get_message_length(unyte_seg_met_t *message);` : total length of the message within one UDP datagram, measured in octets, including the message header
+- `uint32_t get_generator_id(unyte_seg_met_t *message);` : observation domain id of the message
+- `uint32_t get_message_id(unyte_seg_met_t *message);` : message id of the message
+- `uint16_t get_src_port(unyte_seg_met_t *message);` : source port of the message
+- `uint32_t get_src_addr(unyte_seg_met_t *message);` : source address of the message
+- `uint32_t get_dest_addr(unyte_seg_met_t *message);` : collector address
+- `char *get_payload(unyte_seg_met_t *message);` : payload buffer
+- `uint16_t get_payload_length(unyte_seg_met_t *message);` : payload length
 
 ### Usage of the sender
 The sender allows the user to send UDP-notif protocol to a IP/port specified. It cuts the message into segments of the protocol if it is larger than the MTU specified in parameters.

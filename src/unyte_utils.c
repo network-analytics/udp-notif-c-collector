@@ -210,7 +210,7 @@ void printPayload(char *p, int len, FILE *std)
 struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
 {
   struct unyte_segmented_msg *segments_msg = (struct unyte_segmented_msg *)malloc(sizeof(struct unyte_segmented_msg));
-  if (segments_msg == NULL) 
+  if (segments_msg == NULL)
   {
     printf("Malloc failed.\n");
     return NULL;
@@ -351,3 +351,16 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
 
   return parsed_bytes;
 }
+
+uint8_t get_version(unyte_seg_met_t *message) { return message->header->version; }
+uint8_t get_space(unyte_seg_met_t *message) { return message->header->space; }
+uint8_t get_encoding_type(unyte_seg_met_t *message) { return message->header->encoding_type; }
+uint16_t get_header_length(unyte_seg_met_t *message) { return message->header->header_length; }
+uint16_t get_message_length(unyte_seg_met_t *message) { return message->header->message_length; }
+uint32_t get_generator_id(unyte_seg_met_t *message) { return message->header->generator_id; }
+uint32_t get_message_id(unyte_seg_met_t *message) { return message->header->message_id; }
+uint16_t get_src_port(unyte_seg_met_t *message) { return message->metadata->src_port; }
+uint32_t get_src_addr(unyte_seg_met_t *message) { return message->metadata->src_addr; }
+uint32_t get_dest_addr(unyte_seg_met_t *message) { return message->metadata->collector_addr; }
+char *get_payload(unyte_seg_met_t *message) { return message->payload; }
+uint16_t get_payload_length(unyte_seg_met_t *message) { return (message->header->message_length - message->header->header_length); }

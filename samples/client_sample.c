@@ -46,6 +46,19 @@ int main(int argc, char *argv[])
     }
     unyte_seg_met_t *seg = (unyte_seg_met_t *)seg_pointer;
 
+    // printf("get_version: %u\n", get_version(seg));
+    // printf("get_space: %u\n", get_space(seg));
+    // printf("get_encoding_type: %u\n", get_encoding_type(seg));
+    // printf("get_header_length: %u\n", get_header_length(seg));
+    // printf("get_message_length: %u\n", get_message_length(seg));
+    // printf("get_generator_id: %u\n", get_generator_id(seg));
+    // printf("get_message_id: %u\n", get_message_id(seg));
+    // printf("get_src_port: %u\n", get_src_port(seg));
+    // printf("get_src_addr: %u\n", get_src_addr(seg));
+    // printf("get_dest_addr: %u\n", get_dest_addr(seg));
+    // printf("get_payload: %s\n", get_payload(seg));
+    // printf("get_payload_length: %u\n", get_payload_length(seg));
+
     /* Processing sample */
     recv_count++;
     printHeader(seg->header, stdout);

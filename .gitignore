@@ -1,19 +1,14 @@
 *.o
 client_sample
-client_performance
 test_listener
-client_loss
 sender_sample
 test_seg
 test_queue
 test_malloc
 test_version
-sender_performance
 sender_json
 libunyte-udp-notif.so
 scripts/resources
-sender_continuous
-client_continuous
 
 docker/tmp
 

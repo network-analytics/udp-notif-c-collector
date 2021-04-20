@@ -5,13 +5,12 @@ Library for collecting UDP-notif protocol messages.
 To build the project and test example clients, just `make` on root folder. Il will compile with gcc all dependences and the clients.
 
 ### Installing
-To install the library on a machine, run `install.sh` with sudo and `export.sh` without sudo. Export script will export the LD_LIBRARY_PATH on user space.
+To install the library on a machine, run `make install` with sudo and `export.sh` without sudo. Export script will export the LD_LIBRARY_PATH on user space.
 ```
 $ make
 $ sudo make install
 $ ./export.sh
 ```
-After running this commands, restart the terminal to have the LD_LIBRARY_PATH up to date.
 
 ### Uninstalling
 ```
@@ -38,9 +37,10 @@ Simple exemple of usage :
 #include <signal.h>
 #include <unistd.h>
 
-#include <unyte/unyte_collector.h>
-#include <unyte/unyte_utils.h>
-#include <unyte/queue.h>
+// include installed library headers
+#include <unyte-udp-notif/unyte_collector.h>
+#include <unyte-udp-notif/unyte_utils.h>
+#include <unyte-udp-notif/queue.h>
 
 #define PORT 8081
 #define ADDR "192.168.0.17"
@@ -130,8 +130,8 @@ Simple usage of the sender :
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <unyte/unyte_sender.h>
-#include <unyte/unyte_utils.h>
+#include <unyte-udp-notif/unyte_sender.h>
+#include <unyte-udp-notif/unyte_utils.h>
 
 #define PORT 8081
 #define ADDR "192.168.0.17"
@@ -176,32 +176,11 @@ int main()
 ### Examples
 There are some samples implemented during the development of the project [here](samples).
 - `client_sample.c` : simple example for minimal usage of the collector library.
-- `client_performance.c` : sample to test performance of data collection. Multithreaded client to avoid bottleneck on read.
-- `client_loss.c` : sample to test data loss during data collection.
 - `sender_sample.c` : simple example for minimal usage of the sender library.
 - `sender_json.c` : sample reading a json file and sending the bytes by the library.
-- `sender_performance.c` : sample to test performance againts the collector.
 
 ## Docker
 See [Docker docs](docker)
 
 ## License
 See [License](LICENSE)
-
-## Testing
-
-Check used ports and change it in client_sample and sender_sample if necessary (preset : 8081). Hardcode your IP adress in client_sample and sender_sample. Make
-
-`sudo ./client_sample`
-
-`sudo ./sender_sample`
-
-## Profiling
-
-We use kcachegrind, a tool from the valgrind framework. The command to profile executable code is :
-
-`sudo valgrind --tool=callgrind --dump-instr=yes --simulate-cache=yes --collect-jumps=yes --callgrind-out-file=profiling/test.out <executable> <args>`
-
-There are premade kcachegrind .outs in the profiling folder, that employ client_sample, sender_sample, sender_json
-
-`sudo kcachegrind profiling/test.out`

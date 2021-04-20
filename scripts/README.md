@@ -7,8 +7,3 @@ Scripts used to benchmark the collector
 
 ## Monitoring packet loss
 - `watch -n0.2 cat /proc/net/udp`
-
-
-## Tests on the lab
-- `./launch_sender_continuous.sh <ip?> <port?>`
-- `./launch_client_continuous.sh <ip?> <port?>`

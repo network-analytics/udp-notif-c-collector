@@ -11,3 +11,5 @@ LIB_DIR=lib
 
 echo "Adding $INSTALL_DIR to LD_LIBRARY_PATH in .bashrc"
 echo "export LD_LIBRARY_PATH=$INSTALL_DIR/$LIB_DIR:${LD_LIBRARY_PATH}" >> ~/.bashrc
+
+source ~/.bashrc

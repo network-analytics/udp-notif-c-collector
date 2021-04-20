@@ -11,19 +11,24 @@
 #include "../src/unyte_utils.h"
 #include "../src/queue.h"
 
-#define PORT 10000
-#define ADDR "192.168.122.1"
 #define USED_VLEN 10
 #define MAX_TO_RECEIVE 20
 
-int main()
+int main(int argc, char *argv[])
 {
-  printf("Listening on %s:%d\n", ADDR, PORT);
+  if (argc != 3)
+  {
+    printf("Error: arguments not valid\n");
+    printf("Usage: ./client_sample <ip> <port>\n");
+    exit(1);
+  }
+
   // Initialize collector options
   unyte_options_t options = {0};
-  options.address = ADDR;
-  options.port = PORT;
   options.recvmmsg_vlen = USED_VLEN;
+  options.address = argv[1];
+  options.port = atoi(argv[2]);
+  printf("Listening on %s:%d\n", options.address, options.port);
 
   /* Initialize collector */
   unyte_collector_t *collector = unyte_start_collector(&options);
@@ -44,9 +49,8 @@ int main()
     /* Processing sample */
     recv_count++;
     printHeader(seg->header, stdout);
-    // printf("REc:%d\n", seg->header->message_id);
     // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
-    // printf("counter : %d\n", recv_count);
+
     fflush(stdout);
 
     /* Struct frees */

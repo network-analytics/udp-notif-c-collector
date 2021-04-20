@@ -5,8 +5,6 @@
 #include "../src/unyte_sender.h"
 #include "../src/unyte_utils.h"
 
-#define PORT 10000
-#define ADDR "192.168.0.17"
 #define MTU 1500
 
 struct buffer_to_send
@@ -22,9 +20,10 @@ struct buffer_to_send *read_json_file(uint bytes)
   bf->buffer_len = bytes;
   FILE *fptr;
   int filename_size = 24;
-  if (bytes > 999) {
+  if (bytes > 999)
+  {
     filename_size = 25;
-  } 
+  }
   char *filename = (char *)malloc(filename_size);
   snprintf(filename, filename_size, "resources/json-%d.json", bytes);
   if ((fptr = fopen(filename, "r")) == NULL)
@@ -40,29 +39,26 @@ struct buffer_to_send *read_json_file(uint bytes)
   return bf;
 }
 
-struct buffer_to_send *small_json_file()
+int main(int argc, char *argv[])
 {
-  return read_json_file(700);
-}
+  if (argc != 3)
+  {
+    printf("Error: arguments not valid\n");
+    printf("Usage: ./sender_json <ip> <port>\n");
+    exit(1);
+  }
 
-struct buffer_to_send *big_json_file()
-{
-  return read_json_file(8950);
-}
-
-int main()
-{
-  printf("Init sender on %s:%d|%d\n", ADDR, PORT, MTU);
   // Initialize collector options
   unyte_sender_options_t options = {0};
-  options.address = ADDR;
-  options.port = PORT;
+  options.address = argv[1];
+  options.port = atoi(argv[2]);
   options.default_mtu = MTU;
+  printf("Init sender on %s:%d | mtu: %d\n", options.address, options.port, MTU);
 
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
-  struct buffer_to_send *bf_send = big_json_file();
-  // struct buffer_to_send *bf_send = read_json_file(200);
+  // struct buffer_to_send *bf_send = read_json_file(200); // resources/json-200.json
+  struct buffer_to_send *bf_send = read_json_file(8950); // resources/json-8950.json
 
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
   message->buffer = bf_send->buffer;

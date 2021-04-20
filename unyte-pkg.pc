@@ -5,6 +5,6 @@ libdir=${exec_prefix}/<<lib>>
 
 Name: unyte-udp-notif
 Description: Unyte UDP-notif protocol library
-Version: 0.3.0
+Version: 0.4.0
 Cflags: -I${includedir}/unyte-udp-notif
 Libs: -L${libdir} -lunyte-udp-notif

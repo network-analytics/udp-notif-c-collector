@@ -17,12 +17,6 @@ client_continuous
 
 docker/tmp
 
-# !**/*.sh
-# !Dockerfile
-# !**/*.yml
-# !**/*.md
-# !README
-
 **/*.log
 **/logs/run*
 /.vscode
@@ -30,4 +24,4 @@ docker/tmp
 vgcore.*
 unyte-udp-notif.pc
 scripts/graph.eps
-
+.editorconfig

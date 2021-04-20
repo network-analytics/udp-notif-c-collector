@@ -40,11 +40,17 @@ struct buffer_to_send *read_json_file(uint bytes)
   return bf;
 }
 
+/**
+ * Read resources/json-700.json
+ */
 struct buffer_to_send *small_json_file()
 {
   return read_json_file(700);
 }
 
+/**
+ * Read resources/json-8950.json
+ */
 struct buffer_to_send *big_json_file()
 {
   return read_json_file(8950);

@@ -159,7 +159,7 @@ Simple usage of the sender :
 #include <unyte-udp-notif/unyte_sender.h>
 #include <unyte-udp-notif/unyte_utils.h>
 
-#define PORT 8081
+#define PORT 10001
 #define ADDR "192.168.0.17"
 #define MTU 1500
 

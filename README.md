@@ -42,7 +42,7 @@ Simple exemple of usage :
 #include <unyte-udp-notif/unyte_utils.h>
 #include <unyte-udp-notif/queue.h>
 
-#define PORT 8081
+#define PORT 10001
 #define ADDR "192.168.0.17"
 
 int main()

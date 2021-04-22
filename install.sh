@@ -51,3 +51,5 @@ then
   echo "Try sudo"
   exit 1
 fi
+
+ldconfig

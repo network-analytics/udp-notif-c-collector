@@ -67,7 +67,7 @@ int parser(struct parser_thread_input *in)
       {
         if (in->monitoring_running)
           update_lost_segment(counters, gid, mid);
-        // printf("2.losing message on output queue\n");
+        printf("2.losing message on output queue\n");
         //TODO: syslog drop package + count
         // printf("parsing 1:UnyteWrite fail %d\n", ret);
         unyte_free_all(parsed_segment);
@@ -117,7 +117,7 @@ int parser(struct parser_thread_input *in)
         {
           if (in->monitoring_running)
             update_lost_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
-          // printf("3.losing message on output queue\n");
+          printf("3.losing message on output queue\n");
           //TODO: syslog drop package + count
           // printf("parsing UnyteWrite fail %d\n", ret);
           unyte_free_all(parsed_msg);

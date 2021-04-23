@@ -50,6 +50,7 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
 
   struct collision_list_cell *head = buf->hash_array[hk];
   struct collision_list_cell *cur = head;
+  //TODO: mid==mid????
   while (cur->next != NULL && (cur->next->gid != gid || cur->next->mid != mid))
   {
     cur = cur->next;

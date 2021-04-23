@@ -65,8 +65,13 @@ void free_monitoring_worker(struct monitoring_worker *monitoring)
     pthread_cancel(*monitoring->monitoring_thread);
     pthread_join(*monitoring->monitoring_thread, NULL);
   }
+  else
+  {
+    //TODO: possible race condition here or bug here!
+    printf("Not canceling Thread !\n");
+  }
   free(monitoring->monitoring_thread);
-  free(monitoring->monitoring_in->counters);
+  free_seg_counters(monitoring->monitoring_in->counters, monitoring->monitoring_in->nb_counters);
   free(monitoring->monitoring_in);
   free(monitoring);
 }
@@ -125,9 +130,14 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   parser_input->segment_buff = create_segment_buffer();
   parser_input->counters = counters;
   parser_input->counters->type = PARSER_WORKER;
+  for (uint i = 0; i < ACTIVE_GIDS; i++)
+  {
+    (parser_input->counters->active_gids + i)->active = 0;
+  }
+
   parser_input->monitoring_running = monitoring_running;
 
-  if (parser_input->segment_buff == NULL)
+  if (parser_input->segment_buff == NULL || parser_input->counters->active_gids == NULL)
   {
     printf("Create segment buffer failed.\n");
     return -1;
@@ -202,6 +212,12 @@ int listener(struct listener_thread_input *in)
 
   uint nb_counters = in->nb_parsers + 1;
   unyte_seg_counters_t *counters = init_counters(nb_counters); // parsers + listening workers
+
+  if (counters == NULL)
+  {
+    printf("Malloc failed \n");
+    return -1;
+  }
 
   int monitoring_ret = create_monitoring_thread(monitoring, in->monitoring_queue, in->monitoring_delay, counters, nb_counters);
   if (monitoring_ret < 0)

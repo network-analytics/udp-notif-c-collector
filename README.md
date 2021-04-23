@@ -51,11 +51,12 @@ int main()
   unyte_options_t options = {0};
   options.address = ADDR;
   options.port = PORT;
-  options.recvmmsg_vlen = 0;          // Default vlen: 10
-  options.output_queue_size = 0;      // Default size: 1000
-  options.nb_parsers = 0;             // Default parsers: 10
-  options.socket_buff_size = 0;       // Default 20MB
-  options.parsers_queue_size = 0;     // Default parsers queue size 500
+  // if argument set to 0, defaults are used
+  options.recvmmsg_vlen = 0;       // vlen parameter for recvmmsg. Default: 10
+  options.output_queue_size = 0;   // output queue size. Default: 1000
+  options.nb_parsers = 0;          // number of parsers threads to instantiate. Default: 10
+  options.socket_buff_size = 0;    // user socket buffer size in bytes. Default: 20971520 (20MB)
+  options.parsers_queue_size = 0;  // parser queue size. Default: 500
 
   // Initialize collector
   unyte_collector_t *collector = unyte_start_collector(&options);

@@ -91,13 +91,6 @@ int main()
   // wait for main_tread to finish
   pthread_join(*collector->main_thread, NULL);
 
-  // Consume last packets in the queue if wanted to read it
-  while (is_queue_empty(collector->queue) != 0)
-  {
-    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
-    unyte_free_all(seg);
-  }
-
   // Freeing collector mallocs and last messages for every queue if there is any message not consumed
   unyte_free_collector(collector);
 
@@ -128,6 +121,31 @@ typedef struct unyte_segment_with_metadata
 - `uint32_t get_dest_addr(unyte_seg_met_t *message);` : collector address
 - `char *get_payload(unyte_seg_met_t *message);` : payload buffer
 - `uint16_t get_payload_length(unyte_seg_met_t *message);` : payload length
+
+#### Monitoring of the lib
+There is a monitoring thread that could be started to monitor packets loss and packets received in bad order.
+To activate this thread, you must initiate the monitoring thread queue size:
+```
+typedef struct
+{
+  char *address;
+  uint16_t port;
+  ...
+  uint monitoring_queue_size;   // monitoring queue size. Default: 0. Recommended: 500 if want to activate the monitoring thread.
+  uint monitoring_delay;        // monitoring queue frequence in seconds. Default: 5 seconds
+} unyte_options_t;
+```
+The thread will every `monitoring_delay` seconds send all generators id's counters.
+
+##### Type of threads
+The threads types are defined in `monitoring_worker.h`:
+- `PARSER_WORKER`: worker in charge of parsing the segments. Reassembles or saves in memory the segmented messages.
+- `LISTENER_WORKER`: worker in charge of receiving the bytes from the socket. It calls `recvmmsg()` syscall to receive multiple messages at once.
+
+##### Packets loss
+Two usecases are possible monitoring packets loss:
+- Drops on `PARSER_WORKER`: It means the client consuming the parsed messages is not consuming that fast. You may want to multithread the client consuming the `collector->queue` (output_queue) or increase the `output_queue_size` option to avoid packets drops on spikes.
+- Drops on `LISTENER_WORKER`: It means the `N` parsers are not consuming that fast and the `LISTENER_WORKER` is pushing to the `input_queue` faster than the parsers could read. You may want to increment the number of parsers instantiated or increase `parsers_queue_size` option to avoid packets drops on spikes.
 
 ### Usage of the sender
 The sender allows the user to send UDP-notif protocol to a IP/port specified. It cuts the message into segments of the protocol if it is larger than the MTU specified in parameters.

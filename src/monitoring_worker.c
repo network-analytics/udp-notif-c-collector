@@ -12,8 +12,8 @@ uint32_t hash_key(uint32_t gid)
 void init_gid_counter(unyte_gid_counter_t *gid_counters)
 {
   unyte_gid_counter_t *cur = gid_counters;
-  cur->segments_count = 0;
-  cur->segments_lost = 0;
+  cur->segments_received = 0;
+  cur->segments_dropped = 0;
   cur->segments_reordered = 0;
   cur->last_message_id = 0;
   cur->generator_id = 0;
@@ -23,8 +23,8 @@ void init_gid_counter(unyte_gid_counter_t *gid_counters)
 void reinit_gid_counters(unyte_gid_counter_t *gid_counter)
 {
   gid_counter->last_message_id = 0;
-  gid_counter->segments_count = 0;
-  gid_counter->segments_lost = 0;
+  gid_counter->segments_received = 0;
+  gid_counter->segments_dropped = 0;
   gid_counter->segments_reordered = 0;
 }
 
@@ -90,15 +90,13 @@ unyte_gid_counter_t *get_gid_counter(unyte_seg_counters_t *counters, uint32_t gi
   {
     cur = cur->next;
     if (cur->generator_id == gid)
-    {
       return cur;
-    }
   }
   // printf("Creating new one: %d|%d|%d\n", gid, hash_key(gid), cur == NULL);
   cur->next = (unyte_gid_counter_t *)malloc(sizeof(unyte_gid_counter_t));
   cur->next->generator_id = gid;
-  cur->next->segments_count = 0;
-  cur->next->segments_lost = 0;
+  cur->next->segments_received = 0;
+  cur->next->segments_dropped = 0;
   cur->next->segments_reordered = 0;
   cur->next->last_message_id = 0;
   cur->next->next = NULL;
@@ -157,37 +155,39 @@ void remove_gid_counter(unyte_seg_counters_t *counters, uint32_t gid)
 void update_lost_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
 {
   unyte_gid_counter_t *gid_counter = get_gid_counter(counters, last_gid);
-  gid_counter->segments_lost++;
+  gid_counter->segments_dropped++;
   gid_counter->last_message_id = last_mid;
 }
 
 void update_ok_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
 {
   unyte_gid_counter_t *gid_counter = get_gid_counter(counters, last_gid);
-  gid_counter->segments_count++;
+  gid_counter->segments_received++;
   if (last_mid < gid_counter->last_message_id)
+  {
     gid_counter->segments_reordered++;
-  gid_counter->last_message_id = last_mid;
+  }
+  else
+    gid_counter->last_message_id = last_mid;
 }
 
 void print_counters(unyte_sum_counter_t *counter, FILE *std)
 {
-  fprintf(std, "\n*** Counters ***\n");
-  fprintf(std, "Thread: %lu\n", counter->thread_id);
-  fprintf(std, "Type: %s\n", counter->type == PARSER_WORKER ? "PARSER_WORKER" : "LISTENER_WORKER");
-  fprintf(std, "Generator id %d\n", counter->generator_id);
-  fprintf(std, "OK: %u\n", counter->segments_count);
-  fprintf(std, "Lost: %u\n", counter->segments_lost);
-  fprintf(std, "Reorder: %u\n", counter->segments_reordered);
-  fprintf(std, "Last msg id: %u\n", counter->last_message_id);
-  fprintf(std, "***** End ******\n");
+  fprintf(std, "th_id:%10lu|gen_id:%5u|type: %15s|received:%7u|dropped:%7u|reordered:%5u|last_msg_id:%9u\n",
+          counter->thread_id,
+          counter->generator_id,
+          counter->type == PARSER_WORKER ? "PARSER_WORKER" : "LISTENER_WORKER",
+          counter->segments_received,
+          counter->segments_dropped,
+          counter->segments_reordered,
+          counter->last_message_id);
 }
 
 bool gid_counter_has_values(unyte_gid_counter_t *gid_counter)
 {
   return !(gid_counter->last_message_id == 0 &&
-           gid_counter->segments_count == 0 &&
-           gid_counter->segments_lost == 0 &&
+           gid_counter->segments_received == 0 &&
+           gid_counter->segments_dropped == 0 &&
            gid_counter->segments_reordered == 0);
 }
 
@@ -201,8 +201,8 @@ unyte_sum_counter_t *get_summary(unyte_gid_counter_t *gid_counter, pthread_t th_
   }
   summary->generator_id = gid_counter->generator_id;
   summary->last_message_id = gid_counter->last_message_id;
-  summary->segments_count = gid_counter->segments_count;
-  summary->segments_lost = gid_counter->segments_lost;
+  summary->segments_received = gid_counter->segments_received;
+  summary->segments_dropped = gid_counter->segments_dropped;
   summary->segments_reordered = gid_counter->segments_reordered;
   summary->thread_id = th_id;
   summary->type = type;
@@ -217,13 +217,17 @@ void *t_monitoring(void *in)
   {
     sleep(input->delay);
     unyte_seg_counters_t *seg_counter_cur;
+    // every thread (parsing_worker + listening_worker)
     for (uint i = 0; i < input->nb_counters; i++)
     {
       seg_counter_cur = (input->counters + i);
       uint active_gids = seg_counter_cur->active_gids_length;
+      // every generator id read on the worker thread
+      // seg_counter_cur->active_gids is the indexed generator ids received
       for (uint y = 0; y < active_gids; y++)
       {
         unyte_gid_counter_t *cur_gid_counter = get_gid_counter(seg_counter_cur, seg_counter_cur->active_gids[y].generator_id);
+        // if non-zero values, clone stats and send to queue
         if (gid_counter_has_values(cur_gid_counter))
         {
           unyte_sum_counter_t *summary = get_summary(cur_gid_counter, seg_counter_cur->thread_id, seg_counter_cur->type);
@@ -234,10 +238,12 @@ void *t_monitoring(void *in)
           }
           seg_counter_cur->active_gids[y].active = 0;
         }
+        // if generator id has zeros-values and read GID_TIME_TO_LIVE, remove structs from thread stats
         else if (seg_counter_cur->active_gids[y].active == GID_TIME_TO_LIVE)
         {
           remove_gid_counter(seg_counter_cur, seg_counter_cur->active_gids[y].generator_id);
         }
+        // counters are zero and read < GID_TIME_TO_LIVE, send to queue and active++
         else
         {
           unyte_sum_counter_t *summary = get_summary(cur_gid_counter, seg_counter_cur->thread_id, seg_counter_cur->type);
@@ -251,7 +257,7 @@ void *t_monitoring(void *in)
       }
     }
   }
-  return NULL;
+  pthread_exit(NULL);
 }
 
 /**
@@ -284,7 +290,7 @@ void free_seg_counters(unyte_seg_counters_t *counter, uint nb_counter)
 pthread_t get_thread_id(unyte_sum_counter_t *counter) { return counter->thread_id; }
 uint32_t get_gen_id(unyte_sum_counter_t *counter) { return counter->generator_id; }
 uint32_t get_last_msg_id(unyte_sum_counter_t *counter) { return counter->last_message_id; }
-uint32_t get_ok_seg(unyte_sum_counter_t *counter) { return counter->segments_count; }
-uint32_t get_lost_seg(unyte_sum_counter_t *counter) { return counter->segments_lost; }
+uint32_t get_received_seg(unyte_sum_counter_t *counter) { return counter->segments_received; }
+uint32_t get_dropped_seg(unyte_sum_counter_t *counter) { return counter->segments_dropped; }
 uint32_t get_reordered_seg(unyte_sum_counter_t *counter) { return counter->segments_reordered; }
 thread_type_t get_th_type(unyte_sum_counter_t *counter) { return counter->type; }

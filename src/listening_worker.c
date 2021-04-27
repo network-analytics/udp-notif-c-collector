@@ -279,16 +279,22 @@ int listener(struct listener_thread_input *in)
           return -1;
         }
         /* Dispatching by modulo on threads */
+        uint32_t seg_gid = seg->generator_id;
+        uint32_t seg_mid = seg->message_id;
         int ret = unyte_queue_write((parsers + (seg->generator_id % in->nb_parsers))->queue, seg);
         // if ret == -1 --> queue is full, we discard message
         if (ret < 0)
         {
           // printf("1.losing message on parser queue\n");
           if (monitoring->running)
-            update_lost_segment(listener_counter, seg->generator_id, seg->message_id);
+            update_lost_segment(listener_counter, seg_gid, seg_mid);
           //TODO: syslog + count stat
           free(seg->buffer);
           free(seg);
+        }
+        else if (monitoring->running)
+        {
+          update_ok_segment(listener_counter, seg_gid, seg_mid);
         }
       }
       else

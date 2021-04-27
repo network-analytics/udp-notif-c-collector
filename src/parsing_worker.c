@@ -49,7 +49,6 @@ int parser(struct parser_thread_input *in)
       continue;
     }
     unyte_min_t *queue_data = (unyte_min_t *)queue_bef;
-    // Can do better
     unyte_seg_met_t *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
 
     /* Unyte_minimal struct is not useful anymore */
@@ -67,9 +66,8 @@ int parser(struct parser_thread_input *in)
       {
         if (in->monitoring_running)
           update_lost_segment(counters, gid, mid);
-        printf("2.losing message on output queue\n");
+        // printf("2.losing message on output queue\n");
         //TODO: syslog drop package + count
-        // printf("parsing 1:UnyteWrite fail %d\n", ret);
         unyte_free_all(parsed_segment);
       }
       else if (in->monitoring_running)
@@ -117,9 +115,8 @@ int parser(struct parser_thread_input *in)
         {
           if (in->monitoring_running)
             update_lost_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
-          printf("3.losing message on output queue\n");
+          // printf("3.losing message on output queue\n");
           //TODO: syslog drop package + count
-          // printf("parsing UnyteWrite fail %d\n", ret);
           unyte_free_all(parsed_msg);
         }
         else if (in->monitoring_running)

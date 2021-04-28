@@ -71,7 +71,7 @@ int unyte_queue_write(queue_t *queue, void *handle)
   sem_post(&queue->full);
   return 0;
 }
-
+//TODO: rewrite function name
 int unyte_queue_destructive_write(queue_t *queue, void *handle)
 {
   sem_wait(&queue->empty);

@@ -65,14 +65,14 @@ int parser(struct parser_thread_input *in)
       if (ret < 0)
       {
         if (in->monitoring_running)
-          update_lost_segment(counters, gid, mid);
+          unyte_udp_update_lost_segment(counters, gid, mid);
         // printf("2.losing message on output queue\n");
         //TODO: syslog drop package + count
         unyte_free_all(parsed_segment);
       }
       else if (in->monitoring_running)
       {
-        update_ok_segment(counters, gid, mid);
+        unyte_udp_update_ok_segment(counters, gid, mid);
       }
     }
     // Fragmented message
@@ -114,14 +114,14 @@ int parser(struct parser_thread_input *in)
         if (ret < 0)
         {
           if (in->monitoring_running)
-            update_lost_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
+            unyte_udp_update_lost_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
           // printf("3.losing message on output queue\n");
           //TODO: syslog drop package + count
           unyte_free_all(parsed_msg);
         }
         else if (in->monitoring_running)
         {
-          update_ok_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
+          unyte_udp_update_ok_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         }
         clear_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         segment_buff->count--;

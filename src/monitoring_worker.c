@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "monitoring_worker.h"
 
+// TODO: new hashkey function + prepend unyte
 uint32_t hash_key(uint32_t gid)
 {
   return (gid) % GID_COUNTERS;
@@ -48,7 +49,7 @@ int resize_active_gid_index(unyte_seg_counters_t *counters)
   return 0;
 }
 
-unyte_seg_counters_t *init_counters(uint nb_threads)
+unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads)
 {
   unyte_seg_counters_t *counters = (unyte_seg_counters_t *)malloc(sizeof(unyte_seg_counters_t) * (nb_threads));
   if (counters == NULL)
@@ -85,7 +86,9 @@ unyte_seg_counters_t *init_counters(uint nb_threads)
  */
 unyte_gid_counter_t *get_gid_counter(unyte_seg_counters_t *counters, uint32_t gid)
 {
+  // get hashmap element
   unyte_gid_counter_t *cur = counters->gid_counters + hash_key(gid);
+  // get element : linear probing
   while (cur->next != NULL)
   {
     cur = cur->next;
@@ -152,14 +155,14 @@ void remove_gid_counter(unyte_seg_counters_t *counters, uint32_t gid)
   }
 }
 
-void update_lost_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
+void unyte_udp_update_lost_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
 {
   unyte_gid_counter_t *gid_counter = get_gid_counter(counters, last_gid);
   gid_counter->segments_dropped++;
   gid_counter->last_message_id = last_mid;
 }
 
-void update_ok_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
+void unyte_udp_update_ok_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
 {
   unyte_gid_counter_t *gid_counter = get_gid_counter(counters, last_gid);
   gid_counter->segments_received++;
@@ -171,7 +174,7 @@ void update_ok_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32
     gid_counter->last_message_id = last_mid;
 }
 
-void print_counters(unyte_sum_counter_t *counter, FILE *std)
+void unyte_udp_print_counters(unyte_sum_counter_t *counter, FILE *std)
 {
   fprintf(std, "th_id:%10lu|gen_id:%5u|type: %15s|received:%7u|dropped:%7u|reordered:%5u|last_msg_id:%9u\n",
           counter->thread_id,
@@ -209,7 +212,7 @@ unyte_sum_counter_t *get_summary(unyte_gid_counter_t *gid_counter, pthread_t th_
   return summary;
 }
 
-void *t_monitoring(void *in)
+void *t_monitoring_unyte_udp(void *in)
 {
   struct monitoring_thread_input *input = (struct monitoring_thread_input *)in;
   queue_t *output_queue = input->output_queue;
@@ -263,7 +266,7 @@ void *t_monitoring(void *in)
 /**
  * Free all malloc structs for unyte_seg_counters_t
  */
-void free_seg_counters(unyte_seg_counters_t *counter, uint nb_counter)
+void unyte_udp_free_seg_counters(unyte_seg_counters_t *counter, uint nb_counter)
 {
   for (uint i = 0; i < nb_counter; i++)
   {
@@ -287,10 +290,10 @@ void free_seg_counters(unyte_seg_counters_t *counter, uint nb_counter)
   free(counter);
 }
 
-pthread_t get_thread_id(unyte_sum_counter_t *counter) { return counter->thread_id; }
-uint32_t get_gen_id(unyte_sum_counter_t *counter) { return counter->generator_id; }
-uint32_t get_last_msg_id(unyte_sum_counter_t *counter) { return counter->last_message_id; }
-uint32_t get_received_seg(unyte_sum_counter_t *counter) { return counter->segments_received; }
-uint32_t get_dropped_seg(unyte_sum_counter_t *counter) { return counter->segments_dropped; }
-uint32_t get_reordered_seg(unyte_sum_counter_t *counter) { return counter->segments_reordered; }
-thread_type_t get_th_type(unyte_sum_counter_t *counter) { return counter->type; }
+pthread_t unyte_udp_get_thread_id(unyte_sum_counter_t *counter) { return counter->thread_id; }
+uint32_t unyte_udp_get_gen_id(unyte_sum_counter_t *counter) { return counter->generator_id; }
+uint32_t unyte_udp_get_last_msg_id(unyte_sum_counter_t *counter) { return counter->last_message_id; }
+uint32_t unyte_udp_get_received_seg(unyte_sum_counter_t *counter) { return counter->segments_received; }
+uint32_t unyte_udp_get_dropped_seg(unyte_sum_counter_t *counter) { return counter->segments_dropped; }
+uint32_t unyte_udp_get_reordered_seg(unyte_sum_counter_t *counter) { return counter->segments_reordered; }
+thread_type_t unyte_udp_get_th_type(unyte_sum_counter_t *counter) { return counter->type; }

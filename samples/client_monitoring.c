@@ -76,25 +76,25 @@ int main(int argc, char *argv[])
     unyte_sum_counter_t *counter = (unyte_sum_counter_t *)counter_pointer;
 
     // Getters
-    // printf("Thread id: %ld\n", get_thread_id(counter));
-    // printf("Thread type: %d\n", get_th_type(counter));
-    // printf("Generator id: %d\n", get_gen_id(counter));
-    // printf("Last msg id: %d\n", get_last_msg_id(counter));
-    // printf("Received OK: %d\n", get_received_seg(counter));
-    // printf("Dropped: %d\n", get_dropped_seg(counter));
-    // printf("Reordered: %d\n", get_reordered_seg(counter));
+    // printf("Thread id: %ld\n", unyte_udp_get_thread_id(counter));
+    // printf("Thread type: %d\n", unyte_udp_get_th_type(counter));
+    // printf("Generator id: %d\n", unyte_udp_get_gen_id(counter));
+    // printf("Last msg id: %d\n", unyte_udp_get_last_msg_id(counter));
+    // printf("Received OK: %d\n", unyte_udp_get_received_seg(counter));
+    // printf("Dropped: %d\n", unyte_udp_get_dropped_seg(counter));
+    // printf("Reordered: %d\n", unyte_udp_get_reordered_seg(counter));
 
-    print_counters(counter, stdout);
+    unyte_udp_print_counters(counter, stdout);
 
     // listening worker is losing segments
-    if (counter->type == LISTENER_WORKER && get_dropped_seg(counter) > 0)
+    if (counter->type == LISTENER_WORKER && unyte_udp_get_dropped_seg(counter) > 0)
     {
       // The input_queue used by the parser is becoming full and is dropping messages. Try instantiating more
       // parsers or increasing the parsers_queue_size.
       // printf("/!\\ Losing messages on input_queue. The parsers threads are not consuming the segments that fast.\n");
     }
     // parser worker is losing segments
-    else if (counter->type == PARSER_WORKER && get_dropped_seg(counter) > 0)
+    else if (counter->type == PARSER_WORKER && unyte_udp_get_dropped_seg(counter) > 0)
     {
       // The output_queue used by the client is becoming full and is dropping messages. Try multithreading the
       // client (this main thread) to consume faster or increasing the output_queue_size.

@@ -28,16 +28,16 @@ queue_t *unyte_queue_init(size_t size);
 void *unyte_queue_read(queue_t *queue);
 
 /**
- * Writes a buffer pointer to a queue.
+ * Puts the *handle to the *queue.
  * Return 0 if message is written correctly. 
- * Return -1 if queue already full. 
+ * Return -1 if queue already full dropping *handle element. 
  */
 int unyte_queue_write(queue_t *queue, void *handle);
 
 /**
- * Writes a buffer pointer to a queue destroying the oldest buffer if it is full.
- * Return 0 if message is written correctly.
- * Return 1 if queue is full and last message has been destroyed.
+ * Puts the element *handle to the *queue destroying the oldest element if it is full.
+ * Return 0 if *handle introduced in the queue.
+ * Return 1 if queue was full and oldest element from the *queue has been destroyed.
  */
 int unyte_queue_destructive_write(queue_t *queue, void *handle);
 

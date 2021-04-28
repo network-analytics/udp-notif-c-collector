@@ -61,7 +61,7 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
 void free_monitoring_worker(struct monitoring_worker *monitoring)
 {
   if (monitoring->running)
-  {
+  { //TODO: test stop gracefully
     pthread_cancel(*monitoring->monitoring_thread);
     pthread_join(*monitoring->monitoring_thread, NULL);
   }
@@ -71,7 +71,7 @@ void free_monitoring_worker(struct monitoring_worker *monitoring)
     printf("Not canceling Thread !\n");
   }
   free(monitoring->monitoring_thread);
-  free_seg_counters(monitoring->monitoring_in->counters, monitoring->monitoring_in->nb_counters);
+  unyte_udp_free_seg_counters(monitoring->monitoring_in->counters, monitoring->monitoring_in->nb_counters);
   free(monitoring->monitoring_in);
   free(monitoring);
 }
@@ -172,7 +172,7 @@ int create_monitoring_thread(struct monitoring_worker *monitoring, queue_t *out_
   if (out_mnt_queue->size != 0)
   {
     /* Create the thread */
-    pthread_create(th_monitoring, NULL, t_monitoring, (void *)mnt_input);
+    pthread_create(th_monitoring, NULL, t_monitoring_unyte_udp, (void *)mnt_input);
     monitoring->running = 1;
   }
   else
@@ -211,7 +211,7 @@ int listener(struct listener_thread_input *in)
   }
 
   uint nb_counters = in->nb_parsers + 1;
-  unyte_seg_counters_t *counters = init_counters(nb_counters); // parsers + listening workers
+  unyte_seg_counters_t *counters = unyte_udp_init_counters(nb_counters); // parsers + listening workers
 
   if (counters == NULL)
   {
@@ -287,14 +287,14 @@ int listener(struct listener_thread_input *in)
         {
           // printf("1.losing message on parser queue\n");
           if (monitoring->running)
-            update_lost_segment(listener_counter, seg_gid, seg_mid);
+            unyte_udp_update_lost_segment(listener_counter, seg_gid, seg_mid);
           //TODO: syslog + count stat
           free(seg->buffer);
           free(seg);
         }
         else if (monitoring->running)
         {
-          update_ok_segment(listener_counter, seg_gid, seg_mid);
+          unyte_udp_update_ok_segment(listener_counter, seg_gid, seg_mid);
         }
       }
       else

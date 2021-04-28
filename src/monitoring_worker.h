@@ -5,9 +5,9 @@
 #include <stdio.h>
 #include "queue.h"
 
-#define GID_COUNTERS 10     // hashmap modulo
-#define ACTIVE_GIDS 500     // how many active gids do we are waiting for
-#define GID_TIME_TO_LIVE 4  // times monitoring thread consider gid active without stats
+#define GID_COUNTERS 10    // hashmap modulo
+#define ACTIVE_GIDS 500    // how many active gids do we are waiting for
+#define GID_TIME_TO_LIVE 4 // times monitoring thread consider gid active without stats
 
 typedef enum
 {
@@ -17,10 +17,11 @@ typedef enum
 
 typedef struct active_gid
 {
-  uint32_t generator_id;
-  int active; // if > GID_TIME_TO_LIVE gen_id considered not receiving anymore
+  uint32_t generator_id; // generator id / observation id
+  int active;            // if > GID_TIME_TO_LIVE gen_id considered not receiving anymore
 } active_gid_t;
 
+// linear probing
 typedef struct gid_counter
 {
   uint32_t generator_id;
@@ -33,12 +34,12 @@ typedef struct gid_counter
 
 typedef struct seg_counters
 {
-  pthread_t thread_id;
-  unyte_gid_counter_t *gid_counters; // array of n unyte_gid_counter_t
-  thread_type_t type;
-  active_gid_t *active_gids; // active generator ids
-  uint active_gids_length;
-  uint active_gids_max_length; // active_gids max array length
+  pthread_t thread_id;               // thread id
+  unyte_gid_counter_t *gid_counters; // hashmap array of n unyte_gid_counter_t
+  thread_type_t type;                // type of thread: PARSER_WORKER | LISTENER_WORKER
+  active_gid_t *active_gids;         // active generator ids array
+  uint active_gids_length;           // active generator used
+  uint active_gids_max_length;       // active_gids max array length. Used to resize if active_gids is full
 } unyte_seg_counters_t;
 
 /**
@@ -63,21 +64,20 @@ struct monitoring_thread_input
   uint delay;                     // in seconds
 };
 
-unyte_seg_counters_t *init_counters(uint nb_threads);
-void update_lost_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
-void update_ok_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
-void reinit_counters(unyte_seg_counters_t *counters);
-void *t_monitoring(void *in);
-void print_counters(unyte_sum_counter_t *counter, FILE *std);
-void free_seg_counters(unyte_seg_counters_t *counters, uint nb_counter);
+unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads);
+void unyte_udp_update_lost_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
+void unyte_udp_update_ok_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
+void *t_monitoring_unyte_udp(void *in);
+void unyte_udp_print_counters(unyte_sum_counter_t *counter, FILE *std);
+void unyte_udp_free_seg_counters(unyte_seg_counters_t *counters, uint nb_counter);
 
 // Getters
-pthread_t get_thread_id(unyte_sum_counter_t *counter);
-uint32_t get_gen_id(unyte_sum_counter_t *counter);
-uint32_t get_last_msg_id(unyte_sum_counter_t *counter);
-uint32_t get_received_seg(unyte_sum_counter_t *counter);
-uint32_t get_dropped_seg(unyte_sum_counter_t *counter);
-uint32_t get_reordered_seg(unyte_sum_counter_t *counter);
-thread_type_t get_th_type(unyte_sum_counter_t *counter);
+pthread_t unyte_udp_get_thread_id(unyte_sum_counter_t *counter);
+uint32_t unyte_udp_get_gen_id(unyte_sum_counter_t *counter);
+uint32_t unyte_udp_get_last_msg_id(unyte_sum_counter_t *counter);
+uint32_t unyte_udp_get_received_seg(unyte_sum_counter_t *counter);
+uint32_t unyte_udp_get_dropped_seg(unyte_sum_counter_t *counter);
+uint32_t unyte_udp_get_reordered_seg(unyte_sum_counter_t *counter);
+thread_type_t unyte_udp_get_th_type(unyte_sum_counter_t *counter);
 
 #endif

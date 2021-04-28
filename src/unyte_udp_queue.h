@@ -1,5 +1,5 @@
-#ifndef H_QUEUE
-#define H_QUEUE
+#ifndef H_UNYTE_UDP_QUEUE
+#define H_UNYTE_UDP_QUEUE
 
 #include <stdlib.h>
 #include <semaphore.h>

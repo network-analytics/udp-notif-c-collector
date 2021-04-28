@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include "../src/unyte_utils.h"
+#include "../src/unyte_udp_utils.h"
 #include "../src/segmentation_buffer.h"
 
 void test_segment_lists()

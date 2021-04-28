@@ -6,7 +6,7 @@ Note that empty is head==tail, thus only PARSER_QUEUE_SIZE-1 entries may be used
 
 #include <stdio.h>
 #include <assert.h>
-#include "queue.h"
+#include "unyte_udp_queue.h"
 
 queue_t *unyte_queue_init(size_t size)
 {

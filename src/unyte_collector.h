@@ -2,8 +2,8 @@
 #define H_UNYTE_COLLECTOR
 
 #include <pthread.h>
-#include "queue.h"
-#include "unyte_utils.h"
+#include "unyte_udp_queue.h"
+#include "unyte_udp_utils.h"
 
 #define DEFAULT_VLEN 10
 #define DEFAULT_SK_BUFF_SIZE 20971520 // 20MB of socket buffer size 
@@ -44,7 +44,7 @@ typedef struct
  * Start all the subprocesses of the collector on the given port and return the output segment queue.
 
  * Messages in the queues are structured in structs unyte_segment_with_metadata like defined in 
- * unyte_utils.h.
+ * unyte_udp_utils.h.
  */
 unyte_collector_t *unyte_start_collector(unyte_options_t *options);
 

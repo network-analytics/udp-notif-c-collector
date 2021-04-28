@@ -1,7 +1,7 @@
 #ifndef H_PARSING_WORKER
 #define H_PARSING_WORKER
 
-#include "queue.h"
+#include "unyte_udp_queue.h"
 #include "segmentation_buffer.h"
 #include "monitoring_worker.h"
 

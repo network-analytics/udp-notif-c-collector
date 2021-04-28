@@ -15,11 +15,11 @@ USE_LIB=
 ###### c-collector source code ######
 SDIR=src
 ODIR=obj
-_OBJS=hexdump.o listening_worker.o unyte_utils.o queue.o parsing_worker.o unyte_collector.o segmentation_buffer.o cleanup_worker.o unyte_sender.o monitoring_worker.o
+_OBJS=hexdump.o listening_worker.o unyte_udp_utils.o unyte_udp_queue.o parsing_worker.o unyte_collector.o segmentation_buffer.o cleanup_worker.o unyte_sender.o monitoring_worker.o
 OBJS=$(patsubst %,$(ODIR)/%,$(_OBJS))
 
 ###### c-collector source headers ######
-_DEPS=hexdump.h listening_worker.h unyte_utils.h queue.h parsing_worker.h unyte_collector.h segmentation_buffer.h cleanup_worker.h unyte_sender.h monitoring_worker.h
+_DEPS=hexdump.h listening_worker.h unyte_udp_utils.h unyte_udp_queue.h parsing_worker.h unyte_collector.h segmentation_buffer.h cleanup_worker.h unyte_sender.h monitoring_worker.h
 DEPS=$(patsubst %,$(SDIR)/%,$(_DEPS))
 
 ###### c-collector examples ######

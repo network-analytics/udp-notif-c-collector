@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "queue.h"
+#include "unyte_udp_queue.h"
 
 #define GID_COUNTERS 10    // hashmap modulo
 #define ACTIVE_GIDS 500    // how many active gids do we are waiting for

@@ -3,7 +3,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "unyte_utils.h"
+#include "unyte_udp_utils.h"
 #include "parsing_worker.h"
 #include "unyte_collector.h"
 #include "cleanup_worker.h"

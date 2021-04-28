@@ -1,5 +1,5 @@
-#ifndef UNYTE_UTILS_H
-#define UNYTE_UTILS_H
+#ifndef UNYTE_UDP_UTILS_H
+#define UNYTE_UDP_UTILS_H
 
 #include <stdint.h>
 #include <sys/socket.h>
@@ -114,27 +114,27 @@ unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_me
 /**
  * Print header to std buffer
  */
-void printHeader(unyte_header_t *header, FILE *std);
+void print_udp_notif_header(unyte_header_t *header, FILE *std);
 
 /**
  * Print payload to std buffer
  */
-void printPayload(char *p, int len, FILE *std);
+void print_udp_notif_payload(char *p, int len, FILE *std);
 
 struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu);
 unsigned char *serialize_message(unyte_seg_met_t *message);
 
-uint8_t get_version(unyte_seg_met_t *message);
-uint8_t get_space(unyte_seg_met_t *message);
-uint8_t get_encoding_type(unyte_seg_met_t *message);
-uint16_t get_header_length(unyte_seg_met_t *message);
-uint16_t get_message_length(unyte_seg_met_t *message);
-uint32_t get_generator_id(unyte_seg_met_t *message);
-uint32_t get_message_id(unyte_seg_met_t *message);
-uint16_t get_src_port(unyte_seg_met_t *message);
-uint32_t get_src_addr(unyte_seg_met_t *message);
-uint32_t get_dest_addr(unyte_seg_met_t *message);
-char *get_payload(unyte_seg_met_t *message);
-uint16_t get_payload_length(unyte_seg_met_t *message);
+uint8_t unyte_udp_get_version(unyte_seg_met_t *message);
+uint8_t unyte_udp_get_space(unyte_seg_met_t *message);
+uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message);
+uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message);
+uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message);
+uint32_t unyte_udp_get_generator_id(unyte_seg_met_t *message);
+uint32_t unyte_udp_get_message_id(unyte_seg_met_t *message);
+uint16_t unyte_udp_get_src_port(unyte_seg_met_t *message);
+uint32_t unyte_udp_get_src_addr(unyte_seg_met_t *message);
+uint32_t unyte_udp_get_dest_addr(unyte_seg_met_t *message);
+char *unyte_udp_get_payload(unyte_seg_met_t *message);
+uint16_t unyte_udp_get_payload_length(unyte_seg_met_t *message);
 
 #endif

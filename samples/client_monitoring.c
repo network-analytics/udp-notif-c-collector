@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
   options.address = argv[1];
   options.port = atoi(argv[2]);
   options.recvmmsg_vlen = USED_VLEN;
-  options.monitoring_delay = 3;
+  options.monitoring_delay = 2;
   options.monitoring_queue_size = 500;
 
   printf("Listening on %s:%d\n", options.address, options.port);

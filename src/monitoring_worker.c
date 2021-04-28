@@ -216,7 +216,7 @@ void *t_monitoring_unyte_udp(void *in)
 {
   struct monitoring_thread_input *input = (struct monitoring_thread_input *)in;
   queue_t *output_queue = input->output_queue;
-  while (1)
+  while (!input->stop_monitoring_thread)
   {
     sleep(input->delay);
     unyte_seg_counters_t *seg_counter_cur;

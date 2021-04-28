@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include "unyte_udp_queue.h"
 
 #define GID_COUNTERS 10    // hashmap modulo
@@ -62,6 +63,7 @@ struct monitoring_thread_input
   uint nb_counters;               // number of counters
   queue_t *output_queue;          // output queue of stats
   uint delay;                     // in seconds
+  bool stop_monitoring_thread;    // bool to stop thread
 };
 
 unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads);

@@ -15,16 +15,21 @@
 #include "unyte_collector.h"
 #include "cleanup_worker.h"
 
-/**
- * Frees all parsers mallocs and thread input memory.
- */
-void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in, struct mmsghdr *messages)
+void stop_parsers_and_monitoring(struct parse_worker *parsers, struct listener_thread_input *in, struct monitoring_worker *monitoring)
 {
   for (uint i = 0; i < in->nb_parsers; i++)
   {
     // stopping all clean up thread first
     (parsers + i)->cleanup_worker->cleanup_in->stop_cleanup_thread = 1;
   }
+  monitoring->monitoring_in->stop_monitoring_thread = true;
+}
+
+/**
+ * Frees all parsers mallocs and thread input memory.
+ */
+void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in, struct mmsghdr *messages)
+{
   /* Kill every workers here */
   for (uint i = 0; i < in->nb_parsers; i++)
   {
@@ -61,15 +66,7 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
 void free_monitoring_worker(struct monitoring_worker *monitoring)
 {
   if (monitoring->running)
-  { //TODO: test stop gracefully
-    pthread_cancel(*monitoring->monitoring_thread);
     pthread_join(*monitoring->monitoring_thread, NULL);
-  }
-  else
-  {
-    //TODO: possible race condition here or bug here!
-    printf("Not canceling Thread !\n");
-  }
   free(monitoring->monitoring_thread);
   unyte_udp_free_seg_counters(monitoring->monitoring_in->counters, monitoring->monitoring_in->nb_counters);
   free(monitoring->monitoring_in);
@@ -168,16 +165,17 @@ int create_monitoring_thread(struct monitoring_worker *monitoring, queue_t *out_
   mnt_input->output_queue = out_mnt_queue;
   mnt_input->counters = counters;
   mnt_input->nb_counters = nb_counters;
+  mnt_input->stop_monitoring_thread = false;
 
   if (out_mnt_queue->size != 0)
   {
     /* Create the thread */
     pthread_create(th_monitoring, NULL, t_monitoring_unyte_udp, (void *)mnt_input);
-    monitoring->running = 1;
+    monitoring->running = true;
   }
   else
   {
-    monitoring->running = 0;
+    monitoring->running = false;
   }
 
   /* Store the pointer to be able to free it at the end */
@@ -262,6 +260,7 @@ int listener(struct listener_thread_input *in)
     {
       perror("recvmmsg failed");
       close(*in->conn->sockfd);
+      stop_parsers_and_monitoring(parsers, in, monitoring);
       free_parsers(parsers, in, messages);
       free_monitoring_worker(monitoring);
       return -1;

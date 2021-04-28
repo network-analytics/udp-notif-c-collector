@@ -124,14 +124,14 @@ typedef struct unyte_segment_with_metadata
 
 #### Monitoring of the lib
 There is a monitoring thread that could be started to monitor packets loss and packets received in bad order.
-To activate this thread, you must initiate the monitoring thread queue size:
+To activate this thread, you must initiate the monitoring thread queue size (`monitoring_queue_size`):
 ```
 typedef struct
 {
   char *address;
   uint16_t port;
   ...
-  uint monitoring_queue_size;   // monitoring queue size. Default: 0. Recommended: 500 if want to activate the monitoring thread.
+  uint monitoring_queue_size;   // monitoring queue size if wanted to activate the monitoring thread. Default: 0. Recommended: 500.
   uint monitoring_delay;        // monitoring queue frequence in seconds. Default: 5 seconds
 } unyte_options_t;
 ```

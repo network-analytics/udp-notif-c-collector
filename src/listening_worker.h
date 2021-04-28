@@ -44,7 +44,7 @@ struct monitoring_worker
 {
   pthread_t *monitoring_thread;
   struct monitoring_thread_input *monitoring_in;
-  int running;
+  bool running;
 };
 
 /**

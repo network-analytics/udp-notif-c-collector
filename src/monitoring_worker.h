@@ -8,7 +8,7 @@
 
 #define GID_COUNTERS 10    // hashmap modulo
 #define ACTIVE_GIDS 500    // how many active gids do we are waiting for
-#define GID_TIME_TO_LIVE 4 // times monitoring thread consider gid active without stats
+#define GID_TIME_TO_LIVE 4 // times monitoring thread consider generator_id active without stats
 
 typedef enum
 {
@@ -67,8 +67,16 @@ struct monitoring_thread_input
 };
 
 unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads);
-void unyte_udp_update_lost_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
-void unyte_udp_update_ok_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
+
+/**
+ * Updates counters with a dropped segment
+ */
+void unyte_udp_update_dropped_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
+
+/**
+ * Updates counters with a received segment
+ */
+void unyte_udp_update_received_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
 void *t_monitoring_unyte_udp(void *in);
 void unyte_udp_print_counters(unyte_sum_counter_t *counter, FILE *std);
 void unyte_udp_free_seg_counters(unyte_seg_counters_t *counters, uint nb_counter);

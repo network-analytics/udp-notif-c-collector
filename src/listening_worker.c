@@ -286,14 +286,14 @@ int listener(struct listener_thread_input *in)
         {
           // printf("1.losing message on parser queue\n");
           if (monitoring->running)
-            unyte_udp_update_lost_segment(listener_counter, seg_gid, seg_mid);
+            unyte_udp_update_dropped_segment(listener_counter, seg_gid, seg_mid);
           //TODO: syslog + count stat
           free(seg->buffer);
           free(seg);
         }
         else if (monitoring->running)
         {
-          unyte_udp_update_ok_segment(listener_counter, seg_gid, seg_mid);
+          unyte_udp_update_received_segment(listener_counter, seg_gid, seg_mid);
         }
       }
       else

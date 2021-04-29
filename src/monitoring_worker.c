@@ -10,6 +10,9 @@ uint32_t hash_key(uint32_t gid)
   return (gid) % GID_COUNTERS;
 }
 
+/**
+ * Initialize element unyte_gid_counter_t
+ */
 void init_gid_counter(unyte_gid_counter_t *gid_counters)
 {
   unyte_gid_counter_t *cur = gid_counters;
@@ -21,6 +24,9 @@ void init_gid_counter(unyte_gid_counter_t *gid_counters)
   cur->next = NULL;
 }
 
+/**
+ * Reinitialize the counter for the element *gid_counter
+ */
 void reinit_gid_counters(unyte_gid_counter_t *gid_counter)
 {
   gid_counter->last_message_id = 0;
@@ -29,6 +35,9 @@ void reinit_gid_counters(unyte_gid_counter_t *gid_counter)
   gid_counter->segments_reordered = 0;
 }
 
+/**
+ * Initialize active generators id index array.
+ */
 int init_active_gid_index(unyte_seg_counters_t *counters)
 {
   counters->active_gids = (active_gid_t *)malloc(sizeof(active_gid_t) * ACTIVE_GIDS);
@@ -39,6 +48,9 @@ int init_active_gid_index(unyte_seg_counters_t *counters)
   return 0;
 }
 
+/**
+ * Resize active generators id index array if it is full
+ */
 int resize_active_gid_index(unyte_seg_counters_t *counters)
 {
   active_gid_t *new_active_gid = (active_gid_t *)realloc(counters->active_gids, sizeof(active_gid_t) * (counters->active_gids_max_length + ACTIVE_GIDS));
@@ -49,6 +61,9 @@ int resize_active_gid_index(unyte_seg_counters_t *counters)
   return 0;
 }
 
+/**
+ * Initialize counters for <nb_threads> threads
+ */
 unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads)
 {
   unyte_seg_counters_t *counters = (unyte_seg_counters_t *)malloc(sizeof(unyte_seg_counters_t) * (nb_threads));
@@ -86,7 +101,7 @@ unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads)
  */
 unyte_gid_counter_t *get_gid_counter(unyte_seg_counters_t *counters, uint32_t gid)
 {
-  // get hashmap element
+  // get hashmap element from global counters hashmap
   unyte_gid_counter_t *cur = counters->gid_counters + hash_key(gid);
   // get element : linear probing
   while (cur->next != NULL)
@@ -95,7 +110,7 @@ unyte_gid_counter_t *get_gid_counter(unyte_seg_counters_t *counters, uint32_t gi
     if (cur->generator_id == gid)
       return cur;
   }
-  // printf("Creating new one: %d|%d|%d\n", gid, hash_key(gid), cur == NULL);
+  // Creates a new one on last element of linear probing linked list
   cur->next = (unyte_gid_counter_t *)malloc(sizeof(unyte_gid_counter_t));
   cur->next->generator_id = gid;
   cur->next->segments_received = 0;
@@ -103,12 +118,11 @@ unyte_gid_counter_t *get_gid_counter(unyte_seg_counters_t *counters, uint32_t gi
   cur->next->segments_reordered = 0;
   cur->next->last_message_id = 0;
   cur->next->next = NULL;
+  // resize active generators id index array if it is full
   if (counters->active_gids_length + 1 >= counters->active_gids_max_length)
   {
     if (resize_active_gid_index(counters) < 0)
-    {
       printf("Malloc failed.\n");
-    }
   }
   // add gid to active gids
   counters->active_gids[counters->active_gids_length].generator_id = gid;
@@ -155,21 +169,19 @@ void remove_gid_counter(unyte_seg_counters_t *counters, uint32_t gid)
   }
 }
 
-void unyte_udp_update_lost_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
+void unyte_udp_update_dropped_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
 {
   unyte_gid_counter_t *gid_counter = get_gid_counter(counters, last_gid);
   gid_counter->segments_dropped++;
   gid_counter->last_message_id = last_mid;
 }
 
-void unyte_udp_update_ok_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
+void unyte_udp_update_received_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
 {
   unyte_gid_counter_t *gid_counter = get_gid_counter(counters, last_gid);
   gid_counter->segments_received++;
   if (last_mid < gid_counter->last_message_id)
-  {
     gid_counter->segments_reordered++;
-  }
   else
     gid_counter->last_message_id = last_mid;
 }
@@ -186,6 +198,9 @@ void unyte_udp_print_counters(unyte_sum_counter_t *counter, FILE *std)
           counter->last_message_id);
 }
 
+/**
+ * Checks if *gid_counter has valid values to clone
+ */
 bool gid_counter_has_values(unyte_gid_counter_t *gid_counter)
 {
   return !(gid_counter->last_message_id == 0 &&
@@ -194,6 +209,9 @@ bool gid_counter_has_values(unyte_gid_counter_t *gid_counter)
            gid_counter->segments_reordered == 0);
 }
 
+/**
+ * Clone *gid_counter to send to user client
+ */
 unyte_sum_counter_t *get_summary(unyte_gid_counter_t *gid_counter, pthread_t th_id, thread_type_t type)
 {
   unyte_sum_counter_t *summary = (unyte_sum_counter_t *)malloc(sizeof(unyte_sum_counter_t));
@@ -290,6 +308,7 @@ void unyte_udp_free_seg_counters(unyte_seg_counters_t *counter, uint nb_counter)
   free(counter);
 }
 
+// Getters
 pthread_t unyte_udp_get_thread_id(unyte_sum_counter_t *counter) { return counter->thread_id; }
 uint32_t unyte_udp_get_gen_id(unyte_sum_counter_t *counter) { return counter->generator_id; }
 uint32_t unyte_udp_get_last_msg_id(unyte_sum_counter_t *counter) { return counter->last_message_id; }

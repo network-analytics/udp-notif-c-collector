@@ -16,7 +16,7 @@ rm $INSTALL_DIR/$LIB_DIR/libunyte-udp-notif.so
 
 if [ $? -ne 0 ]
 then
-  echo "Could not remove shared lib to $INSTALL_DIR/$LIB_DIR" >&2
+  echo "Could not remove shared lib from $INSTALL_DIR/$LIB_DIR" >&2
   echo "Try sudo"
   exit 1
 fi

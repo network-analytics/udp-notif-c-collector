@@ -5,6 +5,8 @@ LIB_DIR=lib
 H_DIR=include
 PKG_DIR=/usr/lib/pkgconfig
 
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
+
 if [ "$EUID" -ne 0 ]
 then
   echo "Please run as root."
@@ -51,8 +53,5 @@ then
   echo "Try sudo"
   exit 1
 fi
-
-# TODO: check if it exists before change it to not break anything
-# export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 
 ldconfig

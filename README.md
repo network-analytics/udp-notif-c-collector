@@ -1,5 +1,5 @@
 # C-Collector for UDP-notif
-Library for collecting UDP-notif protocol messages.
+Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-01](https://tools.ietf.org/html/draft-ietf-netconf-udp-notif-01).
 
 ## Build & install
 To build the project and test example clients, just `make` on root folder. Il will compile with gcc all dependences and the clients.
@@ -14,7 +14,7 @@ $ ./export.sh
 
 ### Uninstalling
 ```
-$ sudo ./uninstall.sh
+$ sudo make uninstall
 ```
 You should remove the export of the lib in your bashrc manually yourself to fully remove the lib.
 
@@ -27,7 +27,7 @@ The api is in `unyte_collector.h` :
 - `void *unyte_queue_read(queue_t *queue)` from `unyte_udp_queue.h` : read from a queue a struct with all the message buffer and metadata.
 - `int unyte_free_all(unyte_seg_met_t *seg)` from `unyte_collector.h`: free all struct used on a message received.
 
-Simple exemple of usage :
+Simple example of usage :
 ```
 #include <stdio.h>
 #include <stdlib.h>
@@ -61,7 +61,7 @@ int main()
   // Initialize collector
   unyte_collector_t *collector = unyte_start_collector(&options);
 
-  // Exemple with infinity loop, change the break condition to be able to free all gracefully
+  // Example with infinity loop, change the break condition to be able to free all gracefully
   while (1)
   {
     // Read message on queue

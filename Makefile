@@ -74,6 +74,9 @@ test_version: $(TDIR)/test_version.o $(OBJS)
 install: libunyte-udp-notif.so
 	./install.sh
 
+uninstall:
+	./uninstall.sh
+
 build: libunyte-udp-notif.so
 
 clean:

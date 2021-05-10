@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "monitoring_worker.h"
+#include <sys/time.h>
 
 // TODO: new hashkey function + prepend unyte
 uint32_t hash_key(uint32_t gid)
@@ -179,6 +180,11 @@ void unyte_udp_update_dropped_segment(unyte_seg_counters_t *counters, uint32_t l
     printf("Malloc failed\n");
   else
   {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    unsigned long time_in_micros = 1000000 * tv.tv_sec + tv.tv_usec;
+    printf("%ld;%s;%ld;%d\n", counters->thread_id, counters->type == PARSER_WORKER ? "PARSER_WORKER" : "LISTENER_WORKER", time_in_micros, (last_mid - gid_counter->last_message_id));
+
     gid_counter->segments_dropped++;
     gid_counter->last_message_id = last_mid;
   }

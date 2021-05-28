@@ -282,7 +282,10 @@ int listener(struct listener_thread_input *in)
         /* Dispatching by modulo on threads */
         uint32_t seg_gid = seg->generator_id;
         uint32_t seg_mid = seg->message_id;
+
+#ifdef _UNYTE_LOG_DEBUG
         printf("listening;%u;%u\n", seg_gid, seg_mid);
+#endif
         int ret = unyte_udp_queue_write((parsers + (seg->generator_id % in->nb_parsers))->queue, seg);
         // if ret == -1 --> queue is full, we discard message
         if (ret < 0)

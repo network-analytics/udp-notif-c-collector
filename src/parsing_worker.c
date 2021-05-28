@@ -78,7 +78,10 @@ int parser(struct parser_thread_input *in)
     {
       uint32_t gid = parsed_segment->header->generator_id;
       uint32_t mid = parsed_segment->header->message_id;
+
+#ifdef _UNYTE_LOG_DEBUG
       printf("parser;%u;%u\n", gid, mid);
+#endif
       int ret = unyte_udp_queue_write(in->output, parsed_segment);
       // ret == -1 queue already full, segment discarded
       if (ret < 0)
@@ -157,7 +160,9 @@ int parser(struct parser_thread_input *in)
         cleanup_seg_buff(segment_buff, CLEAN_UP_PASS_SIZE);
       }
 
+#ifndef _UNYTE_LOG_DEBUG
       fflush(stdout);
+#endif
 
       // free unused partial parsed_segment without payload
       unyte_udp_free_header(parsed_segment);

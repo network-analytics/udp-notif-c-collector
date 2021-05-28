@@ -3,6 +3,7 @@ CC=gcc
 # LDFLAGS=-g -L./ -lunyte-udp-notif
 LDFLAGS=-g
 CFLAGS=-Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC
+# CDEBUGFLAGS= -D_UNYTE_LOG_DEBUG
 
 ## TCMALLOCFLAGS for tcmalloc
 TCMALLOCFLAGS=-ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free
@@ -79,5 +80,13 @@ uninstall:
 
 build: libunyte-udp-notif.so
 
+##### DEBUG
+
+debug: CFLAGS += -D_UNYTE_LOG_DEBUG
+debug: $(OBJS)
+	$(CC) -shared -o libunyte-udp-notif.so $(OBJS)
+
+#####
+
 clean:
-	rm $(ODIR)/*.o $(SAMPLES_ODIR)/*.o $(TDIR)/*.o $(BINS) $(TESTBINS) libunyte-udp-notif.so
+	rm $(ODIR)/*.o $(SAMPLES_ODIR)/*.o $(TDIR)/*.o $(BINS) libunyte-udp-notif.so

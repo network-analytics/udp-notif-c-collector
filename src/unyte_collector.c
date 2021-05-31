@@ -14,16 +14,16 @@
 unyte_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buff_size)
 {
   unyte_sock_t *conn = (unyte_sock_t *)malloc(sizeof(unyte_sock_t));
-  if (conn == NULL)
+  struct sockaddr_in *adresse = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+  int *sock = (int *)malloc(sizeof(int));
+
+  if (conn == NULL || adresse == NULL || sock == NULL)
   {
     printf("Malloc failed.\n");
     exit(EXIT_FAILURE);
   }
-  //TODO: mallog failed
-  struct sockaddr_in *adresse = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
 
   /*create socket on UDP protocol*/
-  int *sock = (int *)malloc(sizeof(int));
   *sock = socket(AF_INET, SOCK_DGRAM, 0);
 
   /*handle error*/

@@ -240,6 +240,8 @@ int listener(struct listener_thread_input *in)
     messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
     messages[i].msg_hdr.msg_iovlen = 1;
   }
+  // FIXME: malloc failed
+  // TODO: malloc array of msg_hdr.msg_name and assign addresss to every messages[i]
   unyte_seg_counters_t *listener_counter = monitoring->monitoring_in->counters + in->nb_parsers;
   listener_counter->thread_id = pthread_self();
   listener_counter->type = LISTENER_WORKER;

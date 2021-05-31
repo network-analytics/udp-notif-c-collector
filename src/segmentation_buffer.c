@@ -22,6 +22,7 @@ struct segment_buffer *create_segment_buffer()
 char *reassemble_payload(struct message_segment_list_cell *msg_seg_list)
 {
   char *complete_msg = (char *)malloc(msg_seg_list->total_payload_byte_size);
+  // TODO: malloc failed
   char *msg_tmp = complete_msg;
   struct message_segment_list_cell *temp = msg_seg_list;
 
@@ -46,6 +47,7 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
   {
     buf->hash_array[hk] = malloc(sizeof(struct collision_list_cell));
     buf->hash_array[hk]->next = NULL;
+    // TODO: malloc failed
   }
 
   struct collision_list_cell *head = buf->hash_array[hk];
@@ -56,7 +58,7 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
     cur = cur->next;
   }
   if (cur->next == NULL)
-  {
+  { // TODO: malloc failed
     cur->next = malloc(sizeof(struct collision_list_cell));
     cur->next->gid = gid;
     cur->next->mid = mid;
@@ -96,7 +98,7 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
     * This segment is not a duplicate, hence the current_size must be increased
     */
   if (cur->next == NULL)
-  {
+  { // TODO: malloc failed
     cur->next = malloc(sizeof(struct message_segment_list_cell));
     if (cur->next == NULL)
       return -3;
@@ -128,6 +130,7 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
     {
       // not a duplicate insert. create intermediate cell and make it point to the rest of the list;
       struct message_segment_list_cell *temp = cur->next;
+      //TODO: malloc failed
       cur->next = malloc(sizeof(struct message_segment_list_cell));
       if (cur->next == NULL)
         return -3;

@@ -112,6 +112,9 @@ unyte_gid_counter_t *get_gid_counter(unyte_seg_counters_t *counters, uint32_t gi
   }
   // Creates a new one on last element of linear probing linked list
   cur->next = (unyte_gid_counter_t *)malloc(sizeof(unyte_gid_counter_t));
+  // Malloc failed
+  if (cur->next == NULL)
+    return NULL;
   cur->next->generator_id = gid;
   cur->next->segments_received = 0;
   cur->next->segments_dropped = 0;
@@ -172,18 +175,28 @@ void remove_gid_counter(unyte_seg_counters_t *counters, uint32_t gid)
 void unyte_udp_update_dropped_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
 {
   unyte_gid_counter_t *gid_counter = get_gid_counter(counters, last_gid);
-  gid_counter->segments_dropped++;
-  gid_counter->last_message_id = last_mid;
+  if (gid_counter == NULL)
+    printf("Malloc failed\n");
+  else
+  {
+    gid_counter->segments_dropped++;
+    gid_counter->last_message_id = last_mid;
+  }
 }
 
 void unyte_udp_update_received_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
 {
   unyte_gid_counter_t *gid_counter = get_gid_counter(counters, last_gid);
-  gid_counter->segments_received++;
-  if (last_mid < gid_counter->last_message_id)
-    gid_counter->segments_reordered++;
+  if (gid_counter == NULL)
+    printf("Malloc failed\n");
   else
-    gid_counter->last_message_id = last_mid;
+  {
+    gid_counter->segments_received++;
+    if (last_mid < gid_counter->last_message_id)
+      gid_counter->segments_reordered++;
+    else
+      gid_counter->last_message_id = last_mid;
+  }
 }
 
 void unyte_udp_print_counters(unyte_sum_counter_t *counter, FILE *std)
@@ -203,10 +216,10 @@ void unyte_udp_print_counters(unyte_sum_counter_t *counter, FILE *std)
  */
 bool gid_counter_has_values(unyte_gid_counter_t *gid_counter)
 {
-  return !(gid_counter->last_message_id == 0 &&
-           gid_counter->segments_received == 0 &&
-           gid_counter->segments_dropped == 0 &&
-           gid_counter->segments_reordered == 0);
+  return (gid_counter != NULL) && !(gid_counter->last_message_id == 0 &&
+                                    gid_counter->segments_received == 0 &&
+                                    gid_counter->segments_dropped == 0 &&
+                                    gid_counter->segments_reordered == 0);
 }
 
 /**
@@ -214,6 +227,9 @@ bool gid_counter_has_values(unyte_gid_counter_t *gid_counter)
  */
 unyte_sum_counter_t *get_summary(unyte_gid_counter_t *gid_counter, pthread_t th_id, thread_type_t type)
 {
+  if (gid_counter == NULL)
+    return NULL;
+
   unyte_sum_counter_t *summary = (unyte_sum_counter_t *)malloc(sizeof(unyte_sum_counter_t));
   if (summary == NULL)
   {

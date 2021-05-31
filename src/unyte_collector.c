@@ -19,7 +19,7 @@ unyte_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buff_si
     printf("Malloc failed.\n");
     exit(EXIT_FAILURE);
   }
-
+  //TODO: mallog failed
   struct sockaddr_in *adresse = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
 
   /*create socket on UDP protocol*/

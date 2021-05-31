@@ -17,7 +17,7 @@ unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_p
   unyte_seg_met_t *parsed_msg = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t));
   parsed_msg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
   parsed_msg->metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
-
+  // TODO: malloc failed
   copy_unyte_seg_met_headers(parsed_msg, src_parsed_segment);
 
   // Rewrite header length and message length

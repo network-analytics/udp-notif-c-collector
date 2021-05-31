@@ -3,7 +3,7 @@
 struct segment_buffer *create_segment_buffer()
 {
   struct segment_buffer *res = malloc(sizeof(struct segment_buffer));
-  if (res == NULL) 
+  if (res == NULL)
   {
     printf("Malloc failed.");
     return NULL;
@@ -51,8 +51,9 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
   if (buf->hash_array[hk] == NULL)
   {
     buf->hash_array[hk] = malloc(sizeof(struct collision_list_cell));
+    if (buf->hash_array[hk] == NULL)
+      return -3;
     buf->hash_array[hk]->next = NULL;
-    // TODO: malloc failed
   }
 
   struct collision_list_cell *head = buf->hash_array[hk];
@@ -63,12 +64,15 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
     cur = cur->next;
   }
   if (cur->next == NULL)
-  { // TODO: malloc failed
+  {
     cur->next = malloc(sizeof(struct collision_list_cell));
+    if (cur->next == NULL)
+      return -3;
     cur->next->gid = gid;
     cur->next->mid = mid;
-    // TODO: head null malloc failed
     cur->next->head = create_message_segment_list(gid, mid);
+    if (cur->next->head == NULL)
+      return -3;
     buf->count++;
     cur->next->next = NULL;
   }
@@ -349,15 +353,19 @@ void cleanup_seg_buff(struct segment_buffer *buf, int cleanup_pass_size)
         {
           // printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
           struct collision_list_cell *t = next->next;
-          if (next->head->timestamp == 0) {
+          if (next->head->timestamp == 0)
+          {
             next->head->timestamp = now;
           }
-          if ((now - next->head->timestamp) > EXPIRE_MSG) {
+          if ((now - next->head->timestamp) > EXPIRE_MSG)
+          {
             // printf("Actually clearing message (%d|%d) %ld\n", next->gid, next->mid, next->head->timestamp);
             clear_segment_list(buf, next->gid, next->mid);
             next = t;
             buf->count--;
-          } else {
+          }
+          else
+          {
             next = next->next;
           }
         }

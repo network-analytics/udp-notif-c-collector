@@ -22,7 +22,12 @@ struct segment_buffer *create_segment_buffer()
 char *reassemble_payload(struct message_segment_list_cell *msg_seg_list)
 {
   char *complete_msg = (char *)malloc(msg_seg_list->total_payload_byte_size);
-  // TODO: malloc failed
+  if (complete_msg == NULL)
+  {
+    printf("Malloc failed reassembling message payload\n");
+    return NULL;
+  }
+
   char *msg_tmp = complete_msg;
   struct message_segment_list_cell *temp = msg_seg_list;
 

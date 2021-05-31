@@ -9,15 +9,33 @@
 #include "cleanup_worker.h"
 
 /**
- * Assembles a message from all segments
+ * Assembles a message from all segments.
+ * Returns NULL if malloc failed or complete_msg is NULL
  */
 unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_parsed_segment, uint16_t total_payload_byte_size)
 {
+  // if assembled message is null due to malloc failed
+  if (complete_msg == NULL)
+    return NULL;
+
   // Create a new unyte_seg_met_t to push to queue
   unyte_seg_met_t *parsed_msg = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t));
+  if (parsed_msg == NULL)
+    return NULL;
+
   parsed_msg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
   parsed_msg->metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
-  // TODO: malloc failed
+
+  if (parsed_msg->header == NULL || parsed_msg->metadata == NULL)
+  {
+    if (parsed_msg->header != NULL)
+      free(parsed_msg->header);
+    if (parsed_msg->metadata != NULL)
+      free(parsed_msg->metadata);
+    free(parsed_msg);
+    return NULL;
+  }
+
   copy_unyte_seg_met_headers(parsed_msg, src_parsed_segment);
 
   // Rewrite header length and message length
@@ -44,7 +62,7 @@ int parser(struct parser_thread_input *in)
     void *queue_bef = unyte_queue_read(in->input);
     if (queue_bef == NULL)
     {
-      printf("Error reading fron queue\n");
+      printf("Error reading from queue\n");
       fflush(stdout);
       continue;
     }
@@ -55,7 +73,7 @@ int parser(struct parser_thread_input *in)
     free(queue_data->buffer);
     free(queue_data);
 
-    // Not fragmented message
+    // Not segmented message
     if (parsed_segment->header->header_length <= HEADER_BYTES)
     {
       uint32_t gid = parsed_segment->header->generator_id;
@@ -75,7 +93,7 @@ int parser(struct parser_thread_input *in)
         unyte_udp_update_received_segment(counters, gid, mid);
       }
     }
-    // Fragmented message
+    // Segmented message
     else
     {
       int insert_res = insert_segment(segment_buff,
@@ -108,7 +126,11 @@ int parser(struct parser_thread_input *in)
         char *complete_msg = reassemble_payload(msg_seg_list);
 
         unyte_seg_met_t *parsed_msg = create_assembled_msg(complete_msg, parsed_segment, msg_seg_list->total_payload_byte_size);
-
+        if (parsed_msg == NULL)
+        {
+          printf("Malloc failed assembling message\n");
+          goto clear_and_cleanup_buffer;
+        }
         int ret = unyte_queue_write(in->output, parsed_msg);
         // ret == -1 queue is full, we discard the message
         if (ret < 0)
@@ -123,6 +145,8 @@ int parser(struct parser_thread_input *in)
         {
           unyte_udp_update_received_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         }
+
+      clear_and_cleanup_buffer:
         clear_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         segment_buff->count--;
       }

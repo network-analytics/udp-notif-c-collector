@@ -7,12 +7,12 @@
 
 void *t_read(void *queue)
 {
-  queue_t *output_queue = (queue_t *)queue;
+  unyte_udp_queue_t *output_queue = (unyte_udp_queue_t *)queue;
   int read = 10;
   int read_done = 0;
   while (read--)
   {
-    void *res = unyte_queue_read(output_queue);
+    void *res = unyte_udp_queue_read(output_queue);
     if (res == NULL)
     {
       printf("RES is NULL\n");
@@ -24,7 +24,7 @@ void *t_read(void *queue)
 }
 void test_destructive()
 {
-  queue_t *queue = unyte_queue_init(SIZE);
+  unyte_udp_queue_t *queue = unyte_udp_queue_init(SIZE);
   int counter = 0;
   char *buff;
 
@@ -33,13 +33,13 @@ void test_destructive()
   {
     buff = (char *)malloc(sizeof(int));
     sprintf(buff, "%d", counter);
-    int ret = unyte_queue_destructive_write(queue, buff);
+    int ret = unyte_udp_queue_destructive_write(queue, buff);
     printf("RET: %d|%d|%s\n", ret, msg_send, buff);
     counter++;
   }
-  while (is_queue_empty(queue) != 0)
+  while (is_udp_queue_empty(queue) != 0)
   {
-    char *read_buff = (char *) unyte_queue_read(queue);
+    char *read_buff = (char *) unyte_udp_queue_read(queue);
     printf("Read:%s\n", read_buff);
     free(read_buff);
   }
@@ -49,7 +49,7 @@ void test_destructive()
 
 int main()
 {
-  // queue_t *output_queue = unyte_queue_init(SIZE);
+  // unyte_udp_queue_t *output_queue = unyte_udp_queue_init(SIZE);
 
   // // pthread_t *thread = (pthread_t *)malloc(sizeof(pthread_t));
   // // pthread_create(thread, NULL, t_read, (void *)output_queue);
@@ -57,12 +57,12 @@ int main()
   // char *buff = "Hello world!";
   // int msg_send = SIZE + 2;
   // while(msg_send-- != 0) {
-  //   int ret = unyte_queue_write(output_queue, buff);
+  //   int ret = unyte_udp_queue_write(output_queue, buff);
   //   printf("RET: %d|%d\n", ret, msg_send);
   // }
 
   // // pthread_join(*thread, NULL);
-  // void *res = unyte_queue_read(output_queue);
+  // void *res = unyte_udp_queue_read(output_queue);
   // if (res == NULL)
   // {
   //   printf("buffer is Null\n");

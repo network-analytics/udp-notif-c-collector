@@ -16,8 +16,8 @@
  */
 struct listener_thread_input
 {
-  queue_t *output_queue;      /* The queue used to push the segments outside. */
-  queue_t *monitoring_queue;  /* The queue used to push monitoring stats of segments outside. */
+  unyte_udp_queue_t *output_queue;      /* The queue used to push the segments outside. */
+  unyte_udp_queue_t *monitoring_queue;  /* The queue used to push monitoring stats of segments outside. */
   uint16_t port;              /* The port to initialize the interface on. */
   unyte_udp_sock_t *conn;     /* Connection with addr, sockfd */
   uint16_t recvmmsg_vlen;     /* The recvmmsg buffer array size */
@@ -28,7 +28,7 @@ struct listener_thread_input
 
 struct parse_worker
 {
-  queue_t *queue;
+  unyte_udp_queue_t *queue;
   pthread_t *worker;
   struct parser_thread_input *input;
   struct cleanup_worker *cleanup_worker;

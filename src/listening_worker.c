@@ -105,7 +105,7 @@ int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *
  */
 int create_parse_worker(struct parse_worker *parser, struct listener_thread_input *in, unyte_seg_counters_t *counters, int monitoring_running)
 {
-  parser->queue = unyte_queue_init(in->parser_queue_size);
+  parser->queue = unyte_udp_queue_init(in->parser_queue_size);
   if (parser->queue == NULL)
   {
     // malloc failed
@@ -149,7 +149,7 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   return create_cleanup_thread(parser_input->segment_buff, parser);
 }
 
-int create_monitoring_thread(struct monitoring_worker *monitoring, queue_t *out_mnt_queue, uint delay, unyte_seg_counters_t *counters, uint nb_counters)
+int create_monitoring_thread(struct monitoring_worker *monitoring, unyte_udp_queue_t *out_mnt_queue, uint delay, unyte_seg_counters_t *counters, uint nb_counters)
 {
   struct monitoring_thread_input *mnt_input = (struct monitoring_thread_input *)malloc(sizeof(struct monitoring_thread_input));
 
@@ -282,7 +282,7 @@ int listener(struct listener_thread_input *in)
         /* Dispatching by modulo on threads */
         uint32_t seg_gid = seg->generator_id;
         uint32_t seg_mid = seg->message_id;
-        int ret = unyte_queue_write((parsers + (seg->generator_id % in->nb_parsers))->queue, seg);
+        int ret = unyte_udp_queue_write((parsers + (seg->generator_id % in->nb_parsers))->queue, seg);
         // if ret == -1 --> queue is full, we discard message
         if (ret < 0)
         {

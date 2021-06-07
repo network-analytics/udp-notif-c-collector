@@ -59,7 +59,7 @@ int parser(struct parser_thread_input *in)
   unyte_seg_counters_t *counters = in->counters;
   while (1)
   {
-    void *queue_bef = unyte_queue_read(in->input);
+    void *queue_bef = unyte_udp_queue_read(in->input);
     if (queue_bef == NULL)
     {
       printf("Error reading from queue\n");
@@ -78,7 +78,7 @@ int parser(struct parser_thread_input *in)
     {
       uint32_t gid = parsed_segment->header->generator_id;
       uint32_t mid = parsed_segment->header->message_id;
-      int ret = unyte_queue_write(in->output, parsed_segment);
+      int ret = unyte_udp_queue_write(in->output, parsed_segment);
       // ret == -1 queue already full, segment discarded
       if (ret < 0)
       {
@@ -86,7 +86,7 @@ int parser(struct parser_thread_input *in)
           unyte_udp_update_dropped_segment(counters, gid, mid);
         // printf("2.losing message on output queue\n");
         //TODO: syslog drop package + count
-        unyte_free_all(parsed_segment);
+        unyte_udp_free_all(parsed_segment);
       }
       else if (in->monitoring_running)
       {
@@ -106,7 +106,7 @@ int parser(struct parser_thread_input *in)
       if (insert_res == -1)
       {
         // Content was already present for this seqnum (f_num)
-        unyte_free_all(parsed_segment);
+        unyte_udp_free_all(parsed_segment);
         continue;
       }
       else if (insert_res == -3)
@@ -115,7 +115,7 @@ int parser(struct parser_thread_input *in)
         max_malloc_errs--;
         if (max_malloc_errs <= 0)
         {
-          unyte_free_all(parsed_segment);
+          unyte_udp_free_all(parsed_segment);
           return -1;
         }
       }
@@ -131,7 +131,7 @@ int parser(struct parser_thread_input *in)
           printf("Malloc failed assembling message\n");
           goto clear_and_cleanup_buffer;
         }
-        int ret = unyte_queue_write(in->output, parsed_msg);
+        int ret = unyte_udp_queue_write(in->output, parsed_msg);
         // ret == -1 queue is full, we discard the message
         if (ret < 0)
         {
@@ -139,7 +139,7 @@ int parser(struct parser_thread_input *in)
             unyte_udp_update_dropped_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
           // printf("3.losing message on output queue\n");
           //TODO: syslog drop package + count
-          unyte_free_all(parsed_msg);
+          unyte_udp_free_all(parsed_msg);
         }
         else if (in->monitoring_running)
         {
@@ -159,8 +159,8 @@ int parser(struct parser_thread_input *in)
       fflush(stdout);
 
       // free unused partial parsed_segment without payload
-      unyte_free_header(parsed_segment);
-      unyte_free_metadata(parsed_segment);
+      unyte_udp_free_header(parsed_segment);
+      unyte_udp_free_metadata(parsed_segment);
       free(parsed_segment);
     }
   }

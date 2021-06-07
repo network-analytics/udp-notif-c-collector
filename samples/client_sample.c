@@ -24,21 +24,21 @@ int main(int argc, char *argv[])
   }
 
   // Initialize collector options
-  unyte_options_t options = {0};
+  unyte_udp_options_t options = {0};
   options.recvmmsg_vlen = USED_VLEN;
   options.address = argv[1];
   options.port = atoi(argv[2]);
   printf("Listening on %s:%d\n", options.address, options.port);
 
   /* Initialize collector */
-  unyte_collector_t *collector = unyte_start_collector(&options);
+  unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);
   int recv_count = 0;
   int max = MAX_TO_RECEIVE;
 
   while (recv_count < max)
   {
     /* Read queue */
-    void *seg_pointer = unyte_queue_read(collector->queue);
+    void *seg_pointer = unyte_udp_queue_read(collector->queue);
     if (seg_pointer == NULL)
     {
       printf("seg_pointer null\n");
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     fflush(stdout);
 
     /* Struct frees */
-    unyte_free_all(seg);
+    unyte_udp_free_all(seg);
   }
 
   printf("Shutdown the socket\n");
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
   pthread_join(*collector->main_thread, NULL);
 
   // freeing collector mallocs
-  unyte_free_collector(collector);
+  unyte_udp_free_collector(collector);
   fflush(stdout);
   return 0;
 }

@@ -55,13 +55,13 @@ typedef struct counter_summary
   uint32_t segments_dropped;
   uint32_t segments_reordered;
   thread_type_t type;
-} unyte_sum_counter_t;
+} unyte_udp_sum_counter_t;
 
 struct monitoring_thread_input
 {
   unyte_seg_counters_t *counters; // current counters for every thread (parsing workers + listening thread)
   uint nb_counters;               // number of counters
-  queue_t *output_queue;          // output queue of stats
+  unyte_udp_queue_t *output_queue;          // output queue of stats
   uint delay;                     // in seconds
   bool stop_monitoring_thread;    // bool to stop thread
 };
@@ -78,16 +78,16 @@ void unyte_udp_update_dropped_segment(unyte_seg_counters_t *counters, uint32_t l
  */
 void unyte_udp_update_received_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
 void *t_monitoring_unyte_udp(void *in);
-void unyte_udp_print_counters(unyte_sum_counter_t *counter, FILE *std);
+void unyte_udp_print_counters(unyte_udp_sum_counter_t *counter, FILE *std);
 void unyte_udp_free_seg_counters(unyte_seg_counters_t *counters, uint nb_counter);
 
 // Getters
-pthread_t unyte_udp_get_thread_id(unyte_sum_counter_t *counter);
-uint32_t unyte_udp_get_gen_id(unyte_sum_counter_t *counter);
-uint32_t unyte_udp_get_last_msg_id(unyte_sum_counter_t *counter);
-uint32_t unyte_udp_get_received_seg(unyte_sum_counter_t *counter);
-uint32_t unyte_udp_get_dropped_seg(unyte_sum_counter_t *counter);
-uint32_t unyte_udp_get_reordered_seg(unyte_sum_counter_t *counter);
-thread_type_t unyte_udp_get_th_type(unyte_sum_counter_t *counter);
+pthread_t unyte_udp_get_thread_id(unyte_udp_sum_counter_t *counter);
+uint32_t unyte_udp_get_gen_id(unyte_udp_sum_counter_t *counter);
+uint32_t unyte_udp_get_last_msg_id(unyte_udp_sum_counter_t *counter);
+uint32_t unyte_udp_get_received_seg(unyte_udp_sum_counter_t *counter);
+uint32_t unyte_udp_get_dropped_seg(unyte_udp_sum_counter_t *counter);
+uint32_t unyte_udp_get_reordered_seg(unyte_udp_sum_counter_t *counter);
+thread_type_t unyte_udp_get_th_type(unyte_udp_sum_counter_t *counter);
 
 #endif

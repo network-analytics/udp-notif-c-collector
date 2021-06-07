@@ -17,18 +17,18 @@
 
 struct read_input
 {
-  queue_t *output_queue;
+  unyte_udp_queue_t *output_queue;
   int stop;
 };
 
 void *t_read(void *input)
 {
   struct read_input *in = (struct read_input *)input;
-  queue_t *output_queue = in->output_queue;
+  unyte_udp_queue_t *output_queue = in->output_queue;
   while (in->stop == 0)
   {
-    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(output_queue);
-    unyte_free_all(seg);
+    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_udp_queue_read(output_queue);
+    unyte_udp_free_all(seg);
   }
   pthread_exit(NULL);
 }
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
   }
 
   // Initialize collector options
-  unyte_options_t options = {0};
+  unyte_udp_options_t options = {0};
   options.address = argv[1];
   options.port = atoi(argv[2]);
   options.recvmmsg_vlen = USED_VLEN;
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
   printf("Listening on %s:%d\n", options.address, options.port);
 
   /* Initialize collector */
-  unyte_collector_t *collector = unyte_start_collector(&options);
+  unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);
   int recv_count = 0;
   int max = MAX_TO_RECEIVE;
 
@@ -67,13 +67,13 @@ int main(int argc, char *argv[])
 
   while (recv_count < max)
   {
-    void *counter_pointer = unyte_queue_read(collector->monitoring_queue);
+    void *counter_pointer = unyte_udp_queue_read(collector->monitoring_queue);
     if (counter_pointer == NULL)
     {
       printf("counter_pointer null\n");
       fflush(stdout);
     }
-    unyte_sum_counter_t *counter = (unyte_sum_counter_t *)counter_pointer;
+    unyte_udp_sum_counter_t *counter = (unyte_udp_sum_counter_t *)counter_pointer;
 
     // Getters
     // printf("Thread id: %ld\n", unyte_udp_get_thread_id(counter));
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
   pthread_join(*collector->main_thread, NULL);
 
   // freeing collector mallocs
-  unyte_free_collector(collector);
+  unyte_udp_free_collector(collector);
   free(th_read);
   fflush(stdout);
   return 0;

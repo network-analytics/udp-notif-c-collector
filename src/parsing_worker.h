@@ -8,8 +8,8 @@
 struct parser_thread_input
 {
   pthread_t parser_thread_id;
-  queue_t *input;  /* The feeding queue. */
-  queue_t *output; /* The feeded queue */
+  unyte_udp_queue_t *input;  /* The feeding queue. */
+  unyte_udp_queue_t *output; /* The feeded queue */
   struct segment_buffer *segment_buff;
   unyte_seg_counters_t *counters;
   int monitoring_running;

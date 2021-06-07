@@ -69,7 +69,7 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buf
   return conn;
 }
 
-void set_default_options(unyte_options_t *options)
+void set_default_options(unyte_udp_options_t *options)
 {
   if (options == NULL)
   {
@@ -109,12 +109,12 @@ void set_default_options(unyte_options_t *options)
   // printf("Options: parser_queue_size:%d\n", options->parsers_queue_size);
 }
 
-unyte_collector_t *unyte_start_collector(unyte_options_t *options)
+unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)
 {
   set_default_options(options);
 
-  queue_t *output_queue = unyte_queue_init(options->output_queue_size);
-  queue_t *monitoring_queue = unyte_queue_init(options->monitoring_queue_size);
+  unyte_udp_queue_t *output_queue = unyte_udp_queue_init(options->output_queue_size);
+  unyte_udp_queue_t *monitoring_queue = unyte_udp_queue_init(options->monitoring_queue_size);
 
   if (output_queue == NULL || monitoring_queue == NULL)
   {
@@ -151,7 +151,7 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   pthread_create(udpListener, NULL, t_listener, (void *)listener_input);
 
   /* Return struct */
-  unyte_collector_t *collector = (unyte_collector_t *)malloc((sizeof(unyte_collector_t)));
+  unyte_udp_collector_t *collector = (unyte_udp_collector_t *)malloc((sizeof(unyte_udp_collector_t)));
   if (collector == NULL)
   {
     printf("Malloc failed.\n");
@@ -166,7 +166,7 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
   return collector;
 }
 
-int unyte_free_all(unyte_seg_met_t *seg)
+int unyte_udp_free_all(unyte_seg_met_t *seg)
 {
   /* Free all the sub modules */
 
@@ -181,33 +181,33 @@ int unyte_free_all(unyte_seg_met_t *seg)
   return 0;
 }
 
-int unyte_free_payload(unyte_seg_met_t *seg)
+int unyte_udp_free_payload(unyte_seg_met_t *seg)
 {
   free(seg->payload);
   return 0;
 }
 
-int unyte_free_header(unyte_seg_met_t *seg)
+int unyte_udp_free_header(unyte_seg_met_t *seg)
 {
   free(seg->header);
   return 0;
 }
 
-int unyte_free_metadata(unyte_seg_met_t *seg)
+int unyte_udp_free_metadata(unyte_seg_met_t *seg)
 {
   free(seg->metadata);
   return 0;
 }
 
-int unyte_free_collector(unyte_collector_t *collector)
+int unyte_udp_free_collector(unyte_udp_collector_t *collector)
 {
   // Freeing last collector queue
-  while (is_queue_empty(collector->queue) != 0)
-    unyte_free_all((unyte_seg_met_t *)unyte_queue_read(collector->queue));
+  while (is_udp_queue_empty(collector->queue) != 0)
+    unyte_udp_free_all((unyte_seg_met_t *)unyte_udp_queue_read(collector->queue));
 
   // Freeing last monitoring counter queue
-  while (is_queue_empty(collector->monitoring_queue) != 0)
-    free(unyte_queue_read(collector->monitoring_queue));
+  while (is_udp_queue_empty(collector->monitoring_queue) != 0)
+    free(unyte_udp_queue_read(collector->monitoring_queue));
 
   free(collector->queue->data);
   free(collector->queue);

@@ -11,9 +11,9 @@
 /**
  * Not exposed function used to initialize the socket and return unyte_socket struct
  */
-unyte_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buff_size)
+unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buff_size)
 {
-  unyte_sock_t *conn = (unyte_sock_t *)malloc(sizeof(unyte_sock_t));
+  unyte_udp_sock_t *conn = (unyte_udp_sock_t *)malloc(sizeof(unyte_udp_sock_t));
   struct sockaddr_in *adresse = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
   int *sock = (int *)malloc(sizeof(int));
 
@@ -129,7 +129,7 @@ unyte_collector_t *unyte_start_collector(unyte_options_t *options)
     exit(EXIT_FAILURE);
   }
 
-  unyte_sock_t *conn = unyte_init_socket(options->address, options->port, options->socket_buff_size);
+  unyte_udp_sock_t *conn = unyte_init_socket(options->address, options->port, options->socket_buff_size);
 
   struct listener_thread_input *listener_input = (struct listener_thread_input *)malloc(sizeof(struct listener_thread_input));
   if (listener_input == NULL)

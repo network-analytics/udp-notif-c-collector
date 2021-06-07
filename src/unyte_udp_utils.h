@@ -62,11 +62,11 @@ typedef struct unyte_minimal
   uint32_t collector_addr; /* Collector interface IPv4*/
 } unyte_min_t;
 
-typedef struct unyte_socket
+typedef struct
 {
   struct sockaddr_in *addr; /* The socket addr */
   int *sockfd;              /* The socket file descriptor */
-} unyte_sock_t;
+} unyte_udp_sock_t;
 
 struct unyte_segmented_msg
 {

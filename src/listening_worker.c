@@ -12,7 +12,7 @@
 #include "listening_worker.h"
 #include "segmentation_buffer.h"
 #include "parsing_worker.h"
-#include "unyte_collector.h"
+#include "unyte_udp_collector.h"
 #include "cleanup_worker.h"
 
 void stop_parsers_and_monitoring(struct parse_worker *parsers, struct listener_thread_input *in, struct monitoring_worker *monitoring)

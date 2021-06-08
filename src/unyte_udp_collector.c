@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "unyte_collector.h"
+#include "unyte_udp_collector.h"
 #include "listening_worker.h"
 #include "unyte_version.h"
 

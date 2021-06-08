@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 #include "unyte_udp_utils.h"
 #include "parsing_worker.h"
-#include "unyte_collector.h"
+#include "unyte_udp_collector.h"
 #include "cleanup_worker.h"
 
 /**

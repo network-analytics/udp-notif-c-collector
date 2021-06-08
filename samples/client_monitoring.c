@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 #include "../src/hexdump.h"
-#include "../src/unyte_collector.h"
+#include "../src/unyte_udp_collector.h"
 #include "../src/unyte_udp_utils.h"
 #include "../src/unyte_udp_queue.h"
 #include "../src/monitoring_worker.h"

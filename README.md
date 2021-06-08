@@ -22,10 +22,10 @@ You should remove the export of the lib in your bashrc manually yourself to full
 ### Usage of the UDP-notif collector
 The collector allows to read and parse UDP-notif protocol messages from a ip/port specified on the parameters. It allows to get directly the buffer and the metadata of the message in a struct.
 
-The api is in `unyte_collector.h` :
-- `unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)` from `unyte_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: address (the IP address to listen to), port (port to listen to), recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)
+The api is in `unyte_udp_collector.h` :
+- `unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: address (the IP address to listen to), port (port to listen to), recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)
 - `void *unyte_udp_queue_read(unyte_udp_queue_t *queue)` from `unyte_udp_queue.h` : read from a queue a struct with all the message buffer and metadata.
-- `int unyte_udp_free_all(unyte_seg_met_t *seg)` from `unyte_collector.h`: free all struct used on a message received.
+- `int unyte_udp_free_all(unyte_seg_met_t *seg)` from `unyte_udp_collector.h`: free all struct used on a message received.
 
 Simple example of usage :
 ```
@@ -38,7 +38,7 @@ Simple example of usage :
 #include <unistd.h>
 
 // include installed library headers
-#include <unyte-udp-notif/unyte_collector.h>
+#include <unyte-udp-notif/unyte_udp_collector.h>
 #include <unyte-udp-notif/unyte_udp_utils.h>
 #include <unyte-udp-notif/unyte_udp_queue.h>
 

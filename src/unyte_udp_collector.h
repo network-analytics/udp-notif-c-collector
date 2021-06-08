@@ -1,5 +1,5 @@
-#ifndef H_UNYTE_COLLECTOR
-#define H_UNYTE_COLLECTOR
+#ifndef H_UNYTE_UDP_COLLECTOR
+#define H_UNYTE_UDP_COLLECTOR
 
 #include <pthread.h>
 #include "unyte_udp_queue.h"

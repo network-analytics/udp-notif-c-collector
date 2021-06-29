@@ -1,8 +1,8 @@
 # C-Collector for UDP-notif
-Library for collecting UDP-notif protocol messages.
+Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-01](https://tools.ietf.org/html/draft-ietf-netconf-udp-notif-01).
 
 ## Build & install
-To build the project and test example clients, just `make` on root folder. Il will compile with gcc all dependences and the clients.
+To build the project and test example clients, just `make` on root folder. Il will compile with gcc all dependencies and the clients.
 
 ### Installing
 To install the library on a machine, run `make install` with sudo and `export.sh` without sudo. Export script will export the LD_LIBRARY_PATH on user space.
@@ -14,7 +14,7 @@ $ ./export.sh
 
 ### Uninstalling
 ```
-$ sudo ./uninstall.sh
+$ sudo make uninstall
 ```
 You should remove the export of the lib in your bashrc manually yourself to fully remove the lib.
 
@@ -22,12 +22,12 @@ You should remove the export of the lib in your bashrc manually yourself to full
 ### Usage of the UDP-notif collector
 The collector allows to read and parse UDP-notif protocol messages from a ip/port specified on the parameters. It allows to get directly the buffer and the metadata of the message in a struct.
 
-The api is in `unyte_collector.h` :
-- `unyte_collector_t *unyte_start_collector(unyte_options_t *options)` from `unyte_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: address (the IP address to listen to), port (port to listen to), recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)
-- `void *unyte_queue_read(queue_t *queue)` from `queue.h` : read from a queue a struct with all the message buffer and metadata.
-- `int unyte_free_all(unyte_seg_met_t *seg)` from `unyte_collector.h`: free all struct used on a message received.
+The api is in `unyte_udp_collector.h` :
+- `unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: address (the IP address to listen to), port (port to listen to), recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)
+- `void *unyte_udp_queue_read(unyte_udp_queue_t *queue)` from `unyte_udp_queue.h` : read from a queue a struct with all the message buffer and metadata.
+- `int unyte_udp_free_all(unyte_seg_met_t *seg)` from `unyte_udp_collector.h`: free all struct used on a message received.
 
-Simple exemple of usage :
+Simple example of usage :
 ```
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,9 +38,9 @@ Simple exemple of usage :
 #include <unistd.h>
 
 // include installed library headers
-#include <unyte-udp-notif/unyte_collector.h>
-#include <unyte-udp-notif/unyte_utils.h>
-#include <unyte-udp-notif/queue.h>
+#include <unyte-udp-notif/unyte_udp_collector.h>
+#include <unyte-udp-notif/unyte_udp_utils.h>
+#include <unyte-udp-notif/unyte_udp_queue.h>
 
 #define PORT 10001
 #define ADDR "192.168.0.17"
@@ -48,7 +48,7 @@ Simple exemple of usage :
 int main()
 {
   // Initialize collector options
-  unyte_options_t options = {0};
+  unyte_udp_options_t options = {0};
   options.address = ADDR;
   options.port = PORT;
   // if argument set to 0, defaults are used
@@ -59,55 +59,47 @@ int main()
   options.parsers_queue_size = 0;  // parser queue size. Default: 500
 
   // Initialize collector
-  unyte_collector_t *collector = unyte_start_collector(&options);
+  unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);
 
-  // Exemple with infinity loop, change the break condition to be able to free all gracefully
+  // Example with infinity loop, change the break condition to be able to free all gracefully
   while (1)
   {
     // Read message on queue
-    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
+    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_udp_queue_read(collector->queue);
 
     // TODO: Process the UDP-notif message here
-    printf("get_version: %u\n", get_version(seg));
-    printf("get_space: %u\n", get_space(seg));
-    printf("get_encoding_type: %u\n", get_encoding_type(seg));
-    printf("get_header_length: %u\n", get_header_length(seg));
-    printf("get_message_length: %u\n", get_message_length(seg));
-    printf("get_generator_id: %u\n", get_generator_id(seg));
-    printf("get_message_id: %u\n", get_message_id(seg));
-    printf("get_src_port: %u\n", get_src_port(seg));
-    printf("get_src_addr: %u\n", get_src_addr(seg));
-    printf("get_dest_addr: %u\n", get_dest_addr(seg));
-    printf("get_payload: %s\n", get_payload(seg));
-    printf("get_payload_length: %u\n", get_payload_length(seg));
+    printf("unyte_udp_get_version: %u\n", unyte_udp_get_version(seg));
+    printf("unyte_udp_get_space: %u\n", unyte_udp_get_space(seg));
+    printf("unyte_udp_get_encoding_type: %u\n", unyte_udp_get_encoding_type(seg));
+    printf("unyte_udp_get_header_length: %u\n", unyte_udp_get_header_length(seg));
+    printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
+    printf("unyte_udp_get_generator_id: %u\n", unyte_udp_get_generator_id(seg));
+    printf("unyte_udp_get_message_id: %u\n", unyte_udp_get_message_id(seg));
+    printf("unyte_udp_get_src_port: %u\n", unyte_udp_get_src_port(seg));
+    printf("unyte_udp_get_src_addr: %u\n", unyte_udp_get_src_addr(seg));
+    printf("unyte_udp_get_dest_addr: %u\n", unyte_udp_get_dest_addr(seg));
+    printf("unyte_udp_get_payload: %s\n", unyte_udp_get_payload(seg));
+    printf("unyte_udp_get_payload_length: %u\n", unyte_udp_get_payload_length(seg));
 
     // Free UDP-notif message after
-    unyte_free_all(seg);
+    unyte_udp_free_all(seg);
   }
 
-  // To shut down the collector, just shutdown and close the socket.
-  shutdown(*collector->sockfd, SHUT_RDWR);
+  // To shut down the collector, just close the socket.
   close(*collector->sockfd);
 
   // wait for main_tread to finish
   pthread_join(*collector->main_thread, NULL);
 
-  // Free last packets in the queue
-  while (is_queue_empty(collector->queue) != 0)
-  {
-    unyte_seg_met_t *seg = (unyte_seg_met_t *)unyte_queue_read(collector->queue);
-    unyte_free_all(seg);
-  }
-
-  // freeing collector mallocs
-  unyte_free_collector(collector);
+  // Freeing collector mallocs and last messages for every queue if there is any message not consumed
+  unyte_udp_free_collector(collector);
 
   return 0;
 }
 ```
 
 #### Segments data
-To process the message data, all the headers, meta-data and payload are found on the struct unyte_seg_met_t defined on unyte_utils.h:
+To process the message data, all the headers, meta-data and payload are found on the struct unyte_seg_met_t defined on unyte_udp_utils.h:
 ```
 typedef struct unyte_segment_with_metadata
 {
@@ -117,18 +109,43 @@ typedef struct unyte_segment_with_metadata
 } unyte_seg_met_t;
 ```
 ##### Getters for segments data
-- `uint8_t get_version(unyte_seg_met_t *message);` : encoding version
-- `uint8_t get_space(unyte_seg_met_t *message);` : space of encoding version
-- `uint8_t get_encoding_type(unyte_seg_met_t *message);` : dentifier to indicate the encoding type used for the Notification Message
-- `uint16_t get_header_length(unyte_seg_met_t *message);` : length of the message header in octets
-- `uint16_t get_message_length(unyte_seg_met_t *message);` : total length of the message within one UDP datagram, measured in octets, including the message header
-- `uint32_t get_generator_id(unyte_seg_met_t *message);` : observation domain id of the message
-- `uint32_t get_message_id(unyte_seg_met_t *message);` : message id of the message
-- `uint16_t get_src_port(unyte_seg_met_t *message);` : source port of the message
-- `uint32_t get_src_addr(unyte_seg_met_t *message);` : source address of the message
-- `uint32_t get_dest_addr(unyte_seg_met_t *message);` : collector address
-- `char *get_payload(unyte_seg_met_t *message);` : payload buffer
-- `uint16_t get_payload_length(unyte_seg_met_t *message);` : payload length
+- `uint8_t unyte_udp_get_version(unyte_seg_met_t *message);` : encoding version
+- `uint8_t unyte_udp_get_space(unyte_seg_met_t *message);` : space of encoding version
+- `uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message);` : dentifier to indicate the encoding type used for the Notification Message
+- `uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message);` : length of the message header in octets
+- `uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message);` : total length of the message within one UDP datagram, measured in octets, including the message header
+- `uint32_t unyte_udp_get_generator_id(unyte_seg_met_t *message);` : observation domain id of the message
+- `uint32_t unyte_udp_get_message_id(unyte_seg_met_t *message);` : message id of the message
+- `uint16_t unyte_udp_get_src_port(unyte_seg_met_t *message);` : source port of the message
+- `uint32_t unyte_udp_get_src_addr(unyte_seg_met_t *message);` : source address of the message
+- `uint32_t unyte_udp_get_dest_addr(unyte_seg_met_t *message);` : collector address
+- `char *unyte_udp_get_payload(unyte_seg_met_t *message);` : payload buffer
+- `uint16_t unyte_udp_get_payload_length(unyte_seg_met_t *message);` : payload length
+
+#### Monitoring of the lib
+There is a monitoring thread that could be started to monitor packets loss and packets received in bad order.
+To activate this thread, you must initiate the monitoring thread queue size (`monitoring_queue_size`):
+```
+typedef struct
+{
+  char *address;
+  uint16_t port;
+  ...
+  uint monitoring_queue_size;   // monitoring queue size if wanted to activate the monitoring thread. Default: 0. Recommended: 500.
+  uint monitoring_delay;        // monitoring queue frequence in seconds. Default: 5 seconds
+} unyte_udp_options_t;
+```
+The thread will every `monitoring_delay` seconds send all generators id's counters.
+
+##### Type of threads
+The threads types are defined in `monitoring_worker.h`:
+- `PARSER_WORKER`: worker in charge of parsing the segments. Reassembles or saves in memory the segmented messages.
+- `LISTENER_WORKER`: worker in charge of receiving the bytes from the socket. It calls `recvmmsg()` syscall to receive multiple messages at once.
+
+##### Packets loss
+Two usecases are possible monitoring packets loss:
+- Drops on `PARSER_WORKER`: It means the client consuming the parsed messages is not consuming that fast. You may want to multithread the client consuming the `collector->queue` (output_queue) or increase the `output_queue_size` option to avoid packets drops on spikes.
+- Drops on `LISTENER_WORKER`: It means the `N` parsers are not consuming that fast and the `LISTENER_WORKER` is pushing to the `input_queue` faster than the parsers could read. You may want to increment the number of parsers instantiated or increase `parsers_queue_size` option to avoid packets drops on spikes.
 
 ### Usage of the sender
 The sender allows the user to send UDP-notif protocol to a IP/port specified. It cuts the message into segments of the protocol if it is larger than the MTU specified in parameters.
@@ -158,7 +175,7 @@ Simple usage of the sender :
 #include <stdlib.h>
 
 #include <unyte-udp-notif/unyte_sender.h>
-#include <unyte-udp-notif/unyte_utils.h>
+#include <unyte-udp-notif/unyte_udp_utils.h>
 
 #define PORT 10001
 #define ADDR "192.168.0.17"

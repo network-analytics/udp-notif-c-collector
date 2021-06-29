@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>
-#include "unyte_utils.h"
+#include "unyte_udp_utils.h"
 
 // Segmentation_buffer parameters
 #define SIZE_BUF 10000          // size of buffer

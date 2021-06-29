@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../src/unyte_collector.h"
+#include "../src/unyte_udp_collector.h"
 
 int main()
 {

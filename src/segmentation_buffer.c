@@ -3,7 +3,7 @@
 struct segment_buffer *create_segment_buffer()
 {
   struct segment_buffer *res = malloc(sizeof(struct segment_buffer));
-  if (res == NULL) 
+  if (res == NULL)
   {
     printf("Malloc failed.");
     return NULL;
@@ -22,6 +22,12 @@ struct segment_buffer *create_segment_buffer()
 char *reassemble_payload(struct message_segment_list_cell *msg_seg_list)
 {
   char *complete_msg = (char *)malloc(msg_seg_list->total_payload_byte_size);
+  if (complete_msg == NULL)
+  {
+    printf("Malloc failed reassembling message payload\n");
+    return NULL;
+  }
+
   char *msg_tmp = complete_msg;
   struct message_segment_list_cell *temp = msg_seg_list;
 
@@ -45,11 +51,14 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
   if (buf->hash_array[hk] == NULL)
   {
     buf->hash_array[hk] = malloc(sizeof(struct collision_list_cell));
+    if (buf->hash_array[hk] == NULL)
+      return -3;
     buf->hash_array[hk]->next = NULL;
   }
 
   struct collision_list_cell *head = buf->hash_array[hk];
   struct collision_list_cell *cur = head;
+  //TODO: mid==mid????
   while (cur->next != NULL && (cur->next->gid != gid || cur->next->mid != mid))
   {
     cur = cur->next;
@@ -57,9 +66,13 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
   if (cur->next == NULL)
   {
     cur->next = malloc(sizeof(struct collision_list_cell));
+    if (cur->next == NULL)
+      return -3;
     cur->next->gid = gid;
     cur->next->mid = mid;
     cur->next->head = create_message_segment_list(gid, mid);
+    if (cur->next->head == NULL)
+      return -3;
     buf->count++;
     cur->next->next = NULL;
   }
@@ -340,15 +353,19 @@ void cleanup_seg_buff(struct segment_buffer *buf, int cleanup_pass_size)
         {
           // printf("Message is to be cleaned (%d|%d)\n", next->gid, next->mid);
           struct collision_list_cell *t = next->next;
-          if (next->head->timestamp == 0) {
+          if (next->head->timestamp == 0)
+          {
             next->head->timestamp = now;
           }
-          if ((now - next->head->timestamp) > EXPIRE_MSG) {
+          if ((now - next->head->timestamp) > EXPIRE_MSG)
+          {
             // printf("Actually clearing message (%d|%d) %ld\n", next->gid, next->mid, next->head->timestamp);
             clear_segment_list(buf, next->gid, next->mid);
             next = t;
             buf->count--;
-          } else {
+          }
+          else
+          {
             next = next->next;
           }
         }

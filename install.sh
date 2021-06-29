@@ -5,6 +5,8 @@ LIB_DIR=lib
 H_DIR=include
 PKG_DIR=/usr/lib/pkgconfig
 
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
+
 if [ "$EUID" -ne 0 ]
 then
   echo "Please run as root."
@@ -43,7 +45,7 @@ fi
 
 echo "Copying pkg-config file to $PKG_DIR"
 sed -e "s/<<install>>/${INSTALL_DIR//\//\\/}/g" -e "s/<<include>>/$H_DIR/g" -e "s/<<lib>>/$LIB_DIR/g" unyte-pkg.pc > unyte-udp-notif.pc
-cp unyte-udp-notif.pc $PKG_DIR
+cp unyte-udp-notif.pc $PKG_DIR/unyte-udp-notif.pc
 
 if [ $? -ne 0 ]
 then

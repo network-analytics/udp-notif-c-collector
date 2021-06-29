@@ -9,6 +9,9 @@ test_version
 sender_json
 libunyte-udp-notif.so
 scripts/resources
+sender_continuous
+client_continuous
+client_monitoring
 
 docker/tmp
 

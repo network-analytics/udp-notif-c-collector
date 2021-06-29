@@ -2,7 +2,7 @@
 #define H_UNYTE_SENDER
 
 #include <stdint.h>
-#include "unyte_utils.h"
+#include "unyte_udp_utils.h"
 
 #define DEFAULT_MTU 1500
 #define DEFAULT_SK_SND_BUFF_SIZE 20971520 // 20MB of socket buffer size

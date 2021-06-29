@@ -6,11 +6,11 @@ Note that empty is head==tail, thus only PARSER_QUEUE_SIZE-1 entries may be used
 
 #include <stdio.h>
 #include <assert.h>
-#include "queue.h"
+#include "unyte_udp_queue.h"
 
-queue_t *unyte_queue_init(size_t size)
+unyte_udp_queue_t *unyte_udp_queue_init(size_t size)
 {
-  queue_t *queue = (queue_t *)malloc(sizeof(queue_t));
+  unyte_udp_queue_t *queue = (unyte_udp_queue_t *)malloc(sizeof(unyte_udp_queue_t));
   if (queue == NULL)
   {
     printf("Malloc failed.\n");
@@ -33,7 +33,7 @@ queue_t *unyte_queue_init(size_t size)
   return queue;
 }
 
-void *unyte_queue_read(queue_t *queue)
+void *unyte_udp_queue_read(unyte_udp_queue_t *queue)
 {
   sem_wait(&queue->full);
   pthread_mutex_lock(&queue->lock);
@@ -53,7 +53,7 @@ void *unyte_queue_read(queue_t *queue)
   return handle;
 }
 
-int unyte_queue_write(queue_t *queue, void *handle)
+int unyte_udp_queue_write(unyte_udp_queue_t *queue, void *handle)
 {
   sem_wait(&queue->empty);
   pthread_mutex_lock(&queue->lock);
@@ -71,11 +71,35 @@ int unyte_queue_write(queue_t *queue, void *handle)
   sem_post(&queue->full);
   return 0;
 }
+//TODO: rewrite function name
+int unyte_udp_queue_destructive_write(unyte_udp_queue_t *queue, void *handle)
+{
+  sem_wait(&queue->empty);
+  pthread_mutex_lock(&queue->lock);
+  // queue is full --> we destroy the oldest and add the new one on the head cell
+  if (((queue->head + 1) % queue->size) == queue->tail)
+  {
+    free(queue->data[queue->tail]);
+    queue->data[queue->head] = handle;
+    queue->head = (queue->head + 1) % queue->size;
+    queue->tail = (queue->tail + 1) % queue->size;
+
+    // unlock mutex + unlock semaphore for writer
+    pthread_mutex_unlock(&queue->lock);
+    sem_post(&queue->empty);
+    return 1;
+  }
+  queue->data[queue->head] = handle;
+  queue->head = (queue->head + 1) % queue->size;
+  pthread_mutex_unlock(&queue->lock);
+  sem_post(&queue->full);
+  return 0;
+}
 
 /**
  * Check wether or not the queue is empty and return 1 for not empty 0 for empty
  */
-int is_queue_empty(queue_t *queue)
+int is_udp_queue_empty(unyte_udp_queue_t *queue)
 {
   int val;
   int n = sem_getvalue(&queue->full, &val);

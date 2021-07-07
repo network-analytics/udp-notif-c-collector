@@ -7,8 +7,11 @@ To build the project and test example clients, just `make` on root folder. Il wi
 ### Installing
 To install the library on a machine, run `make install` with sudo and `export.sh` without sudo. Export script will export the LD_LIBRARY_PATH on user space.
 ```
+$ ./bootstrap
+$ mkdir build && cd build    # if want to compile in a specific folder
+$ ../configure               # if build directory is created ./configure if not
 $ make
-$ sudo make install
+$ make install               # usually needs sudo
 $ ./export.sh
 ```
 

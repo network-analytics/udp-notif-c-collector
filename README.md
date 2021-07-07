@@ -8,12 +8,17 @@ To build the project and test example clients, just `make` on root folder. Il wi
 To install the library on a machine, run `make install` with sudo and `export.sh` without sudo. Export script will export the LD_LIBRARY_PATH on user space.
 ```
 $ ./bootstrap
-$ mkdir build && cd build    # if want to compile in a specific folder
-$ ../configure               # if build directory is created ./configure if not
+$ ./configure                 # See ./configure --help for options
 $ make
-$ make install               # usually needs sudo
-$ ./export.sh
+$ make install                # usually needs sudo permissions
+$ ./export.sh                 # optional: export LD_LIBRARY_PATH with /usr/local/lib in global variable to allow linking process
 ```
+
+#### Configure options
+There are some custom `./configure` options : 
+- `--with-examples`: compile examples directory. Not compiled by default.
+- `--with-test`: compile testdirectory. Not compiled by default.
+- `--enable-tcmalloc`: enable compilation with tcmalloc instead of native malloc. tcmalloc should be installed first.
 
 ### Uninstalling
 ```

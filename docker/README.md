@@ -14,3 +14,4 @@ You can use both `docker` and `podman` engines.
 
 ## Notes
 /!\ `client_sample.c` should listen to IP 0.0.0.0 to work on docker.
+TODO: after using autotools, some of the scripts may not work anymore.

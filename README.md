@@ -1,17 +1,17 @@
 # C-Collector for UDP-notif
 Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-01](https://tools.ietf.org/html/draft-ietf-netconf-udp-notif-01).
 
-## Build & install
-To build the project and test example clients, just `make` on root folder. Il will compile with gcc all dependencies and the clients.
+## Compiling project
+This project uses autotools to compile and install the library.
 
 ### Installing
-To install the library on a machine, run `make install` with sudo and `export.sh` without sudo. Export script will export the LD_LIBRARY_PATH on user space.
+To install the library on a linux machine.
 ```
 $ ./bootstrap
 $ ./configure                 # See ./configure --help for options
 $ make
-$ make install                # usually needs sudo permissions
-$ ./export.sh                 # optional: export LD_LIBRARY_PATH with /usr/local/lib in global variable to allow linking process
+$ make install                # Usually needs sudo permissions
+$ ./export.sh                 # Optional: export LD_LIBRARY_PATH with /usr/local/lib in global variable to allow linking process
 ```
 
 #### Configure options

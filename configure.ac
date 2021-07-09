@@ -1,4 +1,4 @@
-AC_INIT([unyte_udp_notif], [0.4.0], [alex.huang-feng@insa-lyon.fr])
+AC_INIT([unyte_udp_notif], m4_esyscmd_s(cat VERSION), [alex.huang-feng@insa-lyon.fr])
 AC_CONFIG_AUX_DIR([build-aux])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
@@ -17,13 +17,14 @@ AC_PROG_LN_S
 
 AC_ARG_ENABLE([tcmalloc],
     [AS_HELP_STRING([--enable-tcmalloc], [Use tcmalloc instead of native malloc. tcmalloc should be installed first.])],
-    [ tcmalloc_enabled=yes ]
+    [ tcmalloc_enabled=yes ],
+    [ tcmalloc_enabled=no ]
 )
 
 AC_ARG_WITH([examples],
     [AS_HELP_STRING([--with-examples], [Build examples samples])],
-    [with_examples=yes],
-    [with_examples=no]
+    [ with_examples=yes ],
+    [ with_examples=no ]
 )
 
 AM_CONDITIONAL(EXAMPLES, test "x$with_examples" = "xyes")

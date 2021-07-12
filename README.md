@@ -1,56 +1,8 @@
 # C-Collector for UDP-notif
 Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-03](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-03).
 
-## Compiling project
-This project uses autotools to compile and install the library.
-
-### Dependencies
-This project uses autotools and gcc to compile and package the library.
-
-On Ubuntu:
-```shell
-$ sudo apt-get install autoconf libtool build-essential pkg-config
-```
-
-On Centos:
-```shell
-$ #TODO:
-```
-
-#### Using tcmalloc (Optional)
-This project can use tcmalloc for memory management allowing better performance.
-
-On Ubuntu:
-```shell
-$ sudo apt-get install google-perftools-dev
-```
-
-On Centos:
-```shell
-$ # TODO:
-```
-
-### Installing
-To install the library on a linux machine.
-```shell
-$ ./bootstrap
-$ ./configure                 # See ./configure --help for options
-$ make
-$ make install                # Usually needs sudo permissions
-$ ./export.sh                 # Optional: export LD_LIBRARY_PATH with /usr/local/lib in global variable to allow linking process
-```
-
-#### Configure options
-There are some custom `./configure` options : 
-- `--with-examples`: compile examples directory. Not compiled by default.
-- `--with-test`: compile testdirectory. Not compiled by default.
-- `--enable-tcmalloc`: enable compilation with tcmalloc instead of native malloc. tcmalloc should be installed first.
-
-### Uninstalling
-```shell
-$ make uninstall              # Usually need sudo permissions
-```
-You should remove the export of the lib in your bashrc manually yourself to fully remove the lib.
+## Compiling and installing project
+See [INSTALL](INSTALL.md)
 
 ## Usage
 ### Usage of the UDP-notif collector

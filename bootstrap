@@ -16,3 +16,5 @@ check_command() {
 check_command "$AUTORECONF"
 
 autoreconf --install
+
+exit 0

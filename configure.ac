@@ -40,7 +40,7 @@ AM_CONDITIONAL(TEST_FILES, test "x$with_test_files" = "xyes")
 if test "x$tcmalloc_enabled" = "xyes"
 then
     AC_CHECK_LIB(tcmalloc, malloc, [], [
-        echo "Error! You need to have tcmalloc first."
+        echo "*** Error! You need to have tcmalloc first. ***"
         exit -1
     ])
     EXTRA_LDFLAGS="-ltcmalloc -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free"

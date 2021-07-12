@@ -10,3 +10,6 @@ rm Makefile
 rm -r src/Makefile.in src/Makefile src/.deps
 rm -r test/Makefile.in test/Makefile test/.deps
 rm -r examples/Makefile.in examples/Makefile examples/.deps examples/.libs examples/*.o
+rm src/*.o src/*.lo
+rm -r src/.libs
+rm src/*.la

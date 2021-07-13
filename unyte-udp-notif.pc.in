@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+includedir=@includedir@
+libdir=@libdir@
+
+Name: unyte-udp-notif
+Description: Unyte UDP-notif protocol library
+Version: @VERSION@
+Cflags: -I${includedir}/unyte-udp-notif
+Libs: -L${libdir} -lunyte-udp-notif

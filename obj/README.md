@@ -1,1 +1,0 @@
-# C-collector build folder

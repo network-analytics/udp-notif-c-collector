@@ -37,6 +37,15 @@ AC_ARG_WITH([test],
 
 AM_CONDITIONAL(TEST_FILES, test "x$with_test_files" = "xyes")
 
+AC_ARG_WITH([pkgconfigdir],
+    [AS_HELP_STRING([--with-pkgconfigdir], [pkg-config directory to install the .pc file.])],
+    [ with_pkgconfigdir=$with_pkgconfigdir ],
+    [ with_pkgconfigdir=$libdir/pkgconfig ]
+)
+
+PKGCONFIG_USER=$with_pkgconfigdir
+AC_SUBST([PKGCONFIG_USER])
+
 if test "x$tcmalloc_enabled" = "xyes"
 then
     AC_CHECK_LIB(tcmalloc, malloc, [], [

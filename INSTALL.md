@@ -41,6 +41,7 @@ $ ./export.sh       # Optional: export LD_LIBRARY_PATH with /usr/local/lib in gl
 There are some custom `./configure` options : 
 - `--with-examples`: compile examples directory. Not compiled by default.
 - `--with-test`: compile testdirectory. Not compiled by default.
+- `--with-pkgconfigdir=[/own_path/pkgconfig]`: overwrite pkgconfig directory to install .pc file [default: ${PREFIX}/lib/pkgconfig]
 - `--enable-tcmalloc`: enable compilation with tcmalloc instead of native malloc. tcmalloc should be installed first.
 
 ## Uninstalling

@@ -352,6 +352,17 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
   return parsed_bytes;
 }
 
+unyte_IP_type_t get_IP_type(char *addr)
+{
+  char buf[16];
+  if (inet_pton(AF_INET, addr, buf))
+    return unyte_IPV4;
+  else if (inet_pton(AF_INET6, addr, buf))
+    return unyte_IPV6;
+  
+  return unyte_UNKNOWN;
+}
+
 uint8_t unyte_udp_get_version(unyte_seg_met_t *message) { return message->header->version; }
 uint8_t unyte_udp_get_space(unyte_seg_met_t *message) { return message->header->space; }
 uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message) { return message->header->encoding_type; }

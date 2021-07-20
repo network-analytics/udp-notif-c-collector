@@ -253,6 +253,7 @@ int listener(struct listener_thread_input *in)
       messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
       messages[i].msg_hdr.msg_control = 0;
       messages[i].msg_hdr.msg_controllen = 0;
+      // TODO: use struct sockaddr_storage and send it directly to the user without parsing
       messages[i].msg_hdr.msg_name = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
       messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_in);
     }

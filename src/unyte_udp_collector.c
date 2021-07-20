@@ -7,24 +7,43 @@
 #include "unyte_udp_collector.h"
 #include "listening_worker.h"
 #include "unyte_version.h"
+#include <netdb.h>
+#include <net/if.h>
 
 /**
  * Not exposed function used to initialize the socket and return unyte_socket struct
  */
 unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buff_size)
 {
-  unyte_udp_sock_t *conn = (unyte_udp_sock_t *)malloc(sizeof(unyte_udp_sock_t));
-  struct sockaddr_in *adresse = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
-  int *sock = (int *)malloc(sizeof(int));
+  unyte_IP_type_t ip_type = get_IP_type(addr);
+  if (ip_type == unyte_UNKNOWN)
+  {
+    printf("Invalid IP address: %s\n", addr);
+    exit(EXIT_FAILURE);
+  }
 
-  if (conn == NULL || adresse == NULL || sock == NULL)
+  unyte_udp_sock_t *conn = (unyte_udp_sock_t *)malloc(sizeof(unyte_udp_sock_t));
+  int *sock = (int *)malloc(sizeof(int));
+  void *address;
+
+  if (ip_type == unyte_IPV4)
+    address = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
+  else 
+    address = (struct sockaddr_in6 *)malloc(sizeof(struct sockaddr_in6));
+
+  printf("Address type: %s\n", (ip_type == unyte_IPV4) ? "IPv4" : "IPv6");
+
+  if (conn == NULL || address == NULL || sock == NULL)
   {
     printf("Malloc failed.\n");
     exit(EXIT_FAILURE);
   }
 
   /*create socket on UDP protocol*/
-  *sock = socket(AF_INET, SOCK_DGRAM, 0);
+  if (ip_type == unyte_IPV4)
+    *sock = socket(AF_INET, SOCK_DGRAM, 0);
+  else 
+    *sock = socket(AF_INET6, SOCK_DGRAM, 0);
 
   /*handle error*/
   if (*sock < 0)
@@ -52,18 +71,32 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buf
     exit(EXIT_FAILURE);
   }
 
-  adresse->sin_family = AF_INET;
-  adresse->sin_port = htons(port);
-  inet_pton(AF_INET, addr, &adresse->sin_addr);
+  int bind_ret = 0;
+  if (ip_type == unyte_IPV4)
+  {
+    ((struct sockaddr_in *)address)->sin_family = AF_INET;
+    ((struct sockaddr_in *)address)->sin_port = htons(port);
+    inet_pton(AF_INET, addr, &((struct sockaddr_in *)address)->sin_addr);
+    bind_ret = bind(*sock, (struct sockaddr *)address, sizeof(struct sockaddr_in));
+  }
+  else
+  {
+    ((struct sockaddr_in6 *)address)->sin6_family = AF_INET6;
+    ((struct sockaddr_in6 *)address)->sin6_port = htons(port);
+    ((struct sockaddr_in6 *)address)->sin6_scope_id = if_nametoindex("eth0"); //TODO: check all interfaces or bind to one interface
+    ((struct sockaddr_in6 *)address)->sin6_flowinfo = 0;
+    inet_pton(AF_INET6, addr, &((struct sockaddr_in6 *)address)->sin6_addr);
+    bind_ret = bind(*sock, (struct sockaddr *)address, sizeof(struct sockaddr_in6));
+  }
 
-  if (bind(*sock, (struct sockaddr *)adresse, sizeof(*adresse)) == -1)
+  if (bind_ret == -1)
   {
     perror("Bind failed");
     close(*sock);
     exit(EXIT_FAILURE);
   }
 
-  conn->addr = adresse;
+  conn->addr = address;
   conn->sockfd = sock;
 
   return conn;

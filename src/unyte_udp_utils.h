@@ -89,6 +89,13 @@ typedef struct unyte_message
   uint32_t message_id;
 } unyte_message_t;
 
+typedef enum
+{
+  unyte_IPV4,
+  unyte_IPV6,
+  unyte_UNKNOWN
+} unyte_IP_type_t;
+
 /**
  * Return unyte_min_t data out of *SEGMENT.
  */
@@ -123,6 +130,12 @@ void print_udp_notif_payload(char *p, int len, FILE *std);
 
 struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu);
 unsigned char *serialize_message(unyte_seg_met_t *message);
+
+/**
+ * Checks whether *addr is an IPv4 or IPv6
+ * Return NULL if invalid addr
+ */
+unyte_IP_type_t get_IP_type(char *addr);
 
 uint8_t unyte_udp_get_version(unyte_seg_met_t *message);
 uint8_t unyte_udp_get_space(unyte_seg_met_t *message);

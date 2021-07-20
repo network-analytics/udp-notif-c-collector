@@ -202,13 +202,11 @@ unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)
 int unyte_udp_free_all(unyte_seg_met_t *seg)
 {
   /* Free all the sub modules */
-
-  free(seg->payload);
-  free(seg->header);
-  free(seg->metadata);
+  unyte_udp_free_payload(seg);
+  unyte_udp_free_header(seg);
+  unyte_udp_free_metadata(seg);
 
   /* Free the struct itself */
-
   free(seg);
 
   return 0;
@@ -228,6 +226,7 @@ int unyte_udp_free_header(unyte_seg_met_t *seg)
 
 int unyte_udp_free_metadata(unyte_seg_met_t *seg)
 {
+  free(seg->metadata->src);
   free(seg->metadata);
   return 0;
 }

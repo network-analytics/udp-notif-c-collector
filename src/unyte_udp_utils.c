@@ -28,7 +28,7 @@ uint16_t deserialize_uint16(char *c, int p)
 /**
  * Return unyte_min_t data out of *SEGMENT.
  */
-unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struct sockaddr_in *collector)
+unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struct sockaddr_storage *collector)
 {
   unyte_min_t *um = malloc(sizeof(unyte_min_t));
 
@@ -37,16 +37,22 @@ unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struc
     printf("Malloc failed \n");
     return NULL;
   }
+  um->collector_addr = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+
+  if (um->collector_addr == NULL)
+  {
+    printf("Malloc failed\n");
+    free(um);
+    return NULL;
+  }
 
   um->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
   um->message_id = ntohl(deserialize_uint32((char *)segment, 8));
 
   um->buffer = segment;
 
-  // um->src_port = ntohs(source->sin_port);
-  // um->src_addr = ntohl(source->sin_addr.s_addr);
   um->src = source;
-  um->collector_addr = ntohl(collector->sin_addr.s_addr);
+  memcpy(um->collector_addr, collector, sizeof(struct sockaddr_storage));
 
   return um;
 }
@@ -154,10 +160,8 @@ unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met
  */
 unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_met_t *src)
 {
-  dest->metadata->collector_addr = src->metadata->collector_addr;
   memcpy(dest->metadata->src, src->metadata->src, sizeof(struct sockaddr_storage));
-  // dest->metadata->src_addr = src->metadata->src_addr;
-  // dest->metadata->src_port = src->metadata->src_port;
+  memcpy(dest->metadata->collector_addr, src->metadata->collector_addr, sizeof(struct sockaddr_storage));
   return dest;
 }
 
@@ -373,9 +377,7 @@ uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message) { return message-
 uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message) { return message->header->message_length; }
 uint32_t unyte_udp_get_generator_id(unyte_seg_met_t *message) { return message->header->generator_id; }
 uint32_t unyte_udp_get_message_id(unyte_seg_met_t *message) { return message->header->message_id; }
-// uint16_t unyte_udp_get_src_port(unyte_seg_met_t *message) { return message->metadata->src_port; }
-// uint32_t unyte_udp_get_src_addr(unyte_seg_met_t *message) { return message->metadata->src_addr; }
 struct sockaddr_storage *unyte_udp_get_src(unyte_seg_met_t *message) { return message->metadata->src; }
-uint32_t unyte_udp_get_dest_addr(unyte_seg_met_t *message) { return message->metadata->collector_addr; }
+struct sockaddr_storage *unyte_udp_get_dest_addr(unyte_seg_met_t *message) { return message->metadata->collector_addr; }
 char *unyte_udp_get_payload(unyte_seg_met_t *message) { return message->payload; }
 uint16_t unyte_udp_get_payload_length(unyte_seg_met_t *message) { return (message->header->message_length - message->header->header_length); }

@@ -253,7 +253,6 @@ int listener(struct listener_thread_input *in)
       messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
       messages[i].msg_hdr.msg_control = 0;
       messages[i].msg_hdr.msg_controllen = 0;
-      // TODO: use struct sockaddr_storage and send it directly to the user without parsing
       messages[i].msg_hdr.msg_name = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
       messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_storage);
     }
@@ -274,7 +273,6 @@ int listener(struct listener_thread_input *in)
       // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
       if (messages[i].msg_len > 0)
       {
-        // printf("HERE: %d|%d\n", ((struct sockaddr_storage *)messages[i].msg_hdr.msg_name)->ss_family, AF_INET6);
         unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_storage *)messages[i].msg_hdr.msg_name), in->conn->addr);
         if (seg == NULL)
         {
@@ -305,11 +303,6 @@ int listener(struct listener_thread_input *in)
         free(messages[i].msg_hdr.msg_iov->iov_base);
       }
     }
-
-    // for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
-    // {
-    //   free(messages[i].msg_hdr.msg_name);
-    // }
   }
 
   // Never called cause while(1)

@@ -11,8 +11,8 @@
 #include "../src/unyte_udp_utils.h"
 #include "../src/unyte_udp_queue.h"
 
-#define USED_VLEN 10
-#define MAX_TO_RECEIVE 200
+#define USED_VLEN 1
+#define MAX_TO_RECEIVE 20
 
 int main(int argc, char *argv[])
 {
@@ -53,9 +53,8 @@ int main(int argc, char *argv[])
     // printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
     // printf("unyte_udp_get_generator_id: %u\n", unyte_udp_get_generator_id(seg));
     // printf("unyte_udp_get_message_id: %u\n", unyte_udp_get_message_id(seg));
-    // printf("unyte_udp_get_src_port: %u\n", unyte_udp_get_src_port(seg));
-    // printf("unyte_udp_get_src_addr: %u\n", unyte_udp_get_src_addr(seg));
-    // printf("unyte_udp_get_dest_addr: %u\n", unyte_udp_get_dest_addr(seg));
+    // printf("unyte_udp_get_src[family]: %u\n", unyte_udp_get_src(seg)->ss_family);
+    // printf("unyte_udp_get_dest_addr[family]: %u\n", unyte_udp_get_dest_addr(seg)->ss_family);
     // printf("unyte_udp_get_payload: %s\n", unyte_udp_get_payload(seg));
     // printf("unyte_udp_get_payload_length: %u\n", unyte_udp_get_payload_length(seg));
 

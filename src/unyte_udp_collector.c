@@ -24,12 +24,7 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buf
 
   unyte_udp_sock_t *conn = (unyte_udp_sock_t *)malloc(sizeof(unyte_udp_sock_t));
   int *sock = (int *)malloc(sizeof(int));
-  void *address;
-
-  if (ip_type == unyte_IPV4)
-    address = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
-  else 
-    address = (struct sockaddr_in6 *)malloc(sizeof(struct sockaddr_in6));
+  struct sockaddr_storage *address = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
 
   printf("Address type: %s\n", (ip_type == unyte_IPV4) ? "IPv4" : "IPv6");
 
@@ -42,7 +37,7 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buf
   /*create socket on UDP protocol*/
   if (ip_type == unyte_IPV4)
     *sock = socket(AF_INET, SOCK_DGRAM, 0);
-  else 
+  else
     *sock = socket(AF_INET6, SOCK_DGRAM, 0);
 
   /*handle error*/
@@ -227,6 +222,7 @@ int unyte_udp_free_header(unyte_seg_met_t *seg)
 int unyte_udp_free_metadata(unyte_seg_met_t *seg)
 {
   free(seg->metadata->src);
+  free(seg->metadata->collector_addr);
   free(seg->metadata);
   return 0;
 }

@@ -32,10 +32,8 @@ typedef struct unyte_header
 typedef struct unyte_metadata
 {
   /* Metadatas */
-  // uint16_t src_port;       /* Source port */
-  // uint32_t src_addr;       /* Source interface IPv4*/
-  struct sockaddr_storage *src;
-  uint32_t collector_addr; /* Collector interface IPv4*/
+  struct sockaddr_storage *src;            // Source interface IPv4 or IPv6
+  struct sockaddr_storage *collector_addr; // Collector interface IPv4 or IPv6
 } unyte_metadata_t;
 
 /**
@@ -58,16 +56,14 @@ typedef struct unyte_minimal
   char *buffer;
 
   /* Metadatas */
-  // uint16_t src_port;       /* Source port */
-  // uint32_t src_addr;       /* Source interface IPv4*/
-  struct sockaddr_storage *src;  // Source
-  uint32_t collector_addr;      // Collector interface IPv4
+  struct sockaddr_storage *src;            // Source
+  struct sockaddr_storage *collector_addr; // Collector interface IPv4 or IPv6
 } unyte_min_t;
 
 typedef struct
 {
-  struct sockaddr_in *addr; /* The socket addr */
-  int *sockfd;              /* The socket file descriptor */
+  struct sockaddr_storage *addr; // The socket addr
+  int *sockfd;                   // The socket file descriptor
 } unyte_udp_sock_t;
 
 struct unyte_segmented_msg
@@ -101,7 +97,7 @@ typedef enum
 /**
  * Return unyte_min_t data out of *SEGMENT.
  */
-unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struct sockaddr_in *collector);
+unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struct sockaddr_storage *collector);
 
 /**
  * Parse udp-notif segment out of *SEGMENT char buffer.
@@ -146,10 +142,8 @@ uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message);
 uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message);
 uint32_t unyte_udp_get_generator_id(unyte_seg_met_t *message);
 uint32_t unyte_udp_get_message_id(unyte_seg_met_t *message);
-// uint16_t unyte_udp_get_src_port(unyte_seg_met_t *message);
-// uint32_t unyte_udp_get_src_addr(unyte_seg_met_t *message);
 struct sockaddr_storage *unyte_udp_get_src(unyte_seg_met_t *message);
-uint32_t unyte_udp_get_dest_addr(unyte_seg_met_t *message);
+struct sockaddr_storage *unyte_udp_get_dest_addr(unyte_seg_met_t *message);
 char *unyte_udp_get_payload(unyte_seg_met_t *message);
 uint16_t unyte_udp_get_payload_length(unyte_seg_met_t *message);
 

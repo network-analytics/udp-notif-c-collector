@@ -108,7 +108,7 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 
   memcpy(payload, (segment + header->header_length), pSize);
 
-  /* Passing metadatas */
+  // Passing metadatas
   unyte_metadata_t *meta = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
   if (meta == NULL)
   {
@@ -116,13 +116,11 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
     exit(-1);
   }
 
-  /*Filling the struct */
-  // meta->src_addr = um->src_addr;
-  // meta->src_port = um->src_port;
+  // Filling the struct
   meta->src = um->src;
   meta->collector_addr = um->collector_addr;
 
-  /* The global segment container */
+  // The global segment container
   unyte_seg_met_t *seg = malloc(sizeof(unyte_seg_met_t) + sizeof(payload));
 
   if (seg == NULL)

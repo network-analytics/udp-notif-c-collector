@@ -5,6 +5,7 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #include "../src/hexdump.h"
 #include "../src/unyte_udp_collector.h"
@@ -55,6 +56,14 @@ int main(int argc, char *argv[])
     // printf("unyte_udp_get_message_id: %u\n", unyte_udp_get_message_id(seg));
     // printf("unyte_udp_get_src[family]: %u\n", unyte_udp_get_src(seg)->ss_family);
     // printf("unyte_udp_get_dest_addr[family]: %u\n", unyte_udp_get_dest_addr(seg)->ss_family);
+    // char ip_canonical[100];
+    // if (unyte_udp_get_src(seg)->ss_family == AF_INET) {
+    //   printf("src IPv4: %s\n", inet_ntop(unyte_udp_get_src(seg)->ss_family, &((struct sockaddr_in*)unyte_udp_get_src(seg))->sin_addr.s_addr, ip_canonical, sizeof ip_canonical));
+    //   printf("src port: %u\n", ((struct sockaddr_in*)unyte_udp_get_src(seg))->sin_port);
+    // } else {
+    //   printf("src IPv6: %s\n", inet_ntop(unyte_udp_get_src(seg)->ss_family, &((struct sockaddr_in6*)unyte_udp_get_src(seg))->sin6_addr.s6_addr, ip_canonical, sizeof ip_canonical));
+    //   printf("src port: %u\n", ((struct sockaddr_in6*)unyte_udp_get_src(seg))->sin6_port);
+    // }
     // printf("unyte_udp_get_payload: %s\n", unyte_udp_get_payload(seg));
     // printf("unyte_udp_get_payload_length: %u\n", unyte_udp_get_payload_length(seg));
 

@@ -76,17 +76,15 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, char *port, uint64_t sock_buff_s
     exit(EXIT_FAILURE);
   }
 
-  int bind_ret = bind(*sock, addr_info->ai_addr, (int)addr_info->ai_addrlen);
-
-  // free addr_info after usage
-  freeaddrinfo(addr_info);
-
-  if (bind_ret == -1)
+  if (bind(*sock, addr_info->ai_addr, (int)addr_info->ai_addrlen) == -1)
   {
     perror("Bind failed");
     close(*sock);
     exit(EXIT_FAILURE);
   }
+
+  // free addr_info after usage
+  freeaddrinfo(addr_info);
 
   conn->addr = address;
   conn->sockfd = sock;

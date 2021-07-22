@@ -27,8 +27,8 @@ int main(int argc, char *argv[])
   unyte_udp_options_t options = {0};
   options.recvmmsg_vlen = USED_VLEN;
   options.address = argv[1];
-  options.port = atoi(argv[2]);
-  printf("Listening on %s:%d\n", options.address, options.port);
+  options.port = argv[2];
+  printf("Listening on %s:%s\n", options.address, options.port);
 
   /* Initialize collector */
   unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);

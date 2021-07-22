@@ -4,29 +4,38 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <net/if.h>
+#include <string.h>
 #include "unyte_udp_collector.h"
 #include "listening_worker.h"
 #include "unyte_version.h"
-#include <netdb.h>
-#include <net/if.h>
 
 /**
  * Not exposed function used to initialize the socket and return unyte_socket struct
  */
-unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buff_size)
+unyte_udp_sock_t *unyte_init_socket(char *addr, char *port, uint64_t sock_buff_size)
 {
-  unyte_IP_type_t ip_type = get_IP_type(addr);
-  if (ip_type == unyte_UNKNOWN)
-  {
-    printf("Invalid IP address: %s\n", addr);
+  struct addrinfo *addr_info;
+  struct addrinfo hints;
+
+  memset(&hints, 0, sizeof(hints));
+
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
+
+  int rc = getaddrinfo(addr, port, &hints, &addr_info);
+
+  if (rc != 0) {
+    printf("getaddrinfo error: %s\n", gai_strerror(rc));
     exit(EXIT_FAILURE);
   }
 
   unyte_udp_sock_t *conn = (unyte_udp_sock_t *)malloc(sizeof(unyte_udp_sock_t));
   int *sock = (int *)malloc(sizeof(int));
   struct sockaddr_storage *address = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
-
-  printf("Address type: %s\n", (ip_type == unyte_IPV4) ? "IPv4" : "IPv6");
+  printf("Address type: %s\n", (addr_info->ai_family == AF_INET) ? "IPv4" : "IPv6");
 
   if (conn == NULL || address == NULL || sock == NULL)
   {
@@ -34,11 +43,12 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buf
     exit(EXIT_FAILURE);
   }
 
+  // safe a copy of the binded addr
+  memset(address, 0, sizeof(*address));
+  memcpy(address, addr_info->ai_addr, addr_info->ai_addrlen);
+
   /*create socket on UDP protocol*/
-  if (ip_type == unyte_IPV4)
-    *sock = socket(AF_INET, SOCK_DGRAM, 0);
-  else
-    *sock = socket(AF_INET6, SOCK_DGRAM, 0);
+  *sock = socket(addr_info->ai_family, addr_info->ai_socktype, addr_info->ai_protocol);
 
   /*handle error*/
   if (*sock < 0)
@@ -66,23 +76,10 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buf
     exit(EXIT_FAILURE);
   }
 
-  int bind_ret = 0;
-  if (ip_type == unyte_IPV4)
-  {
-    ((struct sockaddr_in *)address)->sin_family = AF_INET;
-    ((struct sockaddr_in *)address)->sin_port = htons(port);
-    inet_pton(AF_INET, addr, &((struct sockaddr_in *)address)->sin_addr);
-    bind_ret = bind(*sock, (struct sockaddr *)address, sizeof(struct sockaddr_in));
-  }
-  else
-  {
-    ((struct sockaddr_in6 *)address)->sin6_family = AF_INET6;
-    ((struct sockaddr_in6 *)address)->sin6_port = htons(port);
-    ((struct sockaddr_in6 *)address)->sin6_scope_id = if_nametoindex("eth0"); //TODO: check all interfaces or bind to one interface
-    ((struct sockaddr_in6 *)address)->sin6_flowinfo = 0;
-    inet_pton(AF_INET6, addr, &((struct sockaddr_in6 *)address)->sin6_addr);
-    bind_ret = bind(*sock, (struct sockaddr *)address, sizeof(struct sockaddr_in6));
-  }
+  int bind_ret = bind(*sock, addr_info->ai_addr, (int)addr_info->ai_addrlen);
+
+  // free addr_info after usage
+  freeaddrinfo(addr_info);
 
   if (bind_ret == -1)
   {
@@ -166,7 +163,6 @@ unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)
     exit(EXIT_FAILURE);
   }
 
-  listener_input->port = options->port;
   listener_input->output_queue = output_queue;
   listener_input->monitoring_queue = monitoring_queue;
   listener_input->conn = conn;

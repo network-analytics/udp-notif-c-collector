@@ -45,12 +45,12 @@ int main(int argc, char *argv[])
   // Initialize collector options
   unyte_udp_options_t options = {0};
   options.address = argv[1];
-  options.port = atoi(argv[2]);
+  options.port = argv[2];
   options.recvmmsg_vlen = USED_VLEN;
   options.monitoring_delay = 2;
   options.monitoring_queue_size = 500;
 
-  printf("Listening on %s:%d\n", options.address, options.port);
+  printf("Listening on %s:%s\n", options.address, options.port);
 
   /* Initialize collector */
   unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);

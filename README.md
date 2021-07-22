@@ -28,7 +28,7 @@ Simple example of usage :
 #include <unyte-udp-notif/unyte_udp_utils.h>
 #include <unyte-udp-notif/unyte_udp_queue.h>
 
-#define PORT 10001
+#define PORT "10001"
 #define ADDR "192.168.0.17"
 
 int main()
@@ -113,7 +113,7 @@ To activate this thread, you must initiate the monitoring thread queue size (`mo
 typedef struct
 {
   char *address;
-  uint16_t port;
+  char *port;
   ...
   uint monitoring_queue_size;   // monitoring queue size if wanted to activate the monitoring thread. Default: 0. Recommended: 500.
   uint monitoring_delay;        // monitoring queue frequence in seconds. Default: 5 seconds
@@ -161,7 +161,7 @@ Simple usage of the sender :
 #include <unyte-udp-notif/unyte_sender.h>
 #include <unyte-udp-notif/unyte_udp_utils.h>
 
-#define PORT 10001
+#define PORT "10001"
 #define ADDR "192.168.0.17"
 #define MTU 1500
 

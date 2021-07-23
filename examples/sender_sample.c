@@ -18,9 +18,9 @@ int main(int argc, char *argv[])
   // Initialize collector options
   unyte_sender_options_t options = {0};
   options.address = argv[1];
-  options.port = atoi(argv[2]);
+  options.port = argv[2];
   options.default_mtu = MTU;
-  printf("Init sender on %s:%d | mtu: %d\n", options.address, options.port, MTU);
+  printf("Init sender on %s:%s | mtu: %d\n", options.address, options.port, MTU);
 
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 

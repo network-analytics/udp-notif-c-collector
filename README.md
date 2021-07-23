@@ -202,7 +202,7 @@ int main()
 ```
 
 ### Examples
-There are some samples implemented during the development of the project [here](samples).
+There are some samples implemented during the development of the project [here](examples).
 - `client_sample.c` : simple example for minimal usage of the collector library.
 - `client_monitoring.c` : sample implementing the monitoring thread to read packets statistics.
 - `sender_sample.c` : simple example for minimal usage of the sender library.

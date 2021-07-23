@@ -188,8 +188,14 @@ int create_monitoring_thread(struct monitoring_worker *monitoring, unyte_udp_que
 
 struct sockaddr_storage *get_dest_addr(struct msghdr *mh, unyte_udp_sock_t *sock)
 {
-  // TODO: malloc error
   struct sockaddr_storage *addr = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+
+  if (addr == NULL)
+  {
+    printf("Malloc failed\n");
+    return NULL;
+  }
+
   memset(addr, 0, sizeof(struct sockaddr_storage));
   struct in_pktinfo *in_pktinfo;
   struct in6_pktinfo *in6_pktinfo;
@@ -309,6 +315,10 @@ int listener(struct listener_thread_input *in)
       if (messages[i].msg_len > 0)
       {
         struct sockaddr_storage *dest_addr = get_dest_addr(&(messages[i].msg_hdr), in->conn);
+
+        if (dest_addr == NULL)
+          return -1;
+
         unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_storage *)messages[i].msg_hdr.msg_name), dest_addr);
         if (seg == NULL)
         {

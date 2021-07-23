@@ -43,7 +43,7 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, char *port, uint64_t sock_buff_s
     exit(EXIT_FAILURE);
   }
 
-  // safe a copy of the binded addr
+  // safe a copy of the bound addr
   memset(address, 0, sizeof(*address));
   memcpy(address, addr_info->ai_addr, addr_info->ai_addrlen);
 

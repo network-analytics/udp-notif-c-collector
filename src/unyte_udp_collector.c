@@ -35,7 +35,7 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, char *port, uint64_t sock_buff_s
   unyte_udp_sock_t *conn = (unyte_udp_sock_t *)malloc(sizeof(unyte_udp_sock_t));
   int *sock = (int *)malloc(sizeof(int));
   struct sockaddr_storage *address = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
-  printf("Address type: %s\n", (addr_info->ai_family == AF_INET) ? "IPv4" : "IPv6");
+  printf("Address type: %s | %d\n", (addr_info->ai_family == AF_INET) ? "IPv4" : "IPv6", ntohs(((struct sockaddr_in *)addr_info->ai_addr)->sin_port));
 
   if (conn == NULL || address == NULL || sock == NULL)
   {
@@ -63,6 +63,28 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, char *port, uint64_t sock_buff_s
     perror("Cannot set SO_REUSEPORT option on socket");
     exit(EXIT_FAILURE);
   }
+
+  // get ip header IPv4
+  if (setsockopt(*sock, IPPROTO_IP, IP_PKTINFO, &optval, sizeof(int)) < 0)
+  {
+    perror("Cannot set IP_PKTINFO option on socket");
+    exit(EXIT_FAILURE);
+  }
+
+  // get ip header IPv6
+  if (addr_info->ai_family == AF_INET6 && (setsockopt(*sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &optval, sizeof(int)) < 0))
+  {
+    perror("Cannot set IPV6_RECVPKTINFO option on socket");
+    exit(EXIT_FAILURE);
+  }
+
+  // get IPv4 in header IPv6
+  // int off = 0;
+  // if (setsockopt(*sock, IPPROTO_IPV6, IPV6_V6ONLY, &off, sizeof(int)) < 0)
+  // {
+  //   perror("Cannot set IPV6_V6ONLY to 0 option on socket");
+  //   exit(EXIT_FAILURE);
+  // }
 
   uint64_t receive_buf_size;
   if (sock_buff_size <= 0)
@@ -216,7 +238,7 @@ int unyte_udp_free_header(unyte_seg_met_t *seg)
 int unyte_udp_free_metadata(unyte_seg_met_t *seg)
 {
   free(seg->metadata->src);
-  free(seg->metadata->collector_addr);
+  free(seg->metadata->dest);
   free(seg->metadata);
   return 0;
 }

@@ -32,8 +32,8 @@ typedef struct unyte_header
 typedef struct unyte_metadata
 {
   /* Metadatas */
-  struct sockaddr_storage *src;            // Source interface IPv4 or IPv6
-  struct sockaddr_storage *collector_addr; // Collector interface IPv4 or IPv6
+  struct sockaddr_storage *src;  // Source interface IPv4 or IPv6
+  struct sockaddr_storage *dest; // Destination interface IPv4 or IPv6
 } unyte_metadata_t;
 
 /**
@@ -56,8 +56,8 @@ typedef struct unyte_minimal
   char *buffer;
 
   /* Metadatas */
-  struct sockaddr_storage *src;            // Source
-  struct sockaddr_storage *collector_addr; // Collector interface IPv4 or IPv6
+  struct sockaddr_storage *src;  // Source
+  struct sockaddr_storage *dest; // Destination interface IPv4 or IPv6
 } unyte_min_t;
 
 typedef struct
@@ -97,7 +97,7 @@ typedef enum
 /**
  * Return unyte_min_t data out of *SEGMENT.
  */
-unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struct sockaddr_storage *collector);
+unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struct sockaddr_storage *dest_addr);
 
 /**
  * Parse udp-notif segment out of *SEGMENT char buffer.

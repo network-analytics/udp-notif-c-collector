@@ -37,9 +37,9 @@ unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_p
   }
 
   parsed_msg->metadata->src = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
-  parsed_msg->metadata->collector_addr = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+  parsed_msg->metadata->dest = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
 
-  if (parsed_msg->metadata->src == NULL || parsed_msg->metadata->collector_addr == NULL)
+  if (parsed_msg->metadata->src == NULL || parsed_msg->metadata->dest == NULL)
   {
     free(parsed_msg->metadata);
     free(parsed_msg->header);

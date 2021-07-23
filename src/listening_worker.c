@@ -59,6 +59,7 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
     free(messages[i].msg_hdr.msg_iov->iov_base);
     free(messages[i].msg_hdr.msg_iov);
     free(messages[i].msg_hdr.msg_name);
+    free(messages[i].msg_hdr.msg_control);
   }
   free(messages);
 }
@@ -185,6 +186,39 @@ int create_monitoring_thread(struct monitoring_worker *monitoring, unyte_udp_que
   return 0;
 }
 
+struct sockaddr_storage *get_dest_addr(struct msghdr *mh, unyte_udp_sock_t *sock)
+{
+  // TODO: malloc error
+  struct sockaddr_storage *addr = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+  memset(addr, 0, sizeof(struct sockaddr_storage));
+  struct in_pktinfo *in_pktinfo;
+  struct in6_pktinfo *in6_pktinfo;
+
+  for ( // iterate through all the control headers
+      struct cmsghdr *cmsg = CMSG_FIRSTHDR(mh);
+      cmsg != NULL;
+      cmsg = CMSG_NXTHDR(mh, cmsg))
+  {
+    if (cmsg->cmsg_level == IPPROTO_IP && cmsg->cmsg_type == IP_PKTINFO)
+    {
+      in_pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
+      ((struct sockaddr_in *)addr)->sin_family = AF_INET;
+      ((struct sockaddr_in *)addr)->sin_addr = in_pktinfo->ipi_addr;
+      ((struct sockaddr_in *)addr)->sin_port = ((struct sockaddr_in *)sock->addr)->sin_port;
+      break;
+    }
+    if (cmsg->cmsg_level == IPPROTO_IPV6 && cmsg->cmsg_type == IPV6_PKTINFO)
+    {
+      in6_pktinfo = (struct in6_pktinfo *)CMSG_DATA(cmsg);
+      ((struct sockaddr_in6 *)addr)->sin6_family = AF_INET6;
+      ((struct sockaddr_in6 *)addr)->sin6_addr = in6_pktinfo->ipi6_addr;
+      ((struct sockaddr_in6 *)addr)->sin6_port = ((struct sockaddr_in6 *)sock->addr)->sin6_port;
+      break;
+    }
+  }
+  return addr;
+}
+
 /**
  * Udp listener worker on PORT port.
  */
@@ -234,11 +268,14 @@ int listener(struct listener_thread_input *in)
     printf("Malloc failed \n");
     return -1;
   }
+  int cmbuf_len = 1024;
   // Init msg_iov first to reduce mallocs every iteration of while
   for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
   {
     messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
     messages[i].msg_hdr.msg_iovlen = 1;
+    messages[i].msg_hdr.msg_control = (char *)malloc(cmbuf_len);
+    messages[i].msg_hdr.msg_controllen = cmbuf_len;
   }
   // FIXME: malloc failed
   // TODO: malloc array of msg_hdr.msg_name and assign addresss to every messages[i]
@@ -251,12 +288,10 @@ int listener(struct listener_thread_input *in)
     {
       messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(UDP_SIZE * sizeof(char));
       messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
-      messages[i].msg_hdr.msg_control = 0;
-      messages[i].msg_hdr.msg_controllen = 0;
+      memset(messages[i].msg_hdr.msg_control, 0, cmbuf_len);
       messages[i].msg_hdr.msg_name = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
       messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_storage);
     }
-
     int read_count = recvmmsg(*in->conn->sockfd, messages, in->recvmmsg_vlen, 0, NULL);
     if (read_count == -1)
     {
@@ -273,7 +308,8 @@ int listener(struct listener_thread_input *in)
       // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
       if (messages[i].msg_len > 0)
       {
-        unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_storage *)messages[i].msg_hdr.msg_name), in->conn->addr);
+        struct sockaddr_storage *dest_addr = get_dest_addr(&(messages[i].msg_hdr), in->conn);
+        unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_storage *)messages[i].msg_hdr.msg_name), dest_addr);
         if (seg == NULL)
         {
           printf("minimal_parse error\n");

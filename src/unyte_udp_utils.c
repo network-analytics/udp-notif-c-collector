@@ -28,7 +28,7 @@ uint16_t deserialize_uint16(char *c, int p)
 /**
  * Return unyte_min_t data out of *SEGMENT.
  */
-unyte_min_t *minimal_parse(char *segment, struct sockaddr_in *source, struct sockaddr_in *collector)
+unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struct sockaddr_storage *dest_addr)
 {
   unyte_min_t *um = malloc(sizeof(unyte_min_t));
 
@@ -43,9 +43,8 @@ unyte_min_t *minimal_parse(char *segment, struct sockaddr_in *source, struct soc
 
   um->buffer = segment;
 
-  um->src_port = ntohs(source->sin_port);
-  um->src_addr = ntohl(source->sin_addr.s_addr);
-  um->collector_addr = ntohl(collector->sin_addr.s_addr);
+  um->src = source;
+  um->dest = dest_addr;
 
   return um;
 }
@@ -101,7 +100,7 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 
   memcpy(payload, (segment + header->header_length), pSize);
 
-  /* Passing metadatas */
+  // Passing metadatas
   unyte_metadata_t *meta = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
   if (meta == NULL)
   {
@@ -109,12 +108,11 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
     exit(-1);
   }
 
-  /*Filling the struct */
-  meta->src_addr = um->src_addr;
-  meta->src_port = um->src_port;
-  meta->collector_addr = um->collector_addr;
+  // Filling the struct
+  meta->src = um->src;
+  meta->dest = um->dest;
 
-  /* The global segment container */
+  // The global segment container
   unyte_seg_met_t *seg = malloc(sizeof(unyte_seg_met_t) + sizeof(payload));
 
   if (seg == NULL)
@@ -152,9 +150,8 @@ unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met
  */
 unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_met_t *src)
 {
-  dest->metadata->collector_addr = src->metadata->collector_addr;
-  dest->metadata->src_addr = src->metadata->src_addr;
-  dest->metadata->src_port = src->metadata->src_port;
+  memcpy(dest->metadata->src, src->metadata->src, sizeof(struct sockaddr_storage));
+  memcpy(dest->metadata->dest, src->metadata->dest, sizeof(struct sockaddr_storage));
   return dest;
 }
 
@@ -352,6 +349,17 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
   return parsed_bytes;
 }
 
+unyte_IP_type_t get_IP_type(char *addr)
+{
+  char buf[16];
+  if (inet_pton(AF_INET, addr, buf))
+    return unyte_IPV4;
+  else if (inet_pton(AF_INET6, addr, buf))
+    return unyte_IPV6;
+  
+  return unyte_UNKNOWN;
+}
+
 uint8_t unyte_udp_get_version(unyte_seg_met_t *message) { return message->header->version; }
 uint8_t unyte_udp_get_space(unyte_seg_met_t *message) { return message->header->space; }
 uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message) { return message->header->encoding_type; }
@@ -359,8 +367,7 @@ uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message) { return message-
 uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message) { return message->header->message_length; }
 uint32_t unyte_udp_get_generator_id(unyte_seg_met_t *message) { return message->header->generator_id; }
 uint32_t unyte_udp_get_message_id(unyte_seg_met_t *message) { return message->header->message_id; }
-uint16_t unyte_udp_get_src_port(unyte_seg_met_t *message) { return message->metadata->src_port; }
-uint32_t unyte_udp_get_src_addr(unyte_seg_met_t *message) { return message->metadata->src_addr; }
-uint32_t unyte_udp_get_dest_addr(unyte_seg_met_t *message) { return message->metadata->collector_addr; }
+struct sockaddr_storage *unyte_udp_get_src(unyte_seg_met_t *message) { return message->metadata->src; }
+struct sockaddr_storage *unyte_udp_get_dest_addr(unyte_seg_met_t *message) { return message->metadata->dest; }
 char *unyte_udp_get_payload(unyte_seg_met_t *message) { return message->payload; }
 uint16_t unyte_udp_get_payload_length(unyte_seg_met_t *message) { return (message->header->message_length - message->header->header_length); }

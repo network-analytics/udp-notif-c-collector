@@ -26,7 +26,7 @@ typedef struct
 {
   // global
   char *address;
-  uint16_t port;
+  char *port;
   uint64_t socket_buff_size; // user socket udp buffer in bytes
   // listener
   uint16_t recvmmsg_vlen;

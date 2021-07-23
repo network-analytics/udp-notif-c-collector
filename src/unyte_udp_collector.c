@@ -4,6 +4,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <netdb.h>
+#include <net/if.h>
+#include <string.h>
 #include "unyte_udp_collector.h"
 #include "listening_worker.h"
 #include "unyte_version.h"
@@ -11,20 +14,41 @@
 /**
  * Not exposed function used to initialize the socket and return unyte_socket struct
  */
-unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buff_size)
+unyte_udp_sock_t *unyte_init_socket(char *addr, char *port, uint64_t sock_buff_size)
 {
-  unyte_udp_sock_t *conn = (unyte_udp_sock_t *)malloc(sizeof(unyte_udp_sock_t));
-  struct sockaddr_in *adresse = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
-  int *sock = (int *)malloc(sizeof(int));
+  struct addrinfo *addr_info;
+  struct addrinfo hints;
 
-  if (conn == NULL || adresse == NULL || sock == NULL)
+  memset(&hints, 0, sizeof(hints));
+
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
+
+  int rc = getaddrinfo(addr, port, &hints, &addr_info);
+
+  if (rc != 0) {
+    printf("getaddrinfo error: %s\n", gai_strerror(rc));
+    exit(EXIT_FAILURE);
+  }
+
+  unyte_udp_sock_t *conn = (unyte_udp_sock_t *)malloc(sizeof(unyte_udp_sock_t));
+  int *sock = (int *)malloc(sizeof(int));
+  struct sockaddr_storage *address = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+  printf("Address type: %s | %d\n", (addr_info->ai_family == AF_INET) ? "IPv4" : "IPv6", ntohs(((struct sockaddr_in *)addr_info->ai_addr)->sin_port));
+
+  if (conn == NULL || address == NULL || sock == NULL)
   {
     printf("Malloc failed.\n");
     exit(EXIT_FAILURE);
   }
 
+  // safe a copy of the bound addr
+  memset(address, 0, sizeof(*address));
+  memcpy(address, addr_info->ai_addr, addr_info->ai_addrlen);
+
   /*create socket on UDP protocol*/
-  *sock = socket(AF_INET, SOCK_DGRAM, 0);
+  *sock = socket(addr_info->ai_family, addr_info->ai_socktype, addr_info->ai_protocol);
 
   /*handle error*/
   if (*sock < 0)
@@ -40,6 +64,28 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buf
     exit(EXIT_FAILURE);
   }
 
+  // get ip header IPv4
+  if (setsockopt(*sock, IPPROTO_IP, IP_PKTINFO, &optval, sizeof(int)) < 0)
+  {
+    perror("Cannot set IP_PKTINFO option on socket");
+    exit(EXIT_FAILURE);
+  }
+
+  // get ip header IPv6
+  if (addr_info->ai_family == AF_INET6 && (setsockopt(*sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &optval, sizeof(int)) < 0))
+  {
+    perror("Cannot set IPV6_RECVPKTINFO option on socket");
+    exit(EXIT_FAILURE);
+  }
+
+  // get IPv4 in header IPv6
+  // int off = 0;
+  // if (setsockopt(*sock, IPPROTO_IPV6, IPV6_V6ONLY, &off, sizeof(int)) < 0)
+  // {
+  //   perror("Cannot set IPV6_V6ONLY to 0 option on socket");
+  //   exit(EXIT_FAILURE);
+  // }
+
   uint64_t receive_buf_size;
   if (sock_buff_size <= 0)
     receive_buf_size = DEFAULT_SK_BUFF_SIZE; // 20MB
@@ -52,18 +98,17 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, uint16_t port, uint64_t sock_buf
     exit(EXIT_FAILURE);
   }
 
-  adresse->sin_family = AF_INET;
-  adresse->sin_port = htons(port);
-  inet_pton(AF_INET, addr, &adresse->sin_addr);
-
-  if (bind(*sock, (struct sockaddr *)adresse, sizeof(*adresse)) == -1)
+  if (bind(*sock, addr_info->ai_addr, (int)addr_info->ai_addrlen) == -1)
   {
     perror("Bind failed");
     close(*sock);
     exit(EXIT_FAILURE);
   }
 
-  conn->addr = adresse;
+  // free addr_info after usage
+  freeaddrinfo(addr_info);
+
+  conn->addr = address;
   conn->sockfd = sock;
 
   return conn;
@@ -138,7 +183,6 @@ unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)
     exit(EXIT_FAILURE);
   }
 
-  listener_input->port = options->port;
   listener_input->output_queue = output_queue;
   listener_input->monitoring_queue = monitoring_queue;
   listener_input->conn = conn;
@@ -169,13 +213,11 @@ unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)
 int unyte_udp_free_all(unyte_seg_met_t *seg)
 {
   /* Free all the sub modules */
-
-  free(seg->payload);
-  free(seg->header);
-  free(seg->metadata);
+  unyte_udp_free_payload(seg);
+  unyte_udp_free_header(seg);
+  unyte_udp_free_metadata(seg);
 
   /* Free the struct itself */
-
   free(seg);
 
   return 0;
@@ -195,6 +237,8 @@ int unyte_udp_free_header(unyte_seg_met_t *seg)
 
 int unyte_udp_free_metadata(unyte_seg_met_t *seg)
 {
+  free(seg->metadata->src);
+  free(seg->metadata->dest);
   free(seg->metadata);
   return 0;
 }

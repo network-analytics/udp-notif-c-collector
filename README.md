@@ -1,34 +1,21 @@
 # C-Collector for UDP-notif
-Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-01](https://tools.ietf.org/html/draft-ietf-netconf-udp-notif-01).
+Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-03](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-03).
 
-## Build & install
-To build the project and test example clients, just `make` on root folder. Il will compile with gcc all dependencies and the clients.
-
-### Installing
-To install the library on a machine, run `make install` with sudo and `export.sh` without sudo. Export script will export the LD_LIBRARY_PATH on user space.
-```
-$ make
-$ sudo make install
-$ ./export.sh
-```
-
-### Uninstalling
-```
-$ sudo make uninstall
-```
-You should remove the export of the lib in your bashrc manually yourself to fully remove the lib.
+## Compiling and installing project
+See [INSTALL](INSTALL.md)
 
 ## Usage
 ### Usage of the UDP-notif collector
 The collector allows to read and parse UDP-notif protocol messages from a ip/port specified on the parameters. It allows to get directly the buffer and the metadata of the message in a struct.
 
-The api is in `unyte_udp_collector.h` :
+The api is in `unyte_udp_collector.h`:
 - `unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: address (the IP address to listen to), port (port to listen to), recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)
+- `unyte_udp_collector_t *unyte_udp_start_collector_sk(unyte_udp_sk_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector binded to a socket. It accepts a struct with different options: socket file descriptor to listen on, recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)
 - `void *unyte_udp_queue_read(unyte_udp_queue_t *queue)` from `unyte_udp_queue.h` : read from a queue a struct with all the message buffer and metadata.
 - `int unyte_udp_free_all(unyte_seg_met_t *seg)` from `unyte_udp_collector.h`: free all struct used on a message received.
 
 Simple example of usage :
-```
+```c
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -42,7 +29,7 @@ Simple example of usage :
 #include <unyte-udp-notif/unyte_udp_utils.h>
 #include <unyte-udp-notif/unyte_udp_queue.h>
 
-#define PORT 10001
+#define PORT "10001"
 #define ADDR "192.168.0.17"
 
 int main()
@@ -75,9 +62,8 @@ int main()
     printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
     printf("unyte_udp_get_generator_id: %u\n", unyte_udp_get_generator_id(seg));
     printf("unyte_udp_get_message_id: %u\n", unyte_udp_get_message_id(seg));
-    printf("unyte_udp_get_src_port: %u\n", unyte_udp_get_src_port(seg));
-    printf("unyte_udp_get_src_addr: %u\n", unyte_udp_get_src_addr(seg));
-    printf("unyte_udp_get_dest_addr: %u\n", unyte_udp_get_dest_addr(seg));
+    printf("unyte_udp_get_src[family]: %u\n", unyte_udp_get_src(seg)->ss_family);               // AF_INET for IPv4 or AF_INET6 for IPv6
+    printf("unyte_udp_get_dest_addr[family]: %u\n", unyte_udp_get_dest_addr(seg)->ss_family);   // AF_INET for IPv4 or AF_INET6 for IPv6
     printf("unyte_udp_get_payload: %s\n", unyte_udp_get_payload(seg));
     printf("unyte_udp_get_payload_length: %u\n", unyte_udp_get_payload_length(seg));
 
@@ -100,7 +86,7 @@ int main()
 
 #### Segments data
 To process the message data, all the headers, meta-data and payload are found on the struct unyte_seg_met_t defined on unyte_udp_utils.h:
-```
+```c
 typedef struct unyte_segment_with_metadata
 {
   unyte_metadata_t *metadata; // source/port
@@ -116,20 +102,19 @@ typedef struct unyte_segment_with_metadata
 - `uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message);` : total length of the message within one UDP datagram, measured in octets, including the message header
 - `uint32_t unyte_udp_get_generator_id(unyte_seg_met_t *message);` : observation domain id of the message
 - `uint32_t unyte_udp_get_message_id(unyte_seg_met_t *message);` : message id of the message
-- `uint16_t unyte_udp_get_src_port(unyte_seg_met_t *message);` : source port of the message
-- `uint32_t unyte_udp_get_src_addr(unyte_seg_met_t *message);` : source address of the message
-- `uint32_t unyte_udp_get_dest_addr(unyte_seg_met_t *message);` : collector address
+- `struct sockaddr_storage * unyte_udp_get_src(unyte_seg_met_t *message);` : source IP and port of the message. Could be IPv4 or IPv6.
+- `struct sockaddr_storage * unyte_udp_get_dest_addr(unyte_seg_met_t *message);` : collector address. Could be IPv4 or IPv6.
 - `char *unyte_udp_get_payload(unyte_seg_met_t *message);` : payload buffer
 - `uint16_t unyte_udp_get_payload_length(unyte_seg_met_t *message);` : payload length
 
 #### Monitoring of the lib
 There is a monitoring thread that could be started to monitor packets loss and packets received in bad order.
 To activate this thread, you must initiate the monitoring thread queue size (`monitoring_queue_size`):
-```
+```c
 typedef struct
 {
   char *address;
-  uint16_t port;
+  char *port;
   ...
   uint monitoring_queue_size;   // monitoring queue size if wanted to activate the monitoring thread. Default: 0. Recommended: 500.
   uint monitoring_delay;        // monitoring queue frequence in seconds. Default: 5 seconds
@@ -152,7 +137,7 @@ The sender allows the user to send UDP-notif protocol to a IP/port specified. It
 
 The api is in `unyte_sender.h`.
 The message to send have the following structure:
-```
+```c
 typedef struct unyte_message
 {
   uint used_mtu;              // MTU to use for cutting the message to segments
@@ -169,7 +154,7 @@ typedef struct unyte_message
 ```
 
 Simple usage of the sender :
-```
+```c
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -177,7 +162,7 @@ Simple usage of the sender :
 #include <unyte-udp-notif/unyte_sender.h>
 #include <unyte-udp-notif/unyte_udp_utils.h>
 
-#define PORT 10001
+#define PORT "10001"
 #define ADDR "192.168.0.17"
 #define MTU 1500
 
@@ -218,8 +203,10 @@ int main()
 ```
 
 ### Examples
-There are some samples implemented during the development of the project [here](samples).
+There are some samples implemented during the development of the project [here](examples).
 - `client_sample.c` : simple example for minimal usage of the collector library.
+- `client_monitoring.c` : sample implementing the monitoring thread to read packets statistics.
+- `client_socket.c` : example using a custom socket instead of creating a new one from the library.
 - `sender_sample.c` : simple example for minimal usage of the sender library.
 - `sender_json.c` : sample reading a json file and sending the bytes by the library.
 

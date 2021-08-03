@@ -1,1 +1,0 @@
-# Samples build folder

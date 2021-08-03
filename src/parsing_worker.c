@@ -36,6 +36,17 @@ unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_p
     return NULL;
   }
 
+  parsed_msg->metadata->src = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+  parsed_msg->metadata->dest = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+
+  if (parsed_msg->metadata->src == NULL || parsed_msg->metadata->dest == NULL)
+  {
+    free(parsed_msg->metadata);
+    free(parsed_msg->header);
+    free(parsed_msg);
+    return NULL;
+  }
+
   copy_unyte_seg_met_headers(parsed_msg, src_parsed_segment);
 
   // Rewrite header length and message length

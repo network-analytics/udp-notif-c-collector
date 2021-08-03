@@ -10,6 +10,7 @@ The collector allows to read and parse UDP-notif protocol messages from a ip/por
 
 The api is in `unyte_udp_collector.h`:
 - `unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: address (the IP address to listen to), port (port to listen to), recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)
+- `unyte_udp_collector_t *unyte_udp_start_collector_sk(unyte_udp_sk_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector binded to a socket. It accepts a struct with different options: socket file descriptor to listen on, recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)
 - `void *unyte_udp_queue_read(unyte_udp_queue_t *queue)` from `unyte_udp_queue.h` : read from a queue a struct with all the message buffer and metadata.
 - `int unyte_udp_free_all(unyte_seg_met_t *seg)` from `unyte_udp_collector.h`: free all struct used on a message received.
 
@@ -205,6 +206,7 @@ int main()
 There are some samples implemented during the development of the project [here](examples).
 - `client_sample.c` : simple example for minimal usage of the collector library.
 - `client_monitoring.c` : sample implementing the monitoring thread to read packets statistics.
+- `client_socket.c` : example using a custom socket instead of creating a new one from the library.
 - `sender_sample.c` : simple example for minimal usage of the sender library.
 - `sender_json.c` : sample reading a json file and sending the bytes by the library.
 

@@ -2,7 +2,7 @@ AM_LDFLAGS = $(EXTRA_LDFLAGS)
 
 ACLOCAL_AMFLAGS = -I m4
 
-bin_PROGRAMS = client_monitoring client_sample sender_json sender_sample
+bin_PROGRAMS = client_monitoring client_sample client_socket sender_json sender_sample
 
 client_monitoring_SOURCES = client_monitoring.c
 client_monitoring_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC -pthread
@@ -11,6 +11,10 @@ client_monitoring_LDADD = $(srcdir)/../src/libunyte-udp-notif.la
 client_sample_SOURCES = client_sample.c
 client_sample_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC -pthread
 client_sample_LDADD = $(srcdir)/../src/libunyte-udp-notif.la
+
+client_socket_SOURCES = client_socket.c
+client_socket_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC -pthread
+client_socket_LDADD = $(srcdir)/../src/libunyte-udp-notif.la
 
 sender_json_SOURCES = sender_json.c
 sender_json_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC -pthread

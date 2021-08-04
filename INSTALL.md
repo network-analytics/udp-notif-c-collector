@@ -40,9 +40,11 @@ $ ./export.sh       # Optional: export LD_LIBRARY_PATH with /usr/local/lib in gl
 ### Configure options
 There are some custom `./configure` options : 
 - `--with-examples`: compile examples directory. Not compiled by default.
+- `--with-ebpf-example`: compile eBPF example. Not compiled by default. It check eBPF dependencies too.
 - `--with-test`: compile testdirectory. Not compiled by default.
 - `--with-pkgconfigdir=[/own_path/pkgconfig]`: overwrite pkgconfig directory to install .pc file [default: ${PREFIX}/lib/pkgconfig]
 - `--enable-tcmalloc`: enable compilation with tcmalloc instead of native malloc. tcmalloc should be installed first.
+- `--with-linux=[/own_path/linux/src]`: linux source code necesary for eBPF compilation [default: /usr/src/linux]. (On Ubuntu use /usr/src/<linux>-generic version)
 
 ## Uninstalling
 ```shell

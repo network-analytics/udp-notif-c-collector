@@ -15,17 +15,17 @@ void unyte_set_ip_headers_options(int socket_fd, sa_family_t family)
 {
   int optval = 1;
   // get ip header IPv4
-  if (setsockopt(socket_fd, IPPROTO_IP, IP_PKTINFO, &optval, sizeof(int)) < 0)
-  {
-    perror("Cannot set IP_PKTINFO option on socket");
-    exit(EXIT_FAILURE);
-  }
-  // get ip header IPv6
-  if (family == AF_INET6 && (setsockopt(socket_fd, IPPROTO_IPV6, IPV6_RECVPKTINFO, &optval, sizeof(int)) < 0))
-  {
-    perror("Cannot set IPV6_RECVPKTINFO option on socket");
-    exit(EXIT_FAILURE);
-  }
+  // if (setsockopt(socket_fd, IPPROTO_IP, IP_PKTINFO, &optval, sizeof(int)) < 0)
+  // {
+  //   perror("Cannot set IP_PKTINFO option on socket");
+  //   exit(EXIT_FAILURE);
+  // }
+  // // get ip header IPv6
+  // if (family == AF_INET6 && (setsockopt(socket_fd, IPPROTO_IPV6, IPV6_RECVPKTINFO, &optval, sizeof(int)) < 0))
+  // {
+  //   perror("Cannot set IPV6_RECVPKTINFO option on socket");
+  //   exit(EXIT_FAILURE);
+  // }
 }
 
 unyte_udp_sock_t *unyte_set_socket_opt(int socket_fd)

@@ -188,6 +188,7 @@ int create_monitoring_thread(struct monitoring_worker *monitoring, unyte_udp_que
 
 struct sockaddr_storage *get_dest_addr(struct msghdr *mh, unyte_udp_sock_t *sock)
 {
+  return NULL;
   struct sockaddr_storage *addr = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
 
   if (addr == NULL)
@@ -196,7 +197,7 @@ struct sockaddr_storage *get_dest_addr(struct msghdr *mh, unyte_udp_sock_t *sock
     return NULL;
   }
 
-  memset(addr, 0, sizeof(struct sockaddr_storage));
+  // memset(addr, 0, sizeof(struct sockaddr_storage));
   struct in_pktinfo *in_pktinfo;
   struct in6_pktinfo *in6_pktinfo;
 
@@ -294,7 +295,7 @@ int listener(struct listener_thread_input *in)
     {
       messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(UDP_SIZE * sizeof(char));
       messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
-      memset(messages[i].msg_hdr.msg_control, 0, cmbuf_len);
+      // memset(messages[i].msg_hdr.msg_control, 0, cmbuf_len);
       messages[i].msg_hdr.msg_name = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
       messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_storage);
     }
@@ -316,8 +317,8 @@ int listener(struct listener_thread_input *in)
       {
         struct sockaddr_storage *dest_addr = get_dest_addr(&(messages[i].msg_hdr), in->conn);
 
-        if (dest_addr == NULL)
-          return -1;
+        // if (dest_addr == NULL)
+        //   return -1;
 
         unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_storage *)messages[i].msg_hdr.msg_name), dest_addr);
         if (seg == NULL)

@@ -156,7 +156,7 @@ unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met
 unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_met_t *src)
 {
   memcpy(dest->metadata->src, src->metadata->src, sizeof(struct sockaddr_storage));
-  memcpy(dest->metadata->dest, src->metadata->dest, sizeof(struct sockaddr_storage));
+  // memcpy(dest->metadata->dest, src->metadata->dest, sizeof(struct sockaddr_storage));
   return dest;
 }
 

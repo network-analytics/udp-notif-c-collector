@@ -209,6 +209,7 @@ There are some samples implemented during the development of the project [here](
 - `client_socket.c` : example using a custom socket instead of creating a new one from the library.
 - `sender_sample.c` : simple example for minimal usage of the sender library.
 - `sender_json.c` : sample reading a json file and sending the bytes by the library.
+- `eBPF/client_ebpf_user.c`: example with a custom eBPF load balancer.
 
 ## Docker
 See [Docker docs](docker)

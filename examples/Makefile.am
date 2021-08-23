@@ -1,5 +1,9 @@
 AM_LDFLAGS = $(EXTRA_LDFLAGS)
 
+if EBPF_EXAMPLE
+SUBDIRS = eBPF
+endif
+
 ACLOCAL_AMFLAGS = -I m4
 
 bin_PROGRAMS = client_monitoring client_sample client_socket sender_json sender_sample

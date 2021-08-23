@@ -1,16 +1,16 @@
 /**
  * Example of client using a eBPF loadbalancer.
- * This allows multiple client instances listening on the same IP/port and receiving consistent data 
+ * This allows multiple client instances listening on the same IP/port and receiving consistent data
  * (all packets from one src IP will always go on the same collector)
  *
- * Usage: ./client_ebpf <ip> <port> <index> <balancer_max>
+ * Usage: ./client_ebpf_user <ip> <port> <index> <balancer_max>
  *
  * Example: launching 3 instances on the same ip port. The index is the index on the map to put the socket
  * and the balancer_max is how many max instances are in use.
  *
- *    ./client_ebpf 192.168.1.17 10001 0 3
- *    ./client_ebpf 192.168.1.17 10001 1 3
- *    ./client_ebpf 192.168.1.17 10001 2 3
+ *    ./client_ebpf_user 192.168.1.17 10001 0 3
+ *    ./client_ebpf_user 192.168.1.17 10001 1 3
+ *    ./client_ebpf_user 192.168.1.17 10001 2 3
  */
 
 #include <stdio.h>

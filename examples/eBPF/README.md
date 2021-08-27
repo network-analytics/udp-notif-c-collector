@@ -22,3 +22,11 @@ To build this directory, use the following options on `configure` script:
 ```shell
 $ ./configure --with-ebpf-example --with-linux=/usr/src/linux
 ```
+
+## Debug
+To show the maps:
+(`sudo` may needed)
+```shell
+$ bpftool map dump name tcp_balancing_t
+$ bpftool map dump name udp_balancing_t
+```

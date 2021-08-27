@@ -19,6 +19,7 @@ client_ebpf_user
 vmlinux.h
 
 docker/tmp
+.DS_Store
 
 **/*.log
 **/logs/run*

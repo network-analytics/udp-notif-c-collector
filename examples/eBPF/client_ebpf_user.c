@@ -48,7 +48,9 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
 }
 
 /**
- * Creates own custom socket
+ * Creates own custom socket and bind it to a passed address and port.
+ * char *address : string of the IPv4 or IPv6 to bind the socket to.
+ * char *port : string of the port to be bind to.
  */
 int create_socket(char *address, char *port)
 {
@@ -109,7 +111,13 @@ int create_socket(char *address, char *port)
 
   return sockfd;
 }
-
+/**
+ * Open socket, loads eBPF program and attaches it to the opened socket.
+ * char *address : string of IPv4 or IPv6 to bind to.
+ * char *port : string of the port to bind to.
+ * uint32_t key : index of the socket to be filled in the eBPF hash table.
+ * uint32_t balancer_count : max values to be used in eBPF reuse. Should be <= MAX_BALANCER_COUNT.
+ */
 int open_socket_attach_ebpf(char *address, char *port, uint32_t key, uint32_t balancer_count)
 {
   int umap_fd, size_map_fd, prog_fd;
@@ -207,6 +215,7 @@ int main(int argc, char *argv[])
   {
     printf("Error: arguments not valid\n");
     printf("Usage: ./client_ebpf_user <ip> <port> <index> <loadbalance_max>\n");
+    printf("Example: ./client_ebpf_user 10.0.2.15 10001 0 5\n");
     exit(1);
   }
 

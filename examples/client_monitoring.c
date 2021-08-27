@@ -42,18 +42,19 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
+  // Create a udp socket with default socket buffer
+  int socketfd = unyte_udp_create_socket(argv[1], argv[2], DEFAULT_SK_BUFF_SIZE);
+  printf("Listening on %s:%s\n", argv[1], argv[2]);
+
   // Initialize collector options
-  unyte_udp_options_t options = {0};
-  options.address = argv[1];
-  options.port = argv[2];
+  unyte_udp_sk_options_t options = {0};
   options.recvmmsg_vlen = USED_VLEN;
+  options.socket_fd = socketfd; // passing socket file descriptor to listen to
   options.monitoring_delay = 2;
   options.monitoring_queue_size = 500;
 
-  printf("Listening on %s:%s\n", options.address, options.port);
-
-  /* Initialize collector */
-  unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);
+  // Initialize collector
+  unyte_udp_collector_t *collector = unyte_udp_start_collector_sk(&options);
   int recv_count = 0;
   int max = MAX_TO_RECEIVE;
 

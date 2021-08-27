@@ -135,6 +135,15 @@ unsigned char *serialize_message(unyte_seg_met_t *message);
  */
 unyte_IP_type_t get_IP_type(char *addr);
 
+/**
+ * Creates socket and bind it to an address and port.
+ * char *address : string of the IPv4 or IPv6 to bind the socket to.
+ * char *port : string of the port to be bind to.
+ * uint64_t buffer_size : socket buffer size.
+ * Returns socketfd of the created socket.
+ */
+int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size);
+
 uint8_t unyte_udp_get_version(unyte_seg_met_t *message);
 uint8_t unyte_udp_get_space(unyte_seg_met_t *message);
 uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message);

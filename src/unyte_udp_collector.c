@@ -189,8 +189,6 @@ void set_default_options(unyte_udp_options_t *options)
     options->monitoring_queue_size = MONITORING_QUEUE_SIZE;
   if (options->monitoring_delay <= 0)
     options->monitoring_delay = MONITORING_DELAY;
-  // printf("Options: %s:%d | vlen: %d|outputqueue: %d| parsers:%d\n", options->address, options->port, options->recvmmsg_vlen, options->output_queue_size, options->nb_parsers);
-  // printf("Options: parser_queue_size:%d\n", options->parsers_queue_size);
 }
 
 unyte_udp_collector_t *unyte_udp_create_listener(

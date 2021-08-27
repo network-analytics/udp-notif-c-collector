@@ -13,15 +13,8 @@
  *    ./client_ebpf_user 192.168.1.17 10001 2 3
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <string.h>
-#include <signal.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <netdb.h>
 #include <assert.h>
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>

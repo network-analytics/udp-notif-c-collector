@@ -59,11 +59,11 @@ typedef struct counter_summary
 
 struct monitoring_thread_input
 {
-  unyte_seg_counters_t *counters; // current counters for every thread (parsing workers + listening thread)
-  uint nb_counters;               // number of counters
-  unyte_udp_queue_t *output_queue;          // output queue of stats
-  uint delay;                     // in seconds
-  bool stop_monitoring_thread;    // bool to stop thread
+  unyte_seg_counters_t *counters;  // current counters for every thread (parsing workers + listening thread)
+  uint nb_counters;                // number of counters
+  unyte_udp_queue_t *output_queue; // output queue of stats
+  uint delay;                      // in seconds
+  bool stop_monitoring_thread;     // bool to stop thread
 };
 
 unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads);

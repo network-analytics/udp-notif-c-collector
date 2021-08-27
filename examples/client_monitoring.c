@@ -1,10 +1,6 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <string.h>
-#include <signal.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 #include "../src/hexdump.h"
 #include "../src/unyte_udp_collector.h"

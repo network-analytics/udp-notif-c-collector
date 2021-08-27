@@ -117,7 +117,7 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
  * uint32_t key : index of the socket to be filled in the eBPF hash table.
  * uint32_t balancer_count : max values to be used in eBPF reuse. Should be <= MAX_BALANCER_COUNT.
  */
-int open_socket_attach_ebpf(int socketfd, uint32_t key, uint32_t balancer_count)
+int attach_ebpf_to_socket(int socketfd, uint32_t key, uint32_t balancer_count)
 {
   int umap_fd, size_map_fd, prog_fd;
   char filename[] = BPF_KERNEL_PRG;
@@ -220,16 +220,16 @@ int main(int argc, char *argv[])
   // Create a udp socket with default socket buffer
   int socketfd = unyte_udp_create_socket(argv[1], argv[2], DEFAULT_SK_BUFF_SIZE);
 
-  open_socket_attach_ebpf(socketfd, atoi(argv[3]), atoi(argv[4]));
+  attach_ebpf_to_socket(socketfd, atoi(argv[3]), atoi(argv[4]));
 
   // Initialize collector options
-  unyte_udp_sk_options_t options = {0};
+  unyte_udp_options_t options = {0};
   options.recvmmsg_vlen = USED_VLEN;
   options.socket_fd = socketfd;
   printf("Listening on socket %d\n", options.socket_fd);
 
   /* Initialize collector */
-  unyte_udp_collector_t *collector = unyte_udp_start_collector_sk(&options);
+  unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);
   int recv_count = 0;
   int max = MAX_TO_RECEIVE;
 

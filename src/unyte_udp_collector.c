@@ -144,37 +144,11 @@ unyte_udp_sock_t *unyte_init_socket(char *addr, char *port, uint64_t sock_buff_s
   return conn;
 }
 
-void set_sk_default_options(unyte_udp_sk_options_t *options)
-{
-  if (options == NULL)
-  {
-    printf("Invalid options.\n");
-    exit(EXIT_FAILURE);
-  }
-  if (options->recvmmsg_vlen == 0)
-    options->recvmmsg_vlen = DEFAULT_VLEN;
-  if (options->output_queue_size <= 0)
-    options->output_queue_size = OUTPUT_QUEUE_SIZE;
-  if (options->nb_parsers <= 0)
-    options->nb_parsers = DEFAULT_NB_PARSERS;
-  if (options->parsers_queue_size <= 0)
-    options->parsers_queue_size = PARSER_QUEUE_SIZE;
-  if (options->monitoring_queue_size <= 0)
-    options->monitoring_queue_size = MONITORING_QUEUE_SIZE;
-  if (options->monitoring_delay <= 0)
-    options->monitoring_delay = MONITORING_DELAY;
-}
-
 void set_default_options(unyte_udp_options_t *options)
 {
   if (options == NULL)
   {
     printf("Invalid options.\n");
-    exit(EXIT_FAILURE);
-  }
-  if (options->address == NULL)
-  {
-    printf("Invalid address.\n");
     exit(EXIT_FAILURE);
   }
   if (options->recvmmsg_vlen == 0)
@@ -232,35 +206,6 @@ unyte_udp_collector_t *unyte_udp_create_listener(
 unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)
 {
   set_default_options(options);
-
-  unyte_udp_queue_t *output_queue = unyte_udp_queue_init(options->output_queue_size);
-  unyte_udp_queue_t *monitoring_queue = unyte_udp_queue_init(options->monitoring_queue_size);
-
-  if (output_queue == NULL || monitoring_queue == NULL)
-  {
-    printf("Malloc failed.\n");
-    exit(EXIT_FAILURE);
-  }
-
-  unyte_udp_sock_t *conn = unyte_init_socket(options->address, options->port, options->socket_buff_size);
-
-  /* Return struct */
-  unyte_udp_collector_t *collector = unyte_udp_create_listener(
-      output_queue, monitoring_queue, conn, options->recvmmsg_vlen, options->nb_parsers,
-      options->parsers_queue_size, options->monitoring_delay);
-
-  if (collector == NULL)
-  {
-    printf("Malloc failed.\n");
-    exit(EXIT_FAILURE);
-  }
-
-  return collector;
-}
-
-unyte_udp_collector_t *unyte_udp_start_collector_sk(unyte_udp_sk_options_t *options)
-{
-  set_sk_default_options(options);
 
   unyte_udp_queue_t *output_queue = unyte_udp_queue_init(options->output_queue_size);
   unyte_udp_queue_t *monitoring_queue = unyte_udp_queue_init(options->monitoring_queue_size);

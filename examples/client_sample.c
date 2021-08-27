@@ -29,12 +29,12 @@ int main(int argc, char *argv[])
   printf("Listening on %s:%s\n", argv[1], argv[2]);
 
   // Initialize collector options
-  unyte_udp_sk_options_t options = {0};
+  unyte_udp_options_t options = {0};
   options.recvmmsg_vlen = USED_VLEN;
   options.socket_fd = socketfd; // passing socket file descriptor to listen to
 
   /* Initialize collector */
-  unyte_udp_collector_t *collector = unyte_udp_start_collector_sk(&options);
+  unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);
   int recv_count = 0;
   int max = MAX_TO_RECEIVE;
 

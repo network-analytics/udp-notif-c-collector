@@ -1,9 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <string.h>
-#include <signal.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 
@@ -24,12 +19,14 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
+  // Create a udp socket with default socket buffer
+  int socketfd = unyte_udp_create_socket(argv[1], argv[2], DEFAULT_SK_BUFF_SIZE);
+  printf("Listening on %s:%s\n", argv[1], argv[2]);
+
   // Initialize collector options
   unyte_udp_options_t options = {0};
   options.recvmmsg_vlen = USED_VLEN;
-  options.address = argv[1];
-  options.port = argv[2];
-  printf("Listening on %s:%s\n", options.address, options.port);
+  options.socket_fd = socketfd; // passing socket file descriptor to listen to
 
   /* Initialize collector */
   unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);

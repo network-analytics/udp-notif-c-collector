@@ -1,9 +1,5 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <stdint.h>
 #include <string.h>
-#include <signal.h>
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -19,7 +15,7 @@
 /**
  * Creates own custom socket
  */
-int create_socket(char *address, char *port)
+int create_custom_socket(char *address, char *port)
 {
   struct addrinfo *addr_info;
   struct addrinfo hints;
@@ -88,16 +84,16 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  int sockfd = create_socket(argv[1], argv[2]);
+  int sockfd = create_custom_socket(argv[1], argv[2]);
 
   // Initialize collector options
-  unyte_udp_sk_options_t options = {0};
+  unyte_udp_options_t options = {0};
   options.recvmmsg_vlen = USED_VLEN;
   options.socket_fd = sockfd;
   printf("Listening on socket %d\n", options.socket_fd);
 
   /* Initialize collector */
-  unyte_udp_collector_t *collector = unyte_udp_start_collector_sk(&options);
+  unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);
   int recv_count = 0;
   int max = MAX_TO_RECEIVE;
 

@@ -19,4 +19,10 @@
 #define ACTIVE_GIDS 500    // how many active gids do we are waiting for
 #define GID_TIME_TO_LIVE 4 // times monitoring thread consider generator_id active without stats
 
+// Segmentation_buffer parameters  | not settable by the user
+#define SIZE_BUF 10000         // size of buffer
+#define CLEAN_UP_PASS_SIZE 500 // number of iterations to clean up
+#define CLEAN_COUNT_MAX 50     // clean up segment buffer when count > CLEAN_COUNT_MAX
+#define EXPIRE_MSG 3           // seconds to consider the segmented message in the buffer expired (not receiving segments anymore)
+
 #endif

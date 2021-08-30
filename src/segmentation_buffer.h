@@ -7,12 +7,7 @@
 #include <string.h>
 #include <time.h>
 #include "unyte_udp_utils.h"
-
-// Segmentation_buffer parameters
-#define SIZE_BUF 10000          // size of buffer
-#define CLEAN_UP_PASS_SIZE 500  // number of iterations to clean up
-#define CLEAN_COUNT_MAX 50      // clean up segment buffer when count > CLEAN_COUNT_MAX
-#define EXPIRE_MSG 3            // seconds to consider the segmented message in the buffer expired (not receiving segments anymore)
+#include "unyte_udp_defaults.h"
 
 /**
  * total_size, current_size, gid, mid, only relevant for header cell

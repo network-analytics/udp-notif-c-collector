@@ -15,7 +15,7 @@
 /**
  * Creates own custom socket
  */
-int create_socket(char *address, char *port)
+int create_custom_socket(char *address, char *port)
 {
   struct addrinfo *addr_info;
   struct addrinfo hints;
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  int sockfd = create_socket(argv[1], argv[2]);
+  int sockfd = create_custom_socket(argv[1], argv[2]);
 
   // Initialize collector options
   unyte_udp_options_t options = {0};

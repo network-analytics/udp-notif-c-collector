@@ -6,11 +6,6 @@
 #include "unyte_udp_utils.h"
 #include "monitoring_worker.h"
 
-#define UDP_SIZE 65535          // max UDP packet size
-#define PARSER_QUEUE_SIZE 500  // input queue size
-#define DEFAULT_NB_PARSERS 10   // number of parser workers instances
-#define CLEANUP_FLAG_CRON 1000  // clean up cron in milliseconds
-
 /**
  * Input given to the listener thread when creating it.
  */

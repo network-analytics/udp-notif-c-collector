@@ -8,4 +8,15 @@
 #define MONITORING_QUEUE_SIZE 0       // queue monitoring default to 0 (not running monitoring thread)
 #define MONITORING_DELAY 3            // in seconds
 
+// listening_worker
+#define UDP_SIZE 65535         // max UDP packet size
+#define PARSER_QUEUE_SIZE 500  // input queue size
+#define DEFAULT_NB_PARSERS 10  // number of parser workers instances
+#define CLEANUP_FLAG_CRON 1000 // clean up cron in milliseconds
+
+// monitoring_worker
+#define GID_COUNTERS 10    // hashmap modulo
+#define ACTIVE_GIDS 500    // how many active gids do we are waiting for
+#define GID_TIME_TO_LIVE 4 // times monitoring thread consider generator_id active without stats
+
 #endif

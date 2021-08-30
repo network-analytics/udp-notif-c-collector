@@ -6,10 +6,6 @@
 #include <stdbool.h>
 #include "unyte_udp_queue.h"
 
-#define GID_COUNTERS 10    // hashmap modulo
-#define ACTIVE_GIDS 500    // how many active gids do we are waiting for
-#define GID_TIME_TO_LIVE 4 // times monitoring thread consider generator_id active without stats
-
 typedef enum
 {
   PARSER_WORKER,

@@ -9,20 +9,16 @@ See [INSTALL](INSTALL.md)
 The collector allows to read and parse UDP-notif protocol messages from a ip/port specified on the parameters. It allows to get directly the buffer and the metadata of the message in a struct.
 
 The api is in `unyte_udp_collector.h`:
-- `unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: address (the IP address to listen to), port (port to listen to), recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)
-- `unyte_udp_collector_t *unyte_udp_start_collector_sk(unyte_udp_sk_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector binded to a socket. It accepts a struct with different options: socket file descriptor to listen on, recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)
+- `int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size)` from `unyte_udp_utils.h`: Helper that creates and binds a socket to an address and port.
+- `unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: socketfd of the socket to listen to, recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)...
 - `void *unyte_udp_queue_read(unyte_udp_queue_t *queue)` from `unyte_udp_queue.h` : read from a queue a struct with all the message buffer and metadata.
 - `int unyte_udp_free_all(unyte_seg_met_t *seg)` from `unyte_udp_collector.h`: free all struct used on a message received.
 
 Simple example of usage :
 ```c
 #include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <string.h>
-#include <signal.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 // include installed library headers
 #include <unyte-udp-notif/unyte_udp_collector.h>
@@ -34,10 +30,13 @@ Simple example of usage :
 
 int main()
 {
+  // Initialize socket and bind it to the address
+  int socketfd = unyte_udp_create_socket(ADDR, PORT, DEFAULT_SK_BUFF_SIZE);
+
   // Initialize collector options
   unyte_udp_options_t options = {0};
-  options.address = ADDR;
-  options.port = PORT;
+  // add socket fd reference to options
+  options.socket_fd = socketfd
   // if argument set to 0, defaults are used
   options.recvmmsg_vlen = 0;       // vlen parameter for recvmmsg. Default: 10
   options.output_queue_size = 0;   // output queue size. Default: 1000
@@ -113,8 +112,7 @@ To activate this thread, you must initiate the monitoring thread queue size (`mo
 ```c
 typedef struct
 {
-  char *address;
-  char *port;
+  int socket_fd;                // socket file descriptor
   ...
   uint monitoring_queue_size;   // monitoring queue size if wanted to activate the monitoring thread. Default: 0. Recommended: 500.
   uint monitoring_delay;        // monitoring queue frequence in seconds. Default: 5 seconds
@@ -155,7 +153,6 @@ typedef struct unyte_message
 
 Simple usage of the sender :
 ```c
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 

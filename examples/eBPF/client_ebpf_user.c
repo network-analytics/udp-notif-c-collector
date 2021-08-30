@@ -13,15 +13,8 @@
  *    ./client_ebpf_user 192.168.1.17 10001 2 3
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <stdint.h>
-#include <string.h>
-#include <signal.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <netdb.h>
 #include <assert.h>
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
@@ -48,77 +41,22 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
 }
 
 /**
- * Creates own custom socket
+ * Open socket, loads eBPF program and attaches it to the opened socket.
+ * int socketfd : socket file descriptor to listen to.
+ * uint32_t key : index of the socket to be filled in the eBPF hash table.
+ * uint32_t balancer_count : max values to be used in eBPF reuse. Should be <= MAX_BALANCER_COUNT.
  */
-int create_socket(char *address, char *port)
-{
-  struct addrinfo *addr_info;
-  struct addrinfo hints;
-
-  memset(&hints, 0, sizeof(hints));
-
-  hints.ai_socktype = SOCK_DGRAM;
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
-
-  // Using getaddrinfo to support both IPv4 and IPv6
-  int rc = getaddrinfo(address, port, &hints, &addr_info);
-
-  if (rc != 0) {
-    printf("getaddrinfo error: %s\n", gai_strerror(rc));
-    exit(EXIT_FAILURE);
-  }
-
-  printf("Address type: %s | %d\n", (addr_info->ai_family == AF_INET) ? "IPv4" : "IPv6", ntohs(((struct sockaddr_in *)addr_info->ai_addr)->sin_port));
-
-  // create socket on UDP protocol
-  int sockfd = socket(addr_info->ai_family, addr_info->ai_socktype, addr_info->ai_protocol);
-
-  // handle error
-  if (sockfd < 0)
-  {
-    perror("Cannot create socket");
-    exit(EXIT_FAILURE);
-  }
-
-  // Use SO_REUSEPORT to be able to launch multiple collector on the same address
-  int optval = 1;
-  if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int)) < 0)
-  {
-    perror("Cannot set SO_REUSEPORT option on socket");
-    exit(EXIT_FAILURE);
-  }
-
-  // Setting socket buffer to default 20 MB
-  uint64_t receive_buf_size = DEFAULT_SK_BUFF_SIZE;
-  if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size)) < 0)
-  {
-    perror("Cannot set buffer size");
-    exit(EXIT_FAILURE);
-  }
-
-  if (bind(sockfd, addr_info->ai_addr, (int)addr_info->ai_addrlen) == -1)
-  {
-    perror("Bind failed");
-    close(sockfd);
-    exit(EXIT_FAILURE);
-  }
-
-  // free addr_info after usage
-  freeaddrinfo(addr_info);
-
-  return sockfd;
-}
-
-int open_socket_attach_ebpf(char *address, char *port, uint32_t key, uint32_t balancer_count)
+int attach_ebpf_to_socket(int socketfd, uint32_t key, uint32_t balancer_count)
 {
   int umap_fd, size_map_fd, prog_fd;
   char filename[] = BPF_KERNEL_PRG;
-  int64_t usock;
+  int64_t usock = socketfd;
   long err = 0;
 
   assert(!balancer_count || key < balancer_count);
   assert(balancer_count <= MAX_BALANCER_COUNT);
+  assert(usock >= 0);
+
   printf("from args: Using hash bucket index %u", key);
   if (balancer_count > 0) printf(" (%u buckets in total)", balancer_count);
   puts("");
@@ -158,10 +96,6 @@ int open_socket_attach_ebpf(char *address, char *port, uint32_t key, uint32_t ba
   umap_fd = bpf_map__fd(udpmap);
   assert(umap_fd);
 
-  usock = create_socket(address, port);
-
-  assert(usock >= 0);
-
   if (setsockopt(usock, SOL_SOCKET, SO_ATTACH_REUSEPORT_EBPF, &prog_fd, sizeof(prog_fd)) != 0) {
     perror("Could not attach BPF prog");
     return 1;
@@ -200,26 +134,31 @@ int open_socket_attach_ebpf(char *address, char *port, uint32_t key, uint32_t ba
   return usock;
 }
 
-
 int main(int argc, char *argv[])
 {
   if (argc != 5)
   {
     printf("Error: arguments not valid\n");
     printf("Usage: ./client_ebpf_user <ip> <port> <index> <loadbalance_max>\n");
+    printf("Example: ./client_ebpf_user 10.0.2.15 10001 0 5\n");
     exit(1);
   }
 
-  int sockfd = open_socket_attach_ebpf(argv[1], argv[2], atoi(argv[3]), atoi(argv[4]));
+  printf("Listening on %s:%s\n", argv[1], argv[2]);
+
+  // Create a udp socket with default socket buffer
+  int socketfd = unyte_udp_create_socket(argv[1], argv[2], DEFAULT_SK_BUFF_SIZE);
+
+  attach_ebpf_to_socket(socketfd, atoi(argv[3]), atoi(argv[4]));
 
   // Initialize collector options
-  unyte_udp_sk_options_t options = {0};
+  unyte_udp_options_t options = {0};
   options.recvmmsg_vlen = USED_VLEN;
-  options.socket_fd = sockfd;
+  options.socket_fd = socketfd;
   printf("Listening on socket %d\n", options.socket_fd);
 
   /* Initialize collector */
-  unyte_udp_collector_t *collector = unyte_udp_start_collector_sk(&options);
+  unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);
   int recv_count = 0;
   int max = MAX_TO_RECEIVE;
 

@@ -10,6 +10,7 @@
 #include "unyte_udp_collector.h"
 #include "listening_worker.h"
 #include "unyte_version.h"
+#include "unyte_udp_defaults.h"
 
 void unyte_set_ip_headers_options(int socket_fd, sa_family_t family)
 {
@@ -152,7 +153,7 @@ void set_default_options(unyte_udp_options_t *options)
     exit(EXIT_FAILURE);
   }
   if (options->recvmmsg_vlen == 0)
-    options->recvmmsg_vlen = DEFAULT_VLEN;
+    options->recvmmsg_vlen = UNYTE_DEFAULT_VLEN;
   if (options->output_queue_size <= 0)
     options->output_queue_size = OUTPUT_QUEUE_SIZE;
   if (options->nb_parsers <= 0)

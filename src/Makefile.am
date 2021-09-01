@@ -24,6 +24,7 @@ libunyte_udp_notif_la_SOURCES = \
     unyte_udp_utils.c           \
     unyte_udp_utils.h           \
     unyte_version.h             \
+    unyte_udp_defaults.h        \
     $(NULL)
 
 unyteincludedir = $(includedir)/unyte-udp-notif
@@ -39,6 +40,7 @@ unyteinclude_HEADERS =    \
     unyte_udp_queue.h     \
     unyte_udp_utils.h     \
     unyte_version.h       \
+    unyte_udp_defaults.h  \
     $(NULL)
 
 libunyte_udp_notif_la_CFLAGS = -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC

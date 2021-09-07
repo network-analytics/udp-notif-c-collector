@@ -121,6 +121,7 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
   for (uint i = 0; i < packets->segments_len; i++)
   {
     unsigned char *parsed_packet = serialize_message(current_seg);
+    printf("LENGHTS: %d %d\n", current_seg->header->header_length, current_seg->header->message_length);
     int res_send = send(sender_sk->sockfd, parsed_packet, current_seg->header->header_length + current_seg->header->message_length, 0);
 
     if (res_send < 0)
@@ -147,11 +148,28 @@ int free_seg_msgs(struct unyte_segmented_msg *packets)
   unyte_seg_met_t *current = packets->segments;
   for (uint i = 0; i < packets->segments_len; i++)
   {
+    printf("HHHH%d %d\n", packets->segments_len, i);
     free(current->payload);
+    unyte_option_t *next = current->header->options->next;
+    while (next != NULL)
+    {
+      unyte_option_t *cur = next;
+      next = next->next;
+      free(cur->data);
+      free(cur);
+    }
+    free(current->header->options);
     free(current->header);
     current++;
   }
   free(packets->segments);
   free(packets);
+  return 0;
+}
+
+int free_unyte_sent_message(unyte_message_t *msg)
+{
+  free(msg->options);
+  free(msg);
   return 0;
 }

@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     /* Processing sample */
     recv_count++;
     print_udp_notif_header(seg->header, stdout);
-    // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
+    hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
 
     fflush(stdout);
 

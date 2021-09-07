@@ -9,8 +9,15 @@
 #define ET_MASK 0b00001111
 #define LAST_MASK 0b00000001
 #define HEADER_BYTES 12
-#define OPTIONS_BYTES 4
-#define F_SEGMENTATION_TYPE 1
+#define UNYTE_SEGMENTATION_OPTION_LEN 4
+
+typedef struct unyte_option
+{
+  uint8_t type;
+  uint8_t length;
+  char *data;
+  struct unyte_option *next;
+} unyte_option_t;
 
 typedef struct unyte_header
 {
@@ -27,6 +34,7 @@ typedef struct unyte_header
   uint8_t f_len;
   uint32_t f_num : 31;
   uint8_t f_last : 1;
+  unyte_option_t *options; // Linked list of custom options
 } unyte_header_t;
 
 typedef struct unyte_metadata
@@ -73,6 +81,13 @@ struct unyte_segmented_msg
   uint segments_len;
 };
 
+typedef struct unyte_send_option
+{
+  uint8_t type;
+  uint8_t data_length;
+  char *data;
+} unyte_send_option_t;
+
 typedef struct unyte_message
 {
   uint used_mtu;
@@ -85,6 +100,10 @@ typedef struct unyte_message
   uint8_t encoding_type : 4;
   uint32_t generator_id;
   uint32_t message_id;
+
+  // Custom options
+  unyte_send_option_t *options; // array of unyte_send_option_t
+  uint options_len;             // options array length
 } unyte_message_t;
 
 typedef enum

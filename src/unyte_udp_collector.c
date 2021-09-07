@@ -254,6 +254,8 @@ int unyte_udp_free_payload(unyte_seg_met_t *seg)
 
 int unyte_udp_free_header(unyte_seg_met_t *seg)
 {
+  //TODO: free all linked list options
+  free(seg->header->options);
   free(seg->header);
   return 0;
 }

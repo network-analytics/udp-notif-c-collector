@@ -20,32 +20,34 @@ unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_p
 
   // Create a new unyte_seg_met_t to push to queue
   unyte_seg_met_t *parsed_msg = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t));
-  if (parsed_msg == NULL)
-    return NULL;
+  unyte_header_t *parsed_msg_header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
+  unyte_metadata_t *parsed_msg_metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
+  unyte_option_t *msg_options = (unyte_option_t *)malloc(sizeof(unyte_option_t));
+  struct sockaddr_storage *msg_src = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+  struct sockaddr_storage *msg_dest = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
 
-  parsed_msg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
-  parsed_msg->metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
-
-  if (parsed_msg->header == NULL || parsed_msg->metadata == NULL)
+  if (parsed_msg == NULL || parsed_msg_header == NULL || parsed_msg_metadata == NULL || msg_options == NULL || msg_src == NULL || msg_dest == NULL)
   {
-    if (parsed_msg->header != NULL)
-      free(parsed_msg->header);
-    if (parsed_msg->metadata != NULL)
-      free(parsed_msg->metadata);
-    free(parsed_msg);
+    if (parsed_msg != NULL)
+      free(parsed_msg);
+    if (parsed_msg_header != NULL)
+      free(parsed_msg_header);
+    if (parsed_msg_metadata != NULL)
+      free(parsed_msg_metadata);
+    if (msg_options != NULL)
+      free(msg_options);
+    if (msg_src != NULL)
+      free(msg_src);
+    if (msg_dest != NULL)
+      free(msg_dest);
     return NULL;
   }
 
-  parsed_msg->metadata->src = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
-  parsed_msg->metadata->dest = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
-
-  if (parsed_msg->metadata->src == NULL || parsed_msg->metadata->dest == NULL)
-  {
-    free(parsed_msg->metadata);
-    free(parsed_msg->header);
-    free(parsed_msg);
-    return NULL;
-  }
+  parsed_msg->header = parsed_msg_header;
+  parsed_msg->metadata = parsed_msg_metadata;
+  parsed_msg->header->options = msg_options;
+  parsed_msg->metadata->src = msg_src;
+  parsed_msg->metadata->dest = msg_dest;
 
   copy_unyte_seg_met_headers(parsed_msg, src_parsed_segment);
 
@@ -79,6 +81,9 @@ int parser(struct parser_thread_input *in)
     }
     unyte_min_t *queue_data = (unyte_min_t *)queue_bef;
     unyte_seg_met_t *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
+
+    if (parsed_segment == NULL)
+      return -1;
 
     /* Unyte_minimal struct is not useful anymore */
     free(queue_data->buffer);

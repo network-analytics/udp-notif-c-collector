@@ -75,7 +75,6 @@ int main(int argc, char *argv[])
 
   udp_options[0].type = UNYTE_TYPE_PRIVATE_ENCODING;
   udp_options[0].data = "CBOR";
-  // printf("HEHR:  %ld\n", strlen(udp_options[0].data));
   udp_options[0].data_length = 4;
 
   udp_options[1].type = 3; // custom header

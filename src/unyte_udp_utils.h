@@ -163,6 +163,8 @@ unyte_IP_type_t get_IP_type(char *addr);
  */
 int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size);
 
+uint options_total_bytes(unyte_option_t *options);
+
 uint8_t unyte_udp_get_version(unyte_seg_met_t *message);
 uint8_t unyte_udp_get_space(unyte_seg_met_t *message);
 uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message);

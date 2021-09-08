@@ -89,8 +89,11 @@ int parser(struct parser_thread_input *in)
     free(queue_data->buffer);
     free(queue_data);
 
+    uint options_length = options_total_bytes(parsed_segment->header->options);
+    bool is_segmented = parsed_segment->header->header_length > (HEADER_BYTES + options_length);
+
     // Not segmented message
-    if (parsed_segment->header->header_length <= HEADER_BYTES)
+    if (!is_segmented)
     {
       uint32_t gid = parsed_segment->header->generator_id;
       uint32_t mid = parsed_segment->header->message_id;
@@ -112,6 +115,7 @@ int parser(struct parser_thread_input *in)
     // Segmented message
     else
     {
+      printf("parsing is segmented!\n");
       int insert_res = insert_segment(segment_buff,
                                       parsed_segment->header->generator_id,
                                       parsed_segment->header->message_id,

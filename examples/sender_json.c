@@ -57,8 +57,8 @@ int main(int argc, char *argv[])
 
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
-  // struct buffer_to_send *bf_send = read_json_file(200); // resources/json-200.json
-  struct buffer_to_send *bf_send = read_json_file(8950); // resources/json-8950.json
+  struct buffer_to_send *bf_send = read_json_file(200); // resources/json-200.json
+  // struct buffer_to_send *bf_send = read_json_file(8950); // resources/json-8950.json
 
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
   message->buffer = bf_send->buffer;

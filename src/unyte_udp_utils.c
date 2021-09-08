@@ -301,21 +301,14 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
     return NULL;
   }
 
-  int options_header_bytes = 0;
-  if (message->options_len > 0) 
-  {
-    printf("There is options to send!\n");
-    unyte_send_option_t *option_it = message->options;
-    for (uint i = 0; i < message->options_len; i++)
-    {
-      options_header_bytes += option_it->data_length;
-      option_it++;
-    }
-  }
-  uint packets_to_send = 1;
   // Usable bytes for segmentation
+  unyte_option_t *options_header = build_message_options(message->options, message->options_len);
+  uint options_header_bytes = options_total_bytes(options_header);
+
   uint actual_usable_bytes = (mtu - HEADER_BYTES - UNYTE_SEGMENTATION_OPTION_LEN);
   uint message_len = options_header_bytes + message->buffer_len;
+  uint packets_to_send = 1;
+
   printf("HERE: %d %d %d\n", options_header_bytes, message->buffer_len, message_len);
   if ((message_len + HEADER_BYTES) > mtu)
   {
@@ -326,7 +319,6 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
   printf("Packets: %d\n", packets_to_send);
   segments_msg->segments = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t) * packets_to_send);
   segments_msg->segments_len = packets_to_send;
-  unyte_option_t *options_header = build_message_options(message->options, message->options_len);
 
   if (segments_msg->segments == NULL || options_header == NULL)
   {
@@ -354,7 +346,7 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
     current_seg->header->space = message->space;
     current_seg->header->version = message->version;
     current_seg->header->encoding_type = message->encoding_type;
-    current_seg->header->header_length = HEADER_BYTES + options_total_bytes(options_header);
+    current_seg->header->header_length = HEADER_BYTES + options_header_bytes;
     current_seg->header->message_length = message->buffer_len;
     current_seg->header->options = options_header;
   }
@@ -366,6 +358,10 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
     {
       // Min(bytes_to_copy, actual_usable_bytes)
       uint bytes_to_send = (message->buffer_len - copy_it) < actual_usable_bytes ? (message->buffer_len - copy_it) : actual_usable_bytes;
+
+      if (i == 0 && options_header_bytes > 0)
+        bytes_to_send -= options_header_bytes;
+
       current_seg->payload = (char *)malloc(bytes_to_send);
       if (current_seg->payload == NULL)
       {
@@ -385,14 +381,16 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
       current_seg->header->version = message->version;
       current_seg->header->encoding_type = message->encoding_type;
       current_seg->header->message_length = bytes_to_send;
+      current_seg->header->header_length = HEADER_BYTES + UNYTE_SEGMENTATION_OPTION_LEN;
 
       // first packet have the custom options
       if (i == 0)
+      {
         current_seg->header->options = options_header;
+        current_seg->header->header_length += options_header_bytes;
+      }
       else
         current_seg->header->options = build_message_empty_options();
-
-      current_seg->header->header_length = HEADER_BYTES + UNYTE_SEGMENTATION_OPTION_LEN + options_total_bytes(current_seg->header->options);
 
       current_seg->header->f_num = i;
       current_seg->header->f_len = UNYTE_SEGMENTATION_OPTION_LEN;
@@ -444,16 +442,16 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
   parsed_bytes[9] = (msg->header->message_id >> 16);
   parsed_bytes[10] = (msg->header->message_id >> 8);
   parsed_bytes[11] = (msg->header->message_id);
-  uint payload_start = HEADER_BYTES;
 
   uint options_it = HEADER_BYTES;
   if (is_segmented)
   {
+    printf("is segmented\n");
     parsed_bytes[options_it] = (msg->header->f_type);
     parsed_bytes[options_it + 1] = (msg->header->f_len);
     parsed_bytes[options_it + 2] = (msg->header->f_num >> 8);
     parsed_bytes[options_it + 3] = (msg->header->f_num << 1) + msg->header->f_last;
-    payload_start = HEADER_BYTES + UNYTE_SEGMENTATION_OPTION_LEN;
+    options_it += UNYTE_SEGMENTATION_OPTION_LEN;
   }
 
   unyte_option_t *head = msg->header->options;
@@ -465,11 +463,10 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
     memcpy(parsed_bytes + options_it + 2, cur->data, cur->length - 2);
     printf("len=%d\n", cur->length);
     options_it += cur->length;
-    payload_start += cur->length;
     cur = cur->next;
   }
-  printf("payloadstard:%d\n", payload_start);
-  memcpy(parsed_bytes + payload_start, msg->payload, msg->header->message_length);
+  printf("payloadstard:%d\n", options_it);
+  memcpy(parsed_bytes + options_it, msg->payload, msg->header->message_length);
 
   hexdump(parsed_bytes, packet_size);
   return parsed_bytes;

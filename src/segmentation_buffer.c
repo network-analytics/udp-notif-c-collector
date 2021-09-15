@@ -45,6 +45,9 @@ uint32_t hashKey(uint32_t gid, uint32_t mid)
   return (gid ^ mid) % SIZE_BUF;
 }
 
+/**
+ * append linked list of options to head and remove reference of options
+ */
 int append_options(struct message_segment_list_cell *head, unyte_option_t *options)
 {
   uint32_t options_length = 0;
@@ -52,30 +55,30 @@ int append_options(struct message_segment_list_cell *head, unyte_option_t *optio
   if (options == NULL) return -2;
   
   unyte_option_t *tail = options;
-  printf("OPTIONS: %d\n", options == NULL);
   while(tail->next != NULL)
   {
     options_length += tail->next->length;
     tail = tail->next;
   }
-  printf("Tail :%d | %d\n", tail == NULL, tail->next == NULL);
+  // Malloc new options linked list
   if (head->options_head == NULL)
   {
-    printf("Head is null\n");
-    head->options_head = options;
-    head->options_tail = tail;
+    head->options_head = build_message_empty_options();
+    if (head->options_head == NULL)
+    {
+      printf("Malloc failed\n");
+      return -3;
+    }
+    head->options_tail = head->options_head;
   }
-  else if (options->next != NULL)
+
+  // If has options, save them
+  if (options->next != NULL)
   {
-    printf("Head is next: %d | %d\n", head->options_tail == NULL, options->next == NULL);
-    printf("Taiol: %d %d\n", head->options_tail->next == NULL, options->next == NULL);
     head->options_tail->next = options->next;
     head->options_tail = tail;
-    // options->next = NULL;
-    free(options);
-  } else {
-    // options->next = NULL;
-    free(options);
+    // remove options to be able to free options later
+    options->next = NULL;
   }
   head->options_length += options_length;
   return 0;

@@ -296,7 +296,6 @@ int listener(struct listener_thread_input *in)
       free_monitoring_worker(monitoring);
       return -1;
     }
-    printf("HERE?\n\n");
     for (int i = 0; i < read_count; i++)
     {
       // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer

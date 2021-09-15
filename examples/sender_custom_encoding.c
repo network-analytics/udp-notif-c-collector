@@ -65,17 +65,17 @@ int main(int argc, char *argv[])
   message->buffer_len = bf_send->buffer_len;
   // UDP-notif
   message->version = 0;
-  message->space = UNYTE_SPACE_NON_STANDARD;
-  message->encoding_type = 4;
+  message->space = UNYTE_SPACE_NON_STANDARD; // Custom space
+  message->encoding_type = 4;                // Custom encoding type
   message->generator_id = 1000;
   message->message_id = 2147483669;
-  message->used_mtu = 100; // use default configured
+  message->used_mtu = 0; // use default configured
 
   unyte_send_option_t *udp_options = (unyte_send_option_t *)malloc(sizeof(unyte_send_option_t) * 2);
 
-  udp_options[0].type = UNYTE_TYPE_PRIVATE_ENCODING;
-  udp_options[0].data = "CBOR";
-  udp_options[0].data_length = 4;
+  udp_options[0].type = UNYTE_TYPE_PRIVATE_ENCODING; // private encoding
+  udp_options[0].data = "CSV";
+  udp_options[0].data_length = 3;
 
   udp_options[1].type = 3; // custom header
   udp_options[1].data = "Custom";

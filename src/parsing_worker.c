@@ -51,8 +51,6 @@ unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_p
   copy_unyte_seg_met_headers(parsed_msg, src_parsed_segment);
 
   // Rewrite header length and message length
-  //TODO: change if has options!
-  printf("--->Options: %d\n", options_length);
   parsed_msg->header->header_length = HEADER_BYTES + options_length;
   parsed_msg->header->message_length = HEADER_BYTES + options_length + total_payload_byte_size;
 
@@ -122,7 +120,6 @@ int parser(struct parser_thread_input *in)
     // Segmented message
     else
     {
-      printf("parsing is segmented!\n");
       int insert_res = insert_segment(segment_buff,
                                       parsed_segment->header->generator_id,
                                       parsed_segment->header->message_id,
@@ -182,11 +179,10 @@ int parser(struct parser_thread_input *in)
       if (segment_buff->cleanup == 1 && segment_buff->count > CLEAN_COUNT_MAX)
         cleanup_seg_buff(segment_buff, CLEAN_UP_PASS_SIZE);
 
-      printf("OPTINNN: %d\n", parsed_segment->header->options->next == NULL);
       fflush(stdout);
 
       // free unused partial parsed_segment without payload
-      unyte_udp_free_header_without_options(parsed_segment);
+      unyte_udp_free_header(parsed_segment);
       unyte_udp_free_metadata(parsed_segment);
       free(parsed_segment);
     }

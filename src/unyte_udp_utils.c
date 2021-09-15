@@ -97,7 +97,6 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   {
     uint8_t type = segment[HEADER_BYTES + options_length];
     uint8_t length = segment[HEADER_BYTES + options_length + 1];
-    printf("Type and length : %d | %d\n", type, length);
     // segmented message
     if (type == UNYTE_TYPE_SEGMENTATION)
     {
@@ -109,7 +108,6 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
       else
         header->f_last = 0;
 
-      // FIXME: Works only if segmentation option is the first option -> check option type == 1 (to define in draft)
       header->f_num = (ntohs(deserialize_uint16((char *)segment, HEADER_BYTES + options_length + 2)) >> 1);
     }
     else // custom options 
@@ -230,13 +228,10 @@ void print_udp_notif_header(unyte_header_t *header, FILE *std)
     unyte_option_t *cur = head->next;
     while(cur != NULL)
     {
-      char test[100];
-      memcpy(test, cur->data, cur->length - 2);
-      test[cur->length-2] = '\0';
       fprintf(std, "\nCustom Option:\n");
       fprintf(std, "opt type: %u\n", cur->type);
       fprintf(std, "opt length: %u\n", cur->length);
-      fprintf(std, "opt description: %.*s\n", cur->length - 2, test);
+      fprintf(std, "opt description: %.*s\n", cur->length - 2, cur->data);
       cur = cur->next;
     }
   }
@@ -266,7 +261,6 @@ void print_udp_notif_payload(char *p, int len, FILE *std)
 uint options_total_bytes(unyte_option_t *options)
 {
   uint length = 0;
-  printf("Print: %d | \n", options == NULL);
   unyte_option_t *cur = options;
   while (cur->next != NULL)
   {
@@ -422,18 +416,12 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
 {
   uint custom_options = options_total_bytes(msg->header->options);
   uint packet_size = HEADER_BYTES + custom_options + msg->header->message_length;
-  printf("Packet_size = %d\n", packet_size);
-  printf("Header length:%d\n", msg->header->header_length);
-  // printf("segment?%d\n", msg->header->f_type);
   bool is_segmented = msg->header->header_length > (HEADER_BYTES + custom_options);
-  printf("Is segmented:%d\n", is_segmented);
   if (is_segmented)
   {
     // segmented header
-    printf("Segmented!\n");
     packet_size += UNYTE_SEGMENTATION_OPTION_LEN;
   }
-  printf("options data length : %d | %d\n", custom_options, packet_size);
   unsigned char *parsed_bytes = (unsigned char *)malloc(packet_size);
   parsed_bytes[0] = (((msg->header->version << 5) + (msg->header->space << 4) + (msg->header->encoding_type)));
   parsed_bytes[1] = msg->header->header_length;
@@ -455,7 +443,6 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
   uint options_it = HEADER_BYTES;
   if (is_segmented)
   {
-    printf("is segmented\n");
     parsed_bytes[options_it] = (msg->header->f_type);
     parsed_bytes[options_it + 1] = (msg->header->f_len);
     parsed_bytes[options_it + 2] = (msg->header->f_num >> 8);
@@ -470,11 +457,9 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
     parsed_bytes[options_it] = cur->type;
     parsed_bytes[options_it + 1] = cur->length;
     memcpy(parsed_bytes + options_it + 2, cur->data, cur->length - 2);
-    printf("len=%d\n", cur->length);
     options_it += cur->length;
     cur = cur->next;
   }
-  printf("payloadstard:%d\n", options_it);
   memcpy(parsed_bytes + options_it, msg->payload, msg->header->message_length);
 
   hexdump(parsed_bytes, packet_size);

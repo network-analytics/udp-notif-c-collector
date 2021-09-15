@@ -97,6 +97,7 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   {
     uint8_t type = segment[HEADER_BYTES + options_length];
     uint8_t length = segment[HEADER_BYTES + options_length + 1];
+    printf("Type and length : %d | %d\n", type, length);
     // segmented message
     if (type == UNYTE_TYPE_SEGMENTATION)
     {
@@ -113,7 +114,6 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
     }
     else // custom options 
     {
-      printf("Custom option: type[%d]\n", type);
       unyte_option_t *custom_option = malloc(sizeof(unyte_option_t));
       char *options_data = malloc(length - 2); // 1 byte for type and 1 byte for length
       if (custom_option == NULL || options_data == NULL)
@@ -266,6 +266,7 @@ void print_udp_notif_payload(char *p, int len, FILE *std)
 uint options_total_bytes(unyte_option_t *options)
 {
   uint length = 0;
+  printf("Print: %d | \n", options == NULL);
   unyte_option_t *cur = options;
   while (cur->next != NULL)
   {

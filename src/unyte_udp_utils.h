@@ -145,6 +145,7 @@ void print_udp_notif_header(unyte_header_t *header, FILE *std);
  */
 void print_udp_notif_payload(char *p, int len, FILE *std);
 
+unyte_option_t *build_message_empty_options();
 struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu);
 unsigned char *serialize_message(unyte_seg_met_t *message);
 

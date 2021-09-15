@@ -45,7 +45,43 @@ uint32_t hashKey(uint32_t gid, uint32_t mid)
   return (gid ^ mid) % SIZE_BUF;
 }
 
-int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content)
+int append_options(struct message_segment_list_cell *head, unyte_option_t *options)
+{
+  uint32_t options_length = 0;
+  if (head == NULL) return -1;
+  if (options == NULL) return -2;
+  
+  unyte_option_t *tail = options;
+  printf("OPTIONS: %d\n", options == NULL);
+  while(tail->next != NULL)
+  {
+    options_length += tail->next->length;
+    tail = tail->next;
+  }
+  printf("Tail :%d | %d\n", tail == NULL, tail->next == NULL);
+  if (head->options_head == NULL)
+  {
+    printf("Head is null\n");
+    head->options_head = options;
+    head->options_tail = tail;
+  }
+  else if (options->next != NULL)
+  {
+    printf("Head is next: %d | %d\n", head->options_tail == NULL, options->next == NULL);
+    printf("Taiol: %d %d\n", head->options_tail->next == NULL, options->next == NULL);
+    head->options_tail->next = options->next;
+    head->options_tail = tail;
+    // options->next = NULL;
+    free(options);
+  } else {
+    // options->next = NULL;
+    free(options);
+  }
+  head->options_length += options_length;
+  return 0;
+}
+
+int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content, unyte_option_t *options)
 {
   uint32_t hk = hashKey(gid, mid);
   if (buf->hash_array[hk] == NULL)
@@ -58,7 +94,6 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
 
   struct collision_list_cell *head = buf->hash_array[hk];
   struct collision_list_cell *cur = head;
-  //TODO: mid==mid????
   while (cur->next != NULL && (cur->next->gid != gid || cur->next->mid != mid))
   {
     cur = cur->next;
@@ -76,7 +111,7 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
     buf->count++;
     cur->next->next = NULL;
   }
-  return insert_into_msl(cur->next->head, seqnum, last, payload_size, content);
+  return insert_into_msl(cur->next->head, seqnum, last, payload_size, content, options);
 }
 
 /**
@@ -91,18 +126,18 @@ int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint3
  * returns -1 if a content was already present for this seqnum
  * returns -2 if a content was already present and message is complete
  * returns -3 if a memory allocation failed
+ * returns -4 if options is NULL or head is NULL
  */
-int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content)
+int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content, unyte_option_t *options)
 {
-  //If the segment is the last, we now know the total size of the message.
+  // If the segment is the last, we now know the total size of the message.
   if (last == 1)
     head->total_size = seqnum + 1;
-  //Search for insert location
+  // Search for insert location
   struct message_segment_list_cell *cur = head;
   while (cur->next != NULL && cur->next->seqnum < seqnum)
-  {
     cur = cur->next;
-  }
+
   /** cur->next is the insertion location
     * if cur->next is NULL, the content is being placed at the end of list
     * This segment is not a duplicate, hence the current_size must be increased
@@ -118,6 +153,8 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
     cur->next->content_size = payload_size;
     head->current_size++;
     head->total_payload_byte_size += payload_size;
+    if (append_options(head, options) < 0)
+      return -4;
     // return value based on message completeness
     if (head->total_size > 0 && head->current_size == head->total_size)
       return 1;
@@ -149,6 +186,8 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
       cur->next->content_size = payload_size;
       head->current_size++;
       head->total_payload_byte_size += payload_size;
+      if (append_options(head, options) < 0)
+        return -4;
       // return value based on message completeness
       if (head->total_size > 0 && head->current_size == head->total_size)
         return 1;
@@ -157,6 +196,7 @@ int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int
     }
   }
 }
+
 struct message_segment_list_cell *get_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid)
 {
   uint32_t hk = hashKey(gid, mid);
@@ -188,6 +228,7 @@ void print_segment_list_header(struct message_segment_list_cell *head)
 {
   printf("Segment list: gid %d mid %d current size %d total size %d\n", head->gid, head->mid, head->current_size, head->total_size);
 }
+
 void print_segment_list_int(struct message_segment_list_cell *head)
 {
   printf("Segment list: gid %d mid %d current size %d total size %d\n", head->gid, head->mid, head->current_size, head->total_size);
@@ -223,6 +264,9 @@ struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint
   res->next = NULL;
   res->to_clean_up = 0;
   res->timestamp = 0;
+  res->options_head = NULL;
+  res->options_tail = NULL;
+  res->options_length = 0;
   return res;
 }
 
@@ -244,6 +288,18 @@ void clear_msl(struct message_segment_list_cell *head)
     free(cur);
     cur = temp;
   }
+  // freeing options linked list
+  unyte_option_t *head_opt = head->options_head;
+  unyte_option_t *cur_opt = head_opt->next;
+  unyte_option_t *to_rm;
+  while(cur_opt != NULL)
+  {
+    free(cur_opt->data);
+    to_rm = cur_opt;
+    cur_opt = cur_opt->next;
+    free(to_rm);
+  }
+  free(head_opt);
   free(head);
 }
 

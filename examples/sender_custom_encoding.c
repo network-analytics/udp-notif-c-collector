@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
   message->encoding_type = 4;
   message->generator_id = 1000;
   message->message_id = 2147483669;
-  message->used_mtu = 0; // use default configured
+  message->used_mtu = 100; // use default configured
 
   unyte_send_option_t *udp_options = (unyte_send_option_t *)malloc(sizeof(unyte_send_option_t) * 2);
 

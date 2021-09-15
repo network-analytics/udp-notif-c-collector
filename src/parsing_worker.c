@@ -12,7 +12,7 @@
  * Assembles a message from all segments.
  * Returns NULL if malloc failed or complete_msg is NULL
  */
-unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_parsed_segment, uint16_t total_payload_byte_size)
+unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_parsed_segment, uint16_t total_payload_byte_size, unyte_option_t *options_head, uint32_t options_length)
 {
   // if assembled message is null due to malloc failed
   if (complete_msg == NULL)
@@ -22,11 +22,11 @@ unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_p
   unyte_seg_met_t *parsed_msg = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t));
   unyte_header_t *parsed_msg_header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
   unyte_metadata_t *parsed_msg_metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
-  unyte_option_t *msg_options = (unyte_option_t *)malloc(sizeof(unyte_option_t));
   struct sockaddr_storage *msg_src = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
   struct sockaddr_storage *msg_dest = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+  unyte_option_t *options = build_message_empty_options();
 
-  if (parsed_msg == NULL || parsed_msg_header == NULL || parsed_msg_metadata == NULL || msg_options == NULL || msg_src == NULL || msg_dest == NULL)
+  if (parsed_msg == NULL || parsed_msg_header == NULL || parsed_msg_metadata == NULL || msg_src == NULL || msg_dest == NULL || options == NULL)
   {
     if (parsed_msg != NULL)
       free(parsed_msg);
@@ -34,26 +34,33 @@ unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_p
       free(parsed_msg_header);
     if (parsed_msg_metadata != NULL)
       free(parsed_msg_metadata);
-    if (msg_options != NULL)
-      free(msg_options);
     if (msg_src != NULL)
       free(msg_src);
     if (msg_dest != NULL)
       free(msg_dest);
+    if (options != NULL)
+      free(options);
     return NULL;
   }
 
   parsed_msg->header = parsed_msg_header;
   parsed_msg->metadata = parsed_msg_metadata;
-  parsed_msg->header->options = msg_options;
   parsed_msg->metadata->src = msg_src;
   parsed_msg->metadata->dest = msg_dest;
 
   copy_unyte_seg_met_headers(parsed_msg, src_parsed_segment);
 
   // Rewrite header length and message length
-  parsed_msg->header->header_length = HEADER_BYTES;
-  parsed_msg->header->message_length = total_payload_byte_size + HEADER_BYTES;
+  //TODO: change if has options!
+  printf("--->Options: %d\n", options_length);
+  parsed_msg->header->header_length = HEADER_BYTES + options_length;
+  parsed_msg->header->message_length = HEADER_BYTES + options_length + total_payload_byte_size;
+
+  // Reassemble custom options
+  options->next = options_head->next;
+  parsed_msg->header->options = options;
+  // dereference options_head
+  options_head->next = NULL;
 
   copy_unyte_seg_met_metadata(parsed_msg, src_parsed_segment);
 
@@ -122,7 +129,8 @@ int parser(struct parser_thread_input *in)
                                       parsed_segment->header->f_num,
                                       parsed_segment->header->f_last,
                                       parsed_segment->header->message_length - parsed_segment->header->header_length,
-                                      parsed_segment->payload);
+                                      parsed_segment->payload,
+                                      parsed_segment->header->options);
       if (insert_res == -1)
       {
         // Content was already present for this seqnum (f_num)
@@ -145,7 +153,7 @@ int parser(struct parser_thread_input *in)
         struct message_segment_list_cell *msg_seg_list = get_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
         char *complete_msg = reassemble_payload(msg_seg_list);
 
-        unyte_seg_met_t *parsed_msg = create_assembled_msg(complete_msg, parsed_segment, msg_seg_list->total_payload_byte_size);
+        unyte_seg_met_t *parsed_msg = create_assembled_msg(complete_msg, parsed_segment, msg_seg_list->total_payload_byte_size, msg_seg_list->options_head, msg_seg_list->options_length);
         if (parsed_msg == NULL)
         {
           printf("Malloc failed assembling message\n");
@@ -172,14 +180,13 @@ int parser(struct parser_thread_input *in)
       }
 
       if (segment_buff->cleanup == 1 && segment_buff->count > CLEAN_COUNT_MAX)
-      {
         cleanup_seg_buff(segment_buff, CLEAN_UP_PASS_SIZE);
-      }
 
+      printf("OPTINNN: %d\n", parsed_segment->header->options->next == NULL);
       fflush(stdout);
 
       // free unused partial parsed_segment without payload
-      unyte_udp_free_header(parsed_segment);
+      unyte_udp_free_header_without_options(parsed_segment);
       unyte_udp_free_metadata(parsed_segment);
       free(parsed_segment);
     }

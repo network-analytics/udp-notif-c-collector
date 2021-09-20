@@ -106,15 +106,25 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
 
   struct unyte_segmented_msg *packets = build_message(message, mtu);
   unyte_seg_met_t *current_seg = packets->segments;
+  int loss = rand() % 10;
+  //TODO:
   for (uint i = 0; i < packets->segments_len; i++)
   {
+    usleep(200);
     unsigned char *parsed_packet = serialize_message(current_seg);
-    int res_send = send(sender_sk->sockfd, parsed_packet, current_seg->header->header_length + current_seg->header->message_length, 0);
-
-    if (res_send < 0)
+    int random = rand() % 100;
+    if (random < 90 || loss < 7)
     {
-      // perror("send()");
+      int res_send = send(sender_sk->sockfd, parsed_packet, current_seg->header->header_length + current_seg->header->message_length, 0);
+
+      if (res_send < 0)
+      {
+        // perror("send()");
+      }
+    } else {
+      printf("losing packet\n");
     }
+
     free(parsed_packet);
     current_seg++;
   }

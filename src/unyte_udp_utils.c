@@ -462,7 +462,7 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
   }
   memcpy(parsed_bytes + options_it, msg->payload, msg->header->message_length);
 
-  hexdump(parsed_bytes, packet_size);
+  // hexdump(parsed_bytes, packet_size);
   return parsed_bytes;
 }
 

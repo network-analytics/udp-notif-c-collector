@@ -9,7 +9,7 @@
 #include "../src/unyte_udp_defaults.h"
 
 #define USED_VLEN 1
-#define MAX_TO_RECEIVE 10
+#define MAX_TO_RECEIVE 5000
 
 int main(int argc, char *argv[])
 {
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
     /* Processing sample */
     recv_count++;
-    print_udp_notif_header(seg->header, stdout);
+    // print_udp_notif_header(seg->header, stdout);
     // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
 
     fflush(stdout);

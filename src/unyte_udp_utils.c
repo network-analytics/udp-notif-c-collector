@@ -8,7 +8,10 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <assert.h>
+#include <stdbool.h>
 #include "unyte_udp_utils.h"
+#include "hexdump.h"
+#include "unyte_udp_constants.h"
 
 /**
  * Return 32 bits unsigned integer value out of *C+P char pointer value.
@@ -28,6 +31,17 @@ uint16_t deserialize_uint16(char *c, int p)
   uint16_t u = 0;
   memcpy(&u, (c + p), 2);
   return u;
+}
+
+unyte_option_t *build_message_empty_options()
+{
+  unyte_option_t *head = (unyte_option_t *)malloc(sizeof(unyte_option_t));
+  if (head == NULL) return NULL;
+  head->data = NULL;
+  head->length = 0;
+  head->type = 0;
+  head->next = NULL;
+  return head;
 }
 
 /**
@@ -60,8 +74,8 @@ unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struc
 unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 {
   unyte_header_t *header = malloc(sizeof(unyte_header_t));
-
-  if (header == NULL)
+  unyte_option_t *options_head = build_message_empty_options();
+  if (header == NULL || options_head == NULL)
   {
     printf("Malloc failed \n");
     return NULL;
@@ -74,24 +88,47 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
   header->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
   header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
-  /* Header contains options */
-  // TODO: handle something else than segmentation ? --> check if option type == 1 (define in draft)
-  if (header->header_length > HEADER_BYTES)
-  {
-    header->f_type = segment[12];
-    header->f_len = segment[13];
+  header->options = options_head;
 
-    // If last = TRUE
-    if ((uint8_t)(segment[15] & 0b00000001) == 1)
+  // Header contains options
+  unyte_option_t *last_option = options_head;
+  int options_length = 0;
+  while((options_length + HEADER_BYTES) < header->header_length)
+  {
+    uint8_t type = segment[HEADER_BYTES + options_length];
+    uint8_t length = segment[HEADER_BYTES + options_length + 1];
+    // segmented message
+    if (type == UNYTE_TYPE_SEGMENTATION)
     {
-      header->f_last = 1;
+      header->f_type = type;
+      header->f_len = length;
+      // If last = TRUE
+      if ((uint8_t)(segment[HEADER_BYTES + options_length + 3] & 0b00000001) == 1)
+        header->f_last = 1;
+      else
+        header->f_last = 0;
+
+      header->f_num = (ntohs(deserialize_uint16((char *)segment, HEADER_BYTES + options_length + 2)) >> 1);
     }
-    else
+    else // custom options 
     {
-      header->f_last = 0;
+      unyte_option_t *custom_option = malloc(sizeof(unyte_option_t));
+      char *options_data = malloc(length - 2); // 1 byte for type and 1 byte for length
+      if (custom_option == NULL || options_data == NULL)
+      {
+        printf("Malloc failed\n");
+        return NULL;
+      }
+      custom_option->type = type;
+      custom_option->length = length;
+      custom_option->next = NULL;
+      custom_option->data = options_data;
+      memcpy(custom_option->data, segment + HEADER_BYTES + options_length + 2, length - 2);
+
+      last_option->next = custom_option;
+      last_option = custom_option;
     }
-    // FIXME: Works only if segmentation option is the first option -> check option type == 1 (to define in draft)
-    header->f_num = (ntohs(deserialize_uint16((char *)segment, HEADER_BYTES + 2)) >> 1);
+    options_length += length;
   }
   int pSize = header->message_length - header->header_length;
 
@@ -110,7 +147,7 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   if (meta == NULL)
   {
     printf("Malloc failed.\n");
-    exit(-1);
+    return NULL;
   }
 
   // Filling the struct
@@ -174,21 +211,33 @@ void print_udp_notif_header(unyte_header_t *header, FILE *std)
   fprintf(std, "Generator ID: %u\n", header->generator_id);
   fprintf(std, "Mesage ID: %u\n", header->message_id);
 
-  /* Header contains options */
-
-  if (header->header_length > HEADER_BYTES)
+  // Header contains options
+  uint options_length = options_total_bytes(header->options);
+  bool is_segmented = header->header_length > (HEADER_BYTES + options_length);
+  if (is_segmented)
   {
-    fprintf(std, "\nOptions: YES\n");
+    fprintf(std, "\nOption segmentation:\n");
     fprintf(std, "opt type: %u\n", header->f_type);
-    fprintf(std, "frag length: %u\n", header->f_len);
-    fprintf(std, "frag message number: %u\n", header->f_num);
-    fprintf(std, "frag last_flag: %u\n", header->f_last);
+    fprintf(std, "seg length: %u\n", header->f_len);
+    fprintf(std, "seg message number: %u\n", header->f_num);
+    fprintf(std, "seg last_flag: %u\n", header->f_last);
+  }
+  if (options_length > 0)
+  {
+    unyte_option_t *head = header->options;
+    unyte_option_t *cur = head->next;
+    while(cur != NULL)
+    {
+      fprintf(std, "\nCustom Option:\n");
+      fprintf(std, "opt type: %u\n", cur->type);
+      fprintf(std, "opt length: %u\n", cur->length);
+      fprintf(std, "opt description: %.*s\n", cur->length - 2, cur->data);
+      cur = cur->next;
+    }
   }
 
   if (std == stdout)
-  {
     fflush(stdout);
-  }
 }
 
 /**
@@ -209,6 +258,44 @@ void print_udp_notif_payload(char *p, int len, FILE *std)
   }
 }
 
+uint options_total_bytes(unyte_option_t *options)
+{
+  uint length = 0;
+  unyte_option_t *cur = options;
+  while (cur->next != NULL)
+  {
+    cur = cur->next;
+    length += cur->length;
+  }
+  return length;
+}
+
+unyte_option_t *build_message_options(unyte_send_option_t *options, uint options_len)
+{
+  unyte_option_t *head = build_message_empty_options();
+  if (head == NULL) return NULL;
+  unyte_option_t *current = head;
+  char *buffer;
+  for (uint i = 0; i < options_len; i++)
+  {
+    current->next = (unyte_option_t *)malloc(sizeof(unyte_option_t));
+    buffer = malloc(options[i].data_length);
+    if (current->next == NULL || buffer == NULL) 
+    {
+      printf("Malloc failed\n");
+      return NULL;
+    }
+    current = current->next;
+    current->type = options[i].type;
+    current->length = options[i].data_length + 2; // length of user data + 1 byte for type and 1 byte for length of the TLV
+    current->data = buffer;
+    current->next = NULL;
+    memcpy(current->data, options[i].data, options[i].data_length);
+  }
+
+  return head;
+}
+
 struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
 {
   struct unyte_segmented_msg *segments_msg = (struct unyte_segmented_msg *)malloc(sizeof(struct unyte_segmented_msg));
@@ -218,21 +305,25 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
     return NULL;
   }
 
-  uint packets_to_send = 1;
   // Usable bytes for segmentation
-  uint actual_usable_bytes = (mtu - HEADER_BYTES - OPTIONS_BYTES);
-  if ((message->buffer_len + HEADER_BYTES) > mtu)
-  {
-    packets_to_send = (message->buffer_len / actual_usable_bytes);
-    if (message->buffer_len % actual_usable_bytes != 0)
-    {
-      packets_to_send++;
-    }
-  }
+  unyte_option_t *options_header = build_message_options(message->options, message->options_len);
+  uint options_header_bytes = options_total_bytes(options_header);
 
+  uint actual_usable_bytes = (mtu - HEADER_BYTES - UNYTE_SEGMENTATION_OPTION_LEN);
+  uint message_len = options_header_bytes + message->buffer_len;
+  uint packets_to_send = 1;
+
+  if ((message_len + HEADER_BYTES) > mtu)
+  {
+    packets_to_send = (message_len / actual_usable_bytes);
+    if (message_len % actual_usable_bytes != 0)
+      packets_to_send++;
+  }
+  printf("Packets: %d\n", packets_to_send);
   segments_msg->segments = (unyte_seg_met_t *)malloc(sizeof(unyte_seg_met_t) * packets_to_send);
   segments_msg->segments_len = packets_to_send;
-  if (segments_msg->segments == NULL)
+
+  if (segments_msg->segments == NULL || options_header == NULL)
   {
     printf("Malloc failed \n");
     return NULL;
@@ -243,26 +334,24 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
   {
     // not segmented
     current_seg->payload = (char *)malloc(message->buffer_len);
-    if (current_seg->payload == NULL)
-    {
-      printf("Malloc failed \n");
-      return NULL;
-    }
-    memcpy(current_seg->payload, message->buffer, message->buffer_len);
     current_seg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
 
-    if (current_seg->header == NULL)
+    if (current_seg->payload == NULL || current_seg->header == NULL)
     {
       printf("Malloc failed \n");
       return NULL;
     }
+
+    memcpy(current_seg->payload, message->buffer, message->buffer_len);
+
     current_seg->header->generator_id = message->generator_id;
     current_seg->header->message_id = message->message_id;
     current_seg->header->space = message->space;
     current_seg->header->version = message->version;
     current_seg->header->encoding_type = message->encoding_type;
-    current_seg->header->header_length = HEADER_BYTES;
+    current_seg->header->header_length = HEADER_BYTES + options_header_bytes;
     current_seg->header->message_length = message->buffer_len;
+    current_seg->header->options = options_header;
   }
   else
   {
@@ -272,6 +361,10 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
     {
       // Min(bytes_to_copy, actual_usable_bytes)
       uint bytes_to_send = (message->buffer_len - copy_it) < actual_usable_bytes ? (message->buffer_len - copy_it) : actual_usable_bytes;
+
+      if (i == 0 && options_header_bytes > 0)
+        bytes_to_send -= options_header_bytes;
+
       current_seg->payload = (char *)malloc(bytes_to_send);
       if (current_seg->payload == NULL)
       {
@@ -290,20 +383,26 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
       current_seg->header->space = message->space;
       current_seg->header->version = message->version;
       current_seg->header->encoding_type = message->encoding_type;
-      current_seg->header->header_length = HEADER_BYTES + OPTIONS_BYTES;
       current_seg->header->message_length = bytes_to_send;
+      current_seg->header->header_length = HEADER_BYTES + UNYTE_SEGMENTATION_OPTION_LEN;
 
-      current_seg->header->f_num = i;
-      current_seg->header->f_len = OPTIONS_BYTES;
-      current_seg->header->f_type = F_SEGMENTATION_TYPE;
-      if (i == segments_msg->segments_len - 1)
+      // first packet have the custom options
+      if (i == 0)
       {
-        current_seg->header->f_last = 1;
+        current_seg->header->options = options_header;
+        current_seg->header->header_length += options_header_bytes;
       }
       else
-      {
+        current_seg->header->options = build_message_empty_options();
+
+      current_seg->header->f_num = i;
+      current_seg->header->f_len = UNYTE_SEGMENTATION_OPTION_LEN;
+      current_seg->header->f_type = UNYTE_TYPE_SEGMENTATION;
+
+      if (i == segments_msg->segments_len - 1)
+        current_seg->header->f_last = 1;
+      else
         current_seg->header->f_last = 0;
-      }
 
       current_seg++;
       copy_it += bytes_to_send;
@@ -315,13 +414,14 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
 
 unsigned char *serialize_message(unyte_seg_met_t *msg)
 {
-  uint packet_size = msg->header->message_length + HEADER_BYTES;
-  if (msg->header->header_length > HEADER_BYTES)
+  uint custom_options = options_total_bytes(msg->header->options);
+  uint packet_size = HEADER_BYTES + custom_options + msg->header->message_length;
+  bool is_segmented = msg->header->header_length > (HEADER_BYTES + custom_options);
+  if (is_segmented)
   {
     // segmented header
-    packet_size = msg->header->message_length + HEADER_BYTES + OPTIONS_BYTES;
+    packet_size += UNYTE_SEGMENTATION_OPTION_LEN;
   }
-
   unsigned char *parsed_bytes = (unsigned char *)malloc(packet_size);
   parsed_bytes[0] = (((msg->header->version << 5) + (msg->header->space << 4) + (msg->header->encoding_type)));
   parsed_bytes[1] = msg->header->header_length;
@@ -339,18 +439,30 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
   parsed_bytes[9] = (msg->header->message_id >> 16);
   parsed_bytes[10] = (msg->header->message_id >> 8);
   parsed_bytes[11] = (msg->header->message_id);
-  uint payload_start = HEADER_BYTES;
 
-  if (msg->header->header_length > HEADER_BYTES)
+  uint options_it = HEADER_BYTES;
+  if (is_segmented)
   {
-    parsed_bytes[12] = (msg->header->f_type);
-    parsed_bytes[13] = (msg->header->f_len);
-    parsed_bytes[14] = (msg->header->f_num >> 8);
-    parsed_bytes[15] = (msg->header->f_num << 1) + msg->header->f_last;
-    payload_start = HEADER_BYTES + OPTIONS_BYTES;
+    parsed_bytes[options_it] = (msg->header->f_type);
+    parsed_bytes[options_it + 1] = (msg->header->f_len);
+    parsed_bytes[options_it + 2] = (msg->header->f_num >> 8);
+    parsed_bytes[options_it + 3] = (msg->header->f_num << 1) + msg->header->f_last;
+    options_it += UNYTE_SEGMENTATION_OPTION_LEN;
   }
-  memcpy(parsed_bytes + payload_start, msg->payload, msg->header->message_length);
 
+  unyte_option_t *head = msg->header->options;
+  unyte_option_t *cur = head->next;
+  while (cur != NULL)
+  {
+    parsed_bytes[options_it] = cur->type;
+    parsed_bytes[options_it + 1] = cur->length;
+    memcpy(parsed_bytes + options_it + 2, cur->data, cur->length - 2);
+    options_it += cur->length;
+    cur = cur->next;
+  }
+  memcpy(parsed_bytes + options_it, msg->payload, msg->header->message_length);
+
+  hexdump(parsed_bytes, packet_size);
   return parsed_bytes;
 }
 

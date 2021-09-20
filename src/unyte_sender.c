@@ -148,10 +148,26 @@ int free_seg_msgs(struct unyte_segmented_msg *packets)
   for (uint i = 0; i < packets->segments_len; i++)
   {
     free(current->payload);
+    unyte_option_t *next = current->header->options->next;
+    while (next != NULL)
+    {
+      unyte_option_t *cur = next;
+      next = next->next;
+      free(cur->data);
+      free(cur);
+    }
+    free(current->header->options);
     free(current->header);
     current++;
   }
   free(packets->segments);
   free(packets);
+  return 0;
+}
+
+int free_unyte_sent_message(unyte_message_t *msg)
+{
+  free(msg->options);
+  free(msg);
   return 0;
 }

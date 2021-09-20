@@ -49,7 +49,7 @@ int unyte_udp_free_all(unyte_seg_met_t *seg);
 int unyte_udp_free_payload(unyte_seg_met_t *seg);
 
 /**
- * Free only the header
+ * Free only the header including the linked list of options
  * pointer still exist but is NULL
  */
 int unyte_udp_free_header(unyte_seg_met_t *seg);

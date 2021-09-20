@@ -252,8 +252,25 @@ int unyte_udp_free_payload(unyte_seg_met_t *seg)
   return 0;
 }
 
+int unyte_udp_free_options(unyte_option_t *options)
+{
+  unyte_option_t *head = options;
+  unyte_option_t *cur = options->next;
+  unyte_option_t *to_rm;
+  while(cur != NULL)
+  {
+    free(cur->data);
+    to_rm = cur;
+    cur = cur->next;
+    free(to_rm);
+  }
+  free(head);
+  return 0;
+}
+
 int unyte_udp_free_header(unyte_seg_met_t *seg)
 {
+  unyte_udp_free_options(seg->header->options);
   free(seg->header);
   return 0;
 }

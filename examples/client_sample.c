@@ -9,7 +9,7 @@
 #include "../src/unyte_udp_defaults.h"
 
 #define USED_VLEN 1
-#define MAX_TO_RECEIVE 20
+#define MAX_TO_RECEIVE 10
 
 int main(int argc, char *argv[])
 {
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     //   printf("dest IPv6: %s\n", inet_ntop(unyte_udp_get_dest_addr(seg)->ss_family, &((struct sockaddr_in6*)unyte_udp_get_dest_addr(seg))->sin6_addr.s6_addr, ip_dest_canonical, sizeof ip_dest_canonical));
     //   printf("dest port: %u\n", ntohs(((struct sockaddr_in6*)unyte_udp_get_dest_addr(seg))->sin6_port));
     // }
-    // printf("unyte_udp_get_payload: %s\n", unyte_udp_get_payload(seg));
+    // printf("unyte_udp_get_payload: %.*s\n", unyte_udp_get_payload_length(seg), unyte_udp_get_payload(seg)); // payload may not be NULL-terminated
     // printf("unyte_udp_get_payload_length: %u\n", unyte_udp_get_payload_length(seg));
 
     /* Processing sample */

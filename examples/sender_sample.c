@@ -35,6 +35,9 @@ int main(int argc, char *argv[])
   message->generator_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 200; // use other than default configured
+  message->options = NULL;
+  message->options_len = 0; // should be initialized to 0 if no options are wanted
+
   unyte_send(sender_sk, message);
 
   // Freeing message and socket

@@ -23,6 +23,9 @@ struct message_segment_list_cell
   uint32_t seqnum;                  // ordered by seqnum
   void *content;
   uint32_t content_size;
+  unyte_option_t *options_head;
+  unyte_option_t *options_tail;
+  uint32_t options_length;
   struct message_segment_list_cell *next;
   int to_clean_up;                  // 0 = not passed yet; 1 = cleaner passed once;
   time_t timestamp;
@@ -84,7 +87,7 @@ char *reassemble_payload(struct message_segment_list_cell *);
  * returns -2 if a content was already present and message is complete
  * returns -3 if a memory allocation failed
 */
-int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content);
+int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content, unyte_option_t *options);
 
 // Segment buffer management
 
@@ -112,7 +115,7 @@ void print_segment_list_string(struct message_segment_list_cell *head);
 /**
  * Adds a message segment in a list of segments of a given message
  */
-int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content);
+int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content, unyte_option_t *options);
 /**
  * Destroys a message
  */

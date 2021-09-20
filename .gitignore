@@ -12,6 +12,7 @@ libunyte-udp-notif.so
 scripts/resources
 examples/resources
 sender_continuous
+sender_custom_encoding
 client_continuous
 client_monitoring
 client_socket

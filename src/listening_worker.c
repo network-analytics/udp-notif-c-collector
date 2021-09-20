@@ -236,23 +236,10 @@ int listener(struct listener_thread_input *in)
 
   /* Create parsing workers */
   struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * in->nb_parsers);
-  if (parsers == NULL)
-  {
-    printf("Malloc failed \n");
-    return -1;
-  }
-
   struct monitoring_worker *monitoring = malloc(sizeof(struct monitoring_worker));
-  if (monitoring == NULL)
-  {
-    printf("Malloc failed \n");
-    return -1;
-  }
-
   uint nb_counters = in->nb_parsers + 1;
   unyte_seg_counters_t *counters = unyte_udp_init_counters(nb_counters); // parsers + listening workers
-
-  if (counters == NULL)
+  if (parsers == NULL || monitoring == NULL || counters == NULL)
   {
     printf("Malloc failed \n");
     return -1;
@@ -309,7 +296,6 @@ int listener(struct listener_thread_input *in)
       free_monitoring_worker(monitoring);
       return -1;
     }
-
     for (int i = 0; i < read_count; i++)
     {
       // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer

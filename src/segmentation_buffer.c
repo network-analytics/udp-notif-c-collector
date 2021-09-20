@@ -293,16 +293,19 @@ void clear_msl(struct message_segment_list_cell *head)
   }
   // freeing options linked list
   unyte_option_t *head_opt = head->options_head;
-  unyte_option_t *cur_opt = head_opt->next;
-  unyte_option_t *to_rm;
-  while(cur_opt != NULL)
+  if (head_opt != NULL)
   {
-    free(cur_opt->data);
-    to_rm = cur_opt;
-    cur_opt = cur_opt->next;
-    free(to_rm);
+    unyte_option_t *cur_opt = head_opt->next;
+    unyte_option_t *to_rm;
+    while(cur_opt != NULL)
+    {
+      free(cur_opt->data);
+      to_rm = cur_opt;
+      cur_opt = cur_opt->next;
+      free(to_rm);
+    }
+    free(head_opt);
   }
-  free(head_opt);
   free(head);
 }
 

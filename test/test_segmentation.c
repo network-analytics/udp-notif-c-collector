@@ -22,7 +22,7 @@ void test_segment_lists()
   //Add a new cell that is last in an empty list, seqnum 0
   int cont = 1;
   printf("Inserting into empty list\n");
-  int val = insert_into_msl(seglist, 0, 1, 1, &cont);
+  int val = insert_into_msl(seglist, 0, 1, 1, &cont, build_message_empty_options());
   printf("Done inserting\n");
   printf("Added a last cell in an empty list, with seqnum set to 0, rtrn value: %d\n", val);
   print_segment_list_int(seglist);
@@ -109,11 +109,11 @@ void test_segment_buffers()
   {
     int *val = malloc(sizeof(int));
     *val = i + 1;
-    insert_segment(buf, 1, 2, i, 0, 1, val);
+    insert_segment(buf, 1, 2, i, 0, 1, val, build_message_empty_options());
     val = malloc(sizeof(int));
     *val = i;
     *val = *val * *val;
-    insert_segment(buf, 2, 1, i, 0, 1, val);
+    insert_segment(buf, 2, 1, i, 0, 1, val, build_message_empty_options());
   }
 
   print_segment_buffer_int(buf);
@@ -129,11 +129,11 @@ void test_segment_buffers()
   {
     int *val = malloc(sizeof(int));
     *val = i + 10;
-    insert_segment(buf, 1, 2, i, 0, 1, val);
+    insert_segment(buf, 1, 2, i, 0, 1, val, build_message_empty_options());
     val = malloc(sizeof(int));
     *val = i;
     *val = (*val * *val) * (*val);
-    insert_segment(buf, 2, 1, i, 0, 1, val);
+    insert_segment(buf, 2, 1, i, 0, 1, val, build_message_empty_options());
   }
   print_segment_buffer_int(buf);
 

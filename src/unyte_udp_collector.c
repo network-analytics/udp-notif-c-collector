@@ -221,24 +221,7 @@ int unyte_udp_free_collector(unyte_udp_collector_t *collector)
   return 0;
 }
 
-int get_int_len(int value)
-{
-  int l = 1;
-  while (value > 9)
-  {
-    l++;
-    value /= 10;
-  }
-  return l;
-}
-
 char *unyte_udp_notif_version()
 {
-  int major_len = get_int_len(UNYTE_UDP_NOTIF_VERSION_MAJOR);
-  int minor_len = get_int_len(UNYTE_UDP_NOTIF_VERSION_MINOR);
-  int patch_len = get_int_len(UNYTE_UDP_NOTIF_VERSION_PATCH);
-  uint len = major_len + minor_len + patch_len + 3; // 2 points and 1 end of string
-  char *version = (char *)malloc(len * sizeof(char));
-  sprintf(version, "%d.%d.%d", UNYTE_UDP_NOTIF_VERSION_MAJOR, UNYTE_UDP_NOTIF_VERSION_MINOR, UNYTE_UDP_NOTIF_VERSION_PATCH);
-  return version;
+  return UNYTE_UDP_NOTIF_VERSION;
 }

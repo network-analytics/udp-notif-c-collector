@@ -9,6 +9,9 @@ AC_PREFIX_DEFAULT([/usr/local])
 AM_PROG_AR
 LT_INIT
 
+UNYTE_UDP_NOTIF_VERSION=`cat $srcdir/VERSION`
+AC_SUBST(UNYTE_UDP_NOTIF_VERSION)
+
 AC_LANG([C])
 AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC([gcc])
@@ -114,6 +117,7 @@ fi
 
 AC_CONFIG_FILES([
     Makefile
+    src/unyte_version.h
     src/Makefile
     examples/Makefile
     examples/eBPF/Makefile

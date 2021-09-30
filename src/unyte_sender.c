@@ -5,37 +5,42 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <string.h>
-#include "unyte_sender.h"
 #include <net/if.h>
+#include <netdb.h>
+#include "unyte_sender.h"
 
 struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
 {
-  unyte_IP_type_t ip_type = get_IP_type(options->address);
-  if (ip_type == unyte_UNKNOWN)
-  {
-    printf("Invalid IP address: %s\n", options->address);
+  struct addrinfo *addr_info;
+  struct addrinfo hints;
+
+  memset(&hints, 0, sizeof(hints));
+
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
+
+  int rc = getaddrinfo(options->address, options->port, &hints, &addr_info);
+
+  if (rc != 0) {
+    printf("getaddrinfo error: %s\n", gai_strerror(rc));
     exit(EXIT_FAILURE);
   }
 
-  void *addr;
   struct unyte_sender_socket *sender_sk = (struct unyte_sender_socket *)malloc(sizeof(struct unyte_sender_socket));
+  struct sockaddr_storage *address = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
 
-  if (ip_type == unyte_IPV4)
-    addr = (struct sockaddr_in *)malloc(sizeof(struct sockaddr_in));
-  else
-    addr = (struct sockaddr_in6 *)malloc(sizeof(struct sockaddr_in6));
-
-  if (addr == NULL || sender_sk == NULL)
+  if (address == NULL || sender_sk == NULL)
   {
     perror("Malloc failed.\n");
     exit(EXIT_FAILURE);
   }
 
-  int sockfd;
-  if (ip_type == unyte_IPV4)
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-  else
-    sockfd = socket(AF_INET6, SOCK_DGRAM, 0);
+  // save copy of the connected addr
+  memset(address, 0, sizeof(*address));
+  memcpy(address, addr_info->ai_addr, addr_info->ai_addrlen);
+
+  int sockfd = socket(addr_info->ai_family, addr_info->ai_socktype, addr_info->ai_protocol);
 
   if (sockfd < 0)
   {
@@ -71,35 +76,18 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
     exit(EXIT_FAILURE);
   }
 
-  int connect_ret = 0;
-  if (ip_type == unyte_IPV4)
-  {
-    memset(addr, 0, sizeof(struct sockaddr_in));
-    ((struct sockaddr_in *)addr)->sin_family = AF_INET;
-    ((struct sockaddr_in *)addr)->sin_port = htons(options->port);
-    inet_pton(AF_INET, options->address, &((struct sockaddr_in *)addr)->sin_addr);
-    connect_ret = connect(sockfd, (struct sockaddr *)addr, sizeof(struct sockaddr_in));
-  }
-  else
-  {
-    memset(addr, 0, sizeof(struct sockaddr_in6));
-    ((struct sockaddr_in6 *)addr)->sin6_family = AF_INET6;
-    ((struct sockaddr_in6 *)addr)->sin6_port = htons(options->port);
-    ((struct sockaddr_in6 *)addr)->sin6_scope_id = if_nametoindex("eth0"); //TODO: check all interfaces or bind to one interface
-    ((struct sockaddr_in6 *)addr)->sin6_flowinfo = 0;
-    inet_pton(AF_INET6, options->address, &((struct sockaddr_in6 *)addr)->sin6_addr);
-    connect_ret = connect(sockfd, (struct sockaddr *)addr, sizeof(struct sockaddr_in6));
-  }
-
   // connect socket to destination address
-  if (connect_ret == -1)
+  if (connect(sockfd, addr_info->ai_addr, (int)addr_info->ai_addrlen) == -1)
   {
     perror("Connect failed");
     close(sockfd);
     exit(EXIT_FAILURE);
   }
 
-  sender_sk->sock_in = addr;
+  // free addr_info after usage
+  freeaddrinfo(addr_info);
+
+  sender_sk->sock_in = address;
   sender_sk->sockfd = sockfd;
   sender_sk->default_mtu = options->default_mtu;
   return sender_sk;

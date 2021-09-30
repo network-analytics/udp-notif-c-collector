@@ -10,7 +10,7 @@
 typedef struct
 {
   char *address;
-  uint16_t port;
+  char *port;
   uint default_mtu;
   char *interface;
   uint64_t socket_buff_size;  // socket buffer size in bytes
@@ -19,7 +19,7 @@ typedef struct
 struct unyte_sender_socket
 {
   int sockfd;
-  struct sockaddr_in *sock_in;
+  struct sockaddr_storage *sock_in;
   uint default_mtu;
 };
 

@@ -18,6 +18,7 @@ client_monitoring
 client_socket
 client_ebpf_user
 vmlinux.h
+unyte_version.h
 
 docker/tmp
 .DS_Store

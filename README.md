@@ -44,6 +44,8 @@ int main()
   options.nb_parsers = 0;          // number of parsers threads to instantiate. Default: 10
   options.socket_buff_size = 0;    // user socket buffer size in bytes. Default: 20971520 (20MB)
   options.parsers_queue_size = 0;  // parser queue size. Default: 500
+  options.msg_dst_ip = false;      // destination IP not parsed from IP packet to improve performance. Default: false
+  
 
   // Initialize collector
   unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);

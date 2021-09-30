@@ -114,6 +114,7 @@ fi
 
 AC_CONFIG_FILES([
     Makefile
+    src/unyte_version.h
     src/Makefile
     examples/Makefile
     examples/eBPF/Makefile

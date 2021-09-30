@@ -2,6 +2,7 @@
 #define H_UNYTE_UDP_COLLECTOR
 
 #include <pthread.h>
+#include <stdbool.h>
 #include "unyte_udp_queue.h"
 #include "unyte_udp_utils.h"
 
@@ -20,6 +21,7 @@ typedef struct
 {
   int socket_fd; // socket file descriptor
   uint16_t recvmmsg_vlen;
+  bool msg_dst_ip; // destination IP parsed from ip packet. Reduces performance.
   // parsers
   uint nb_parsers; // number of parsers to instantiate
   // queues sizes

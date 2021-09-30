@@ -7,7 +7,7 @@ rm -r m4
 rm -r build-aux
 rm -r autom4te.cache
 rm Makefile
-rm -r src/Makefile.in src/Makefile src/.deps
+rm -r src/Makefile.in src/Makefile src/.deps src/unyte_version.h
 rm -r test/Makefile.in test/Makefile test/.deps
 rm -r examples/Makefile.in examples/Makefile examples/.deps examples/.libs examples/*.o
 rm src/*.o src/*.lo

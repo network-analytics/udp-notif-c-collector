@@ -11,13 +11,14 @@
  */
 struct listener_thread_input
 {
-  unyte_udp_queue_t *output_queue;      /* The queue used to push the segments outside. */
-  unyte_udp_queue_t *monitoring_queue;  /* The queue used to push monitoring stats of segments outside. */
-  unyte_udp_sock_t *conn;     /* Connection with addr, sockfd */
-  uint16_t recvmmsg_vlen;     /* The recvmmsg buffer array size */
-  uint nb_parsers;            /* Number of parsers instances to init */
-  uint parser_queue_size;     /* Size of parser queue in bytes */
-  uint monitoring_delay;      /* Monitoring frequence in seconds */
+  unyte_udp_queue_t *output_queue;     /* The queue used to push the segments outside. */
+  unyte_udp_queue_t *monitoring_queue; /* The queue used to push monitoring stats of segments outside. */
+  unyte_udp_sock_t *conn;              /* Connection with addr, sockfd */
+  uint16_t recvmmsg_vlen;              /* The recvmmsg buffer array size */
+  uint nb_parsers;                     /* Number of parsers instances to init */
+  uint parser_queue_size;              /* Size of parser queue in bytes */
+  uint monitoring_delay;               /* Monitoring frequence in seconds */
+  bool msg_dst_ip;                     /* IP packet dst IP parsed */
 };
 
 struct parse_worker

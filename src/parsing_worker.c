@@ -75,6 +75,13 @@ int parser(struct parser_thread_input *in)
   struct segment_buffer *segment_buff = in->segment_buff;
   int max_malloc_errs = 3;
   unyte_seg_counters_t *counters = in->counters;
+
+  unyte_seg_met_t *(*parse_with_metadata_func)(char *, unyte_min_t *);
+  if (in->legacy_proto)
+    parse_with_metadata_func = &parse_with_metadata;
+  else
+    parse_with_metadata_func = &parse_with_metadata;
+
   while (1)
   {
     void *queue_bef = unyte_udp_queue_read(in->input);
@@ -85,7 +92,7 @@ int parser(struct parser_thread_input *in)
       continue;
     }
     unyte_min_t *queue_data = (unyte_min_t *)queue_bef;
-    unyte_seg_met_t *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
+    unyte_seg_met_t *parsed_segment = (*parse_with_metadata_func)(queue_data->buffer, queue_data);
 
     if (parsed_segment == NULL)
       return -1;

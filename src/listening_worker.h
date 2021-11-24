@@ -19,6 +19,7 @@ struct listener_thread_input
   uint parser_queue_size;              /* Size of parser queue in bytes */
   uint monitoring_delay;               /* Monitoring frequence in seconds */
   bool msg_dst_ip;                     /* IP packet dst IP parsed */
+  bool legacy_proto;                   /* Legacy UDP-notif protocol */
 };
 
 struct parse_worker

@@ -78,7 +78,7 @@ int parser(struct parser_thread_input *in)
 
   unyte_seg_met_t *(*parse_with_metadata_func)(char *, unyte_min_t *);
   if (in->legacy_proto)
-    parse_with_metadata_func = &parse_with_metadata;
+    parse_with_metadata_func = &parse_with_metadata_legacy;
   else
     parse_with_metadata_func = &parse_with_metadata;
 

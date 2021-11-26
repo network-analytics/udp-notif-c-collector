@@ -170,6 +170,115 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   return seg;
 }
 
+int get_encoding_IANA_ET_from_legacy(uint8_t legacy_ET)
+{
+  // TODO: error ?
+  if (legacy_ET > SUPPORTED_ET_LEN)
+    return UNYTE_ENCODING_RESERVED;
+
+  return LEGACY_ET_TO_IANA[legacy_ET];
+}
+
+unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um)
+{
+  unyte_header_t *header = malloc(sizeof(unyte_header_t));
+  unyte_option_t *options_head = build_message_empty_options();
+  if (header == NULL || options_head == NULL)
+  {
+    printf("Malloc failed \n");
+    return NULL;
+  }
+
+  header->version = segment[0] >> 4;
+  header->space = 0;  // arbitrary
+  header->encoding_type = get_encoding_IANA_ET_from_legacy((segment[1] & ET_MASK));
+  printf("HERE: %d", get_encoding_IANA_ET_from_legacy((segment[1] & ET_MASK)));
+  header->header_length = HEADER_BYTES;
+  header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
+  header->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
+  header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
+  header->options = options_head;
+
+  // Header contains options
+  unyte_option_t *last_option = options_head;
+  int options_length = 0;
+  while((options_length + HEADER_BYTES) < header->header_length)
+  {
+    uint8_t type = segment[HEADER_BYTES + options_length];
+    uint8_t length = segment[HEADER_BYTES + options_length + 1];
+    // segmented message
+    if (type == UNYTE_TYPE_SEGMENTATION)
+    {
+      header->f_type = type;
+      header->f_len = length;
+      // If last = TRUE
+      if ((uint8_t)(segment[HEADER_BYTES + options_length + 3] & 0b00000001) == 1)
+        header->f_last = 1;
+      else
+        header->f_last = 0;
+
+      header->f_num = (ntohs(deserialize_uint16((char *)segment, HEADER_BYTES + options_length + 2)) >> 1);
+    }
+    else // custom options 
+    {
+      unyte_option_t *custom_option = malloc(sizeof(unyte_option_t));
+      char *options_data = malloc(length - 2); // 1 byte for type and 1 byte for length
+      if (custom_option == NULL || options_data == NULL)
+      {
+        printf("Malloc failed\n");
+        return NULL;
+      }
+      custom_option->type = type;
+      custom_option->length = length;
+      custom_option->next = NULL;
+      custom_option->data = options_data;
+      memcpy(custom_option->data, segment + HEADER_BYTES + options_length + 2, length - 2);
+
+      last_option->next = custom_option;
+      last_option = custom_option;
+    }
+    options_length += length;
+  }
+  int pSize = header->message_length - header->header_length;
+
+  char *payload = malloc(pSize);
+
+  if (payload == NULL)
+  {
+    printf("Malloc failed \n");
+    return NULL;
+  }
+
+  memcpy(payload, (segment + header->header_length), pSize);
+
+  // Passing metadatas
+  unyte_metadata_t *meta = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
+  if (meta == NULL)
+  {
+    printf("Malloc failed.\n");
+    return NULL;
+  }
+
+  // Filling the struct
+  meta->src = um->src;
+  meta->dest = um->dest;
+
+  // The global segment container
+  unyte_seg_met_t *seg = malloc(sizeof(unyte_seg_met_t) + sizeof(payload));
+
+  if (seg == NULL)
+  {
+    printf("Malloc failed \n");
+    return NULL;
+  }
+
+  seg->header = header;
+  seg->payload = payload;
+  seg->metadata = meta;
+
+  return seg;
+}
+
 /**
  * Deep copies header values without options from src to dest 
  * Returns dest

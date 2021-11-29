@@ -13,27 +13,19 @@ struct buffer_to_send
   uint buffer_len;
 };
 
-struct buffer_to_send *read_json_file(uint bytes)
+struct buffer_to_send *read_cbor_file()
 {
+  uint bytes = 754;
   struct buffer_to_send *bf = (struct buffer_to_send *)malloc(sizeof(struct buffer_to_send));
   bf->buffer = (char *)malloc(bytes);
   bf->buffer_len = bytes;
   FILE *fptr;
-  int filename_size = 24;
-  if (bytes > 999)
-  {
-    filename_size = 25;
-  }
-  char *filename = (char *)malloc(filename_size);
-  snprintf(filename, filename_size, "resources/json-%d.json", bytes);
-  if ((fptr = fopen(filename, "r")) == NULL)
+  if ((fptr = fopen("resources/cbor-example.cbor", "rb")) == NULL)
   {
     printf("Error! opening file");
-    free(filename);
     // Program exits if the file pointer returns NULL.
     exit(1);
   }
-  free(filename);
   fread(bf->buffer, bytes, 1, fptr);
   fclose(fptr);
   return bf;
@@ -44,7 +36,7 @@ int main(int argc, char *argv[])
   if (argc != 3)
   {
     printf("Error: arguments not valid\n");
-    printf("Usage: ./sender_json <ip> <port>\n");
+    printf("Usage: ./sender_cbor <ip> <port>\n");
     exit(1);
   }
 
@@ -57,8 +49,7 @@ int main(int argc, char *argv[])
 
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
-  struct buffer_to_send *bf_send = read_json_file(200); // resources/json-200.json
-  // struct buffer_to_send *bf_send = read_json_file(8950); // resources/json-8950.json
+  struct buffer_to_send *bf_send = read_cbor_file(); // resources/cbor-exampole.cbor: 754 bytes
 
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
   message->buffer = bf_send->buffer;
@@ -66,7 +57,7 @@ int main(int argc, char *argv[])
   // UDP-notif
   message->version = 0;
   message->space = UNYTE_SPACE_STANDARD;
-  message->encoding_type = UNYTE_ENCODING_JSON;
+  message->encoding_type = UNYTE_ENCODING_CBOR; // sending CBOR
   message->generator_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 0;   // use default configured

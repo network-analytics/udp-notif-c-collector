@@ -7,12 +7,7 @@
 #include <string.h>
 #include <time.h>
 #include "unyte_udp_utils.h"
-
-// Segmentation_buffer parameters
-#define SIZE_BUF 10000          // size of buffer
-#define CLEAN_UP_PASS_SIZE 500  // number of iterations to clean up
-#define CLEAN_COUNT_MAX 50      // clean up segment buffer when count > CLEAN_COUNT_MAX
-#define EXPIRE_MSG 3            // seconds to consider the segmented message in the buffer expired (not receiving segments anymore)
+#include "unyte_udp_defaults.h"
 
 /**
  * total_size, current_size, gid, mid, only relevant for header cell
@@ -28,6 +23,9 @@ struct message_segment_list_cell
   uint32_t seqnum;                  // ordered by seqnum
   void *content;
   uint32_t content_size;
+  unyte_option_t *options_head;
+  unyte_option_t *options_tail;
+  uint32_t options_length;
   struct message_segment_list_cell *next;
   int to_clean_up;                  // 0 = not passed yet; 1 = cleaner passed once;
   time_t timestamp;
@@ -89,7 +87,7 @@ char *reassemble_payload(struct message_segment_list_cell *);
  * returns -2 if a content was already present and message is complete
  * returns -3 if a memory allocation failed
 */
-int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content);
+int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content, unyte_option_t *options);
 
 // Segment buffer management
 
@@ -117,7 +115,7 @@ void print_segment_list_string(struct message_segment_list_cell *head);
 /**
  * Adds a message segment in a list of segments of a given message
  */
-int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content);
+int insert_into_msl(struct message_segment_list_cell *head, uint32_t seqnum, int last, uint32_t payload_size, void *content, unyte_option_t *options);
 /**
  * Destroys a message
  */

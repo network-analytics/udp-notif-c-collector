@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
   if (argc != 3)
   {
     printf("Error: arguments not valid\n");
-    printf("Usage: ./client_sample <ip> <port>\n");
+    printf("Usage: ./client_legacy_proto <ip> <port>\n");
     exit(1);
   }
 
@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
   options.recvmmsg_vlen = USED_VLEN;
   options.socket_fd = socketfd; // passing socket file descriptor to listen to
   options.msg_dst_ip = false;   // destination IP not parsed from IP packet to improve performance
+  options.legacy = true;        // using legacy draft-ietf-netconf-udp-pub-channel-05 protocol
 
   /* Initialize collector */
   unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);
@@ -46,13 +47,13 @@ int main(int argc, char *argv[])
     }
     unyte_seg_met_t *seg = (unyte_seg_met_t *)seg_pointer;
 
-    // printf("unyte_udp_get_version: %u\n", unyte_udp_get_version(seg));
-    // printf("unyte_udp_get_space: %u\n", unyte_udp_get_space(seg));
-    // printf("unyte_udp_get_encoding_type: %u\n", unyte_udp_get_encoding_type(seg));
-    // printf("unyte_udp_get_header_length: %u\n", unyte_udp_get_header_length(seg));
-    // printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
-    // printf("unyte_udp_get_generator_id: %u\n", unyte_udp_get_generator_id(seg));
-    // printf("unyte_udp_get_message_id: %u\n", unyte_udp_get_message_id(seg));
+    printf("unyte_udp_get_version: %u\n", unyte_udp_get_version(seg));
+    printf("unyte_udp_get_space: %u\n", unyte_udp_get_space(seg));
+    printf("unyte_udp_get_encoding_type: %u\n", unyte_udp_get_encoding_type(seg));
+    printf("unyte_udp_get_header_length: %u\n", unyte_udp_get_header_length(seg));
+    printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
+    printf("unyte_udp_get_generator_id: %u\n", unyte_udp_get_generator_id(seg));
+    printf("unyte_udp_get_message_id: %u\n", unyte_udp_get_message_id(seg));
     // printf("unyte_udp_get_src[family]: %u\n", unyte_udp_get_src(seg)->ss_family);
     printf("unyte_udp_get_dest_addr[family]: %u\n", unyte_udp_get_dest_addr(seg) == NULL ? 0 : unyte_udp_get_dest_addr(seg)->ss_family); // NULL if options.msg_dst_ip is set to false (default)
     // char ip_canonical[100];
@@ -64,22 +65,22 @@ int main(int argc, char *argv[])
     //   printf("src port: %u\n", ntohs(((struct sockaddr_in6*)unyte_udp_get_src(seg))->sin6_port));
     // }
     // Only if options.msg_dst_ip is set to true
-    if (unyte_udp_get_dest_addr(seg) != NULL) {
-      char ip_dest_canonical[100];
-      if (unyte_udp_get_dest_addr(seg)->ss_family == AF_INET) {
-        printf("dest IPv4: %s\n", inet_ntop(unyte_udp_get_dest_addr(seg)->ss_family, &((struct sockaddr_in*)unyte_udp_get_dest_addr(seg))->sin_addr.s_addr, ip_dest_canonical, sizeof ip_dest_canonical));
-        printf("dest port: %u\n", ntohs(((struct sockaddr_in*)unyte_udp_get_dest_addr(seg))->sin_port));
-      } else {
-        printf("dest IPv6: %s\n", inet_ntop(unyte_udp_get_dest_addr(seg)->ss_family, &((struct sockaddr_in6*)unyte_udp_get_dest_addr(seg))->sin6_addr.s6_addr, ip_dest_canonical, sizeof ip_dest_canonical));
-        printf("dest port: %u\n", ntohs(((struct sockaddr_in6*)unyte_udp_get_dest_addr(seg))->sin6_port));
-      }
-    }
-    // printf("unyte_udp_get_payload: %.*s\n", unyte_udp_get_payload_length(seg), unyte_udp_get_payload(seg)); // payload may not be NULL-terminated
+    // if (unyte_udp_get_dest_addr(seg) != NULL) {
+    //   char ip_dest_canonical[100];
+    //   if (unyte_udp_get_dest_addr(seg)->ss_family == AF_INET) {
+    //     printf("dest IPv4: %s\n", inet_ntop(unyte_udp_get_dest_addr(seg)->ss_family, &((struct sockaddr_in*)unyte_udp_get_dest_addr(seg))->sin_addr.s_addr, ip_dest_canonical, sizeof ip_dest_canonical));
+    //     printf("dest port: %u\n", ntohs(((struct sockaddr_in*)unyte_udp_get_dest_addr(seg))->sin_port));
+    //   } else {
+    //     printf("dest IPv6: %s\n", inet_ntop(unyte_udp_get_dest_addr(seg)->ss_family, &((struct sockaddr_in6*)unyte_udp_get_dest_addr(seg))->sin6_addr.s6_addr, ip_dest_canonical, sizeof ip_dest_canonical));
+    //     printf("dest port: %u\n", ntohs(((struct sockaddr_in6*)unyte_udp_get_dest_addr(seg))->sin6_port));
+    //   }
+    // }
+    printf("unyte_udp_get_payload: %.*s\n", unyte_udp_get_payload_length(seg), unyte_udp_get_payload(seg)); // payload may not be NULL-terminated
     // printf("unyte_udp_get_payload_length: %u\n", unyte_udp_get_payload_length(seg));
 
     /* Processing sample */
     recv_count++;
-    print_udp_notif_header(seg->header, stdout);
+    // print_udp_notif_header(seg->header, stdout);
     // hexdump(seg->payload, seg->header->message_length - seg->header->header_length);
 
     fflush(stdout);

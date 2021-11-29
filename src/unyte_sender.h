@@ -10,7 +10,7 @@
 typedef struct
 {
   char *address;
-  uint16_t port;
+  char *port;
   uint default_mtu;
   char *interface;
   uint64_t socket_buff_size;  // socket buffer size in bytes
@@ -19,7 +19,7 @@ typedef struct
 struct unyte_sender_socket
 {
   int sockfd;
-  struct sockaddr_in *sock_in;
+  struct sockaddr_storage *sock_in;
   uint default_mtu;
 };
 
@@ -42,5 +42,6 @@ int free_sender_socket(struct unyte_sender_socket *sender_sk);
  * Free segmented messages after sent
  */
 int free_seg_msgs(struct unyte_segmented_msg *packets);
+int free_unyte_sent_message(unyte_message_t *msg);
 
 #endif

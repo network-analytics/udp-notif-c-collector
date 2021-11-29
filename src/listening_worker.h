@@ -6,23 +6,20 @@
 #include "unyte_udp_utils.h"
 #include "monitoring_worker.h"
 
-#define UDP_SIZE 65535          // max UDP packet size
-#define PARSER_QUEUE_SIZE 500  // input queue size
-#define DEFAULT_NB_PARSERS 10   // number of parser workers instances
-#define CLEANUP_FLAG_CRON 1000  // clean up cron in milliseconds
-
 /**
  * Input given to the listener thread when creating it.
  */
 struct listener_thread_input
 {
-  unyte_udp_queue_t *output_queue;      /* The queue used to push the segments outside. */
-  unyte_udp_queue_t *monitoring_queue;  /* The queue used to push monitoring stats of segments outside. */
-  unyte_udp_sock_t *conn;     /* Connection with addr, sockfd */
-  uint16_t recvmmsg_vlen;     /* The recvmmsg buffer array size */
-  uint nb_parsers;            /* Number of parsers instances to init */
-  uint parser_queue_size;     /* Size of parser queue in bytes */
-  uint monitoring_delay;      /* Monitoring frequence in seconds */
+  unyte_udp_queue_t *output_queue;     /* The queue used to push the segments outside. */
+  unyte_udp_queue_t *monitoring_queue; /* The queue used to push monitoring stats of segments outside. */
+  unyte_udp_sock_t *conn;              /* Connection with addr, sockfd */
+  uint16_t recvmmsg_vlen;              /* The recvmmsg buffer array size */
+  uint nb_parsers;                     /* Number of parsers instances to init */
+  uint parser_queue_size;              /* Size of parser queue in bytes */
+  uint monitoring_delay;               /* Monitoring frequence in seconds */
+  bool msg_dst_ip;                     /* IP packet dst IP parsed */
+  bool legacy_proto;                   /* Legacy UDP-notif protocol */
 };
 
 struct parse_worker

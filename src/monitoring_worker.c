@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "monitoring_worker.h"
+#include "unyte_udp_defaults.h"
 
 // TODO: new hashkey function + prepend unyte
 uint32_t hash_key(uint32_t gid)

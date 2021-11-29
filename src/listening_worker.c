@@ -14,6 +14,7 @@
 #include "parsing_worker.h"
 #include "unyte_udp_collector.h"
 #include "cleanup_worker.h"
+#include "unyte_udp_defaults.h"
 
 void stop_parsers_and_monitoring(struct parse_worker *parsers, struct listener_thread_input *in, struct monitoring_worker *monitoring)
 {
@@ -128,6 +129,8 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   parser_input->segment_buff = create_segment_buffer();
   parser_input->counters = counters;
   parser_input->counters->type = PARSER_WORKER;
+  parser_input->legacy_proto = in->legacy_proto;
+
   for (uint i = 0; i < ACTIVE_GIDS; i++)
   {
     (parser_input->counters->active_gids + i)->active = 0;
@@ -233,16 +236,11 @@ int listener(struct listener_thread_input *in)
   /* errno used to handle socket read errors */
   errno = 0;
 
-  /* Create parsing workers */
+  // Create parsing workers and monitoring worker
   struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * in->nb_parsers);
-  if (parsers == NULL)
-  {
-    printf("Malloc failed \n");
-    return -1;
-  }
-
   struct monitoring_worker *monitoring = malloc(sizeof(struct monitoring_worker));
-  if (monitoring == NULL)
+
+  if (parsers == NULL || monitoring == NULL)
   {
     printf("Malloc failed \n");
     return -1;
@@ -250,8 +248,7 @@ int listener(struct listener_thread_input *in)
 
   uint nb_counters = in->nb_parsers + 1;
   unyte_seg_counters_t *counters = unyte_udp_init_counters(nb_counters); // parsers + listening workers
-
-  if (counters == NULL)
+  if (parsers == NULL || monitoring == NULL || counters == NULL)
   {
     printf("Malloc failed \n");
     return -1;
@@ -280,8 +277,16 @@ int listener(struct listener_thread_input *in)
   {
     messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
     messages[i].msg_hdr.msg_iovlen = 1;
-    messages[i].msg_hdr.msg_control = (char *)malloc(cmbuf_len);
-    messages[i].msg_hdr.msg_controllen = cmbuf_len;
+    if (in->msg_dst_ip)
+    {
+      messages[i].msg_hdr.msg_control = (char *)malloc(cmbuf_len);
+      messages[i].msg_hdr.msg_controllen = cmbuf_len;
+    }
+    else
+    {
+      messages[i].msg_hdr.msg_control = NULL;
+      messages[i].msg_hdr.msg_controllen = 0;
+    }
   }
   // FIXME: malloc failed
   // TODO: malloc array of msg_hdr.msg_name and assign addresss to every messages[i]
@@ -294,7 +299,8 @@ int listener(struct listener_thread_input *in)
     {
       messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(UDP_SIZE * sizeof(char));
       messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
-      memset(messages[i].msg_hdr.msg_control, 0, cmbuf_len);
+      if (in->msg_dst_ip)
+        memset(messages[i].msg_hdr.msg_control, 0, cmbuf_len);
       messages[i].msg_hdr.msg_name = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
       messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_storage);
     }
@@ -308,16 +314,16 @@ int listener(struct listener_thread_input *in)
       free_monitoring_worker(monitoring);
       return -1;
     }
-
+    struct sockaddr_storage *dest_addr;
     for (int i = 0; i < read_count; i++)
     {
       // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
       if (messages[i].msg_len > 0)
       {
-        struct sockaddr_storage *dest_addr = get_dest_addr(&(messages[i].msg_hdr), in->conn);
-
-        if (dest_addr == NULL)
-          return -1;
+        if (in->msg_dst_ip)
+          dest_addr = get_dest_addr(&(messages[i].msg_hdr), in->conn);
+        else
+          dest_addr = NULL;
 
         unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_storage *)messages[i].msg_hdr.msg_name), dest_addr);
         if (seg == NULL)
@@ -335,19 +341,14 @@ int listener(struct listener_thread_input *in)
           // printf("1.losing message on parser queue\n");
           if (monitoring->running)
             unyte_udp_update_dropped_segment(listener_counter, seg_gid, seg_mid);
-          //TODO: syslog + count stat
           free(seg->buffer);
           free(seg);
         }
         else if (monitoring->running)
-        {
           unyte_udp_update_received_segment(listener_counter, seg_gid, seg_mid);
-        }
       }
       else
-      {
         free(messages[i].msg_hdr.msg_iov->iov_base);
-      }
     }
   }
 

@@ -18,9 +18,9 @@ int main(int argc, char *argv[])
   // Initialize collector options
   unyte_sender_options_t options = {0};
   options.address = argv[1];
-  options.port = atoi(argv[2]);
+  options.port = argv[2];
   options.default_mtu = MTU;
-  printf("Init sender on %s:%d | mtu: %d\n", options.address, options.port, MTU);
+  printf("Init sender on %s:%s | mtu: %d\n", options.address, options.port, MTU);
 
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
@@ -35,6 +35,9 @@ int main(int argc, char *argv[])
   message->generator_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 200; // use other than default configured
+  message->options = NULL;
+  message->options_len = 0; // should be initialized to 0 if no options are wanted
+
   unyte_send(sender_sk, message);
 
   // Freeing message and socket

@@ -1,5 +1,5 @@
 # C-Collector for UDP-notif
-Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-03](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-03).
+Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-04](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-04).
 
 ## Compiling and installing project
 See [INSTALL](INSTALL.md)
@@ -45,6 +45,8 @@ int main()
   options.socket_buff_size = 0;    // user socket buffer size in bytes. Default: 20971520 (20MB)
   options.parsers_queue_size = 0;  // parser queue size. Default: 500
   options.msg_dst_ip = false;      // destination IP not parsed from IP packet to improve performance. Default: false
+  options.legacy = false;          // Use legacy UDP pub channel protocol: draft-ietf-netconf-udp-pub-channel-05. Default: false.
+                                   // For legacy UDP pub channel: /!\ Used encoding types identifiers are taken from IANA.
   
 
   // Initialize collector
@@ -133,6 +135,27 @@ Two usecases are possible monitoring packets loss:
 - Drops on `PARSER_WORKER`: It means the client consuming the parsed messages is not consuming that fast. You may want to multithread the client consuming the `collector->queue` (output_queue) or increase the `output_queue_size` option to avoid packets drops on spikes.
 - Drops on `LISTENER_WORKER`: It means the `N` parsers are not consuming that fast and the `LISTENER_WORKER` is pushing to the `input_queue` faster than the parsers could read. You may want to increment the number of parsers instantiated or increase `parsers_queue_size` option to avoid packets drops on spikes.
 
+#### Legacy UDP-notif
+The library can support the legacy UDP-notif protocol specified in [draft-ietf-netconf-udp-pub-channel-05](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-pub-channel-05).
+
+There is an example [client_legacy_proto.c](examples/client_legacy_proto.c).
+
+To use this legacy protocol activate the flag legacy in the collector options:
+```c
+typedef struct
+{
+  int socket_fd;            // socket file descriptor
+  ...
+  bool legacy;              // legacy udp-notif: draft-ietf-netconf-udp-pub-channel-05.
+} unyte_udp_options_t;
+```
+
+Limitations of udp-pub-channel-05:
+- Same output `struct unyte_seg_met_t` is given to the user.
+- Flags from the protocol are not parsed.
+- No options are possible and thus no segmentation is supported
+- The encoding type identifiers are taken from the IANA instead of the draft to maintain consistency in the different pipelines. IANA codes could be checked in the main [draft](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-04#section-9).
+
 ### Usage of the sender
 The sender allows the user to send UDP-notif protocol to a IP/port specified. It cuts the message into segments of the protocol if it is larger than the MTU specified in parameters.
 
@@ -207,6 +230,7 @@ There are some samples implemented during the development of the project [here](
 - `client_sample.c` : simple example for minimal usage of the collector library.
 - `client_monitoring.c` : sample implementing the monitoring thread to read packets statistics.
 - `client_socket.c` : example using a custom socket instead of creating a new one from the library.
+- `client_legacy_proto.c` : example using a collector for legacy UDP-notif protocol: draft-ietf-netconf-udp-pub-channel-05.
 - `sender_sample.c` : simple example for minimal usage of the sender library.
 - `sender_json.c` : sample reading a json file and sending the bytes by the library.
 - `eBPF/client_ebpf_user.c`: example with a custom eBPF load balancer.

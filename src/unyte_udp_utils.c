@@ -192,7 +192,6 @@ unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um)
   header->version = segment[0] >> 4;
   header->space = 0;  // arbitrary
   header->encoding_type = get_encoding_IANA_ET_from_legacy((segment[1] & ET_MASK));
-  printf("HERE: %d", get_encoding_IANA_ET_from_legacy((segment[1] & ET_MASK)));
   header->header_length = HEADER_BYTES;
   header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
   header->generator_id = ntohl(deserialize_uint32((char *)segment, 4));

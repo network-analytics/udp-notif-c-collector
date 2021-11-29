@@ -124,6 +124,11 @@ unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struc
 unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um);
 
 /**
+ * Parse udp-notif segment out of *SEGMENT char buffer with legacy headers: draft-ietf-netconf-udp-pub-channel-05
+ */
+unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um);
+
+/**
  * Deep copies header values without options from src to dest 
  * Returns dest
  */

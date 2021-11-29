@@ -23,23 +23,21 @@ unyte_seg_met_t *create_assembled_msg(char *complete_msg, unyte_seg_met_t *src_p
   unyte_header_t *parsed_msg_header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
   unyte_metadata_t *parsed_msg_metadata = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
   struct sockaddr_storage *msg_src = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
-  struct sockaddr_storage *msg_dest = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+  struct sockaddr_storage *msg_dest = NULL;
   unyte_option_t *options = build_message_empty_options();
+  bool has_dest_ip = src_parsed_segment->metadata->dest != NULL;
 
-  if (parsed_msg == NULL || parsed_msg_header == NULL || parsed_msg_metadata == NULL || msg_src == NULL || msg_dest == NULL || options == NULL)
+  if (has_dest_ip)
+    msg_dest = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+
+  if (parsed_msg == NULL || parsed_msg_header == NULL || parsed_msg_metadata == NULL || msg_src == NULL || (has_dest_ip && msg_dest == NULL ) || options == NULL)
   {
-    if (parsed_msg != NULL)
-      free(parsed_msg);
-    if (parsed_msg_header != NULL)
-      free(parsed_msg_header);
-    if (parsed_msg_metadata != NULL)
-      free(parsed_msg_metadata);
-    if (msg_src != NULL)
-      free(msg_src);
-    if (msg_dest != NULL)
-      free(msg_dest);
-    if (options != NULL)
-      free(options);
+    free(parsed_msg);
+    free(parsed_msg_header);
+    free(parsed_msg_metadata);
+    free(msg_src);
+    free(msg_dest);
+    free(options);
     return NULL;
   }
 
@@ -75,6 +73,13 @@ int parser(struct parser_thread_input *in)
   struct segment_buffer *segment_buff = in->segment_buff;
   int max_malloc_errs = 3;
   unyte_seg_counters_t *counters = in->counters;
+
+  unyte_seg_met_t *(*parse_with_metadata_func)(char *, unyte_min_t *);
+  if (in->legacy_proto)
+    parse_with_metadata_func = &parse_with_metadata_legacy;
+  else
+    parse_with_metadata_func = &parse_with_metadata;
+
   while (1)
   {
     void *queue_bef = unyte_udp_queue_read(in->input);
@@ -85,7 +90,7 @@ int parser(struct parser_thread_input *in)
       continue;
     }
     unyte_min_t *queue_data = (unyte_min_t *)queue_bef;
-    unyte_seg_met_t *parsed_segment = parse_with_metadata(queue_data->buffer, queue_data);
+    unyte_seg_met_t *parsed_segment = (*parse_with_metadata_func)(queue_data->buffer, queue_data);
 
     if (parsed_segment == NULL)
       return -1;

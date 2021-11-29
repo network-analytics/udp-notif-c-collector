@@ -17,6 +17,7 @@ client_continuous
 client_monitoring
 client_socket
 client_ebpf_user
+client_legacy_proto
 vmlinux.h
 unyte_version.h
 

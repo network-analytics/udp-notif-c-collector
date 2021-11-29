@@ -75,7 +75,8 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 {
   unyte_header_t *header = malloc(sizeof(unyte_header_t));
   unyte_option_t *options_head = build_message_empty_options();
-  if (header == NULL || options_head == NULL)
+  unyte_metadata_t *meta = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
+  if (header == NULL || options_head == NULL || meta == NULL)
   {
     printf("Malloc failed \n");
     return NULL;
@@ -142,13 +143,66 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 
   memcpy(payload, (segment + header->header_length), pSize);
 
-  // Passing metadatas
-  unyte_metadata_t *meta = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
-  if (meta == NULL)
+  // Filling the struct
+  meta->src = um->src;
+  meta->dest = um->dest;
+
+  // The global segment container
+  unyte_seg_met_t *seg = malloc(sizeof(unyte_seg_met_t) + sizeof(payload));
+
+  if (seg == NULL)
   {
-    printf("Malloc failed.\n");
+    printf("Malloc failed \n");
     return NULL;
   }
+
+  seg->header = header;
+  seg->payload = payload;
+  seg->metadata = meta;
+
+  return seg;
+}
+
+int get_encoding_IANA_ET_from_legacy(uint8_t legacy_ET)
+{
+  // TODO: error ?
+  if (legacy_ET > SUPPORTED_ET_LEN)
+    return UNYTE_ENCODING_RESERVED;
+
+  return LEGACY_ET_TO_IANA[legacy_ET];
+}
+
+unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um)
+{
+  unyte_header_t *header = malloc(sizeof(unyte_header_t));
+  unyte_option_t *options_head = build_message_empty_options();
+  unyte_metadata_t *meta = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
+  if (header == NULL || options_head == NULL || meta == NULL)
+  {
+    printf("Malloc failed \n");
+    return NULL;
+  }
+
+  header->version = segment[0] >> 4;
+  header->space = 0;  // arbitrary
+  header->encoding_type = get_encoding_IANA_ET_from_legacy((segment[1] & ET_MASK));
+  header->header_length = HEADER_BYTES;
+  header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
+  header->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
+  header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
+  header->options = options_head;
+
+  int pSize = header->message_length - header->header_length;
+
+  char *payload = malloc(pSize);
+
+  if (payload == NULL)
+  {
+    printf("Malloc failed \n");
+    return NULL;
+  }
+
+  memcpy(payload, (segment + header->header_length), pSize);
 
   // Filling the struct
   meta->src = um->src;
@@ -193,7 +247,8 @@ unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met
 unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_met_t *src)
 {
   memcpy(dest->metadata->src, src->metadata->src, sizeof(struct sockaddr_storage));
-  memcpy(dest->metadata->dest, src->metadata->dest, sizeof(struct sockaddr_storage));
+  if (src->metadata->dest != NULL)
+    memcpy(dest->metadata->dest, src->metadata->dest, sizeof(struct sockaddr_storage));
   return dest;
 }
 
@@ -462,7 +517,7 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
   }
   memcpy(parsed_bytes + options_it, msg->payload, msg->header->message_length);
 
-  hexdump(parsed_bytes, packet_size);
+  // hexdump(parsed_bytes, packet_size);
   return parsed_bytes;
 }
 

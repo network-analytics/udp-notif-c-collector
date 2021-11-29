@@ -129,6 +129,8 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   parser_input->segment_buff = create_segment_buffer();
   parser_input->counters = counters;
   parser_input->counters->type = PARSER_WORKER;
+  parser_input->legacy_proto = in->legacy_proto;
+
   for (uint i = 0; i < ACTIVE_GIDS; i++)
   {
     (parser_input->counters->active_gids + i)->active = 0;

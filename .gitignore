@@ -13,6 +13,7 @@ scripts/resources
 examples/resources
 sender_continuous
 sender_custom_encoding
+sender_cbor
 client_continuous
 client_monitoring
 client_socket

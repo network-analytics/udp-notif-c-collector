@@ -211,7 +211,7 @@ int main()
   // UDP-notif
   message->version = 0;
   message->space = 0;
-  message->encoding_type = 1; // json but sending string
+  message->encoding_type = UNYTE_ENCODING_JSON; // json but sending string
   message->generator_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 200; // If set to 0, the default mtu set on options is used, else, this one is used
@@ -234,6 +234,7 @@ There are some samples implemented during the development of the project [here](
 - `client_legacy_proto.c` : example using a collector for legacy UDP-notif protocol: draft-ietf-netconf-udp-pub-channel-05.
 - `sender_sample.c` : simple example for minimal usage of the sender library.
 - `sender_json.c` : sample reading a json file and sending the bytes by the library.
+- `sender_cbor.c` : sample reading a CBOR (RFC7049) file and sending the bytes by the library.
 - `eBPF/client_ebpf_user.c`: example with a custom eBPF load balancer.
 
 ## Docker

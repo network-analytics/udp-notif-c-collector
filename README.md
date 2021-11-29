@@ -155,6 +155,7 @@ Limitations of udp-pub-channel-05:
 - Flags from the protocol are not parsed.
 - No options are possible and thus no segmentation is supported
 - The encoding type identifiers are taken from the IANA instead of the draft to maintain consistency in the different pipelines. IANA codes could be checked in the main [draft](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-04#section-9).
+- Google protobuf is returned as RESERVED(0) encoding type.
 
 ### Usage of the sender
 The sender allows the user to send UDP-notif protocol to a IP/port specified. It cuts the message into segments of the protocol if it is larger than the MTU specified in parameters.

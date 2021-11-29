@@ -247,7 +247,8 @@ unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met
 unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_met_t *src)
 {
   memcpy(dest->metadata->src, src->metadata->src, sizeof(struct sockaddr_storage));
-  memcpy(dest->metadata->dest, src->metadata->dest, sizeof(struct sockaddr_storage));
+  if (src->metadata->dest != NULL)
+    memcpy(dest->metadata->dest, src->metadata->dest, sizeof(struct sockaddr_storage));
   return dest;
 }
 
@@ -516,7 +517,7 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
   }
   memcpy(parsed_bytes + options_it, msg->payload, msg->header->message_length);
 
-  hexdump(parsed_bytes, packet_size);
+  // hexdump(parsed_bytes, packet_size);
   return parsed_bytes;
 }
 

@@ -6,7 +6,7 @@ endif
 
 ACLOCAL_AMFLAGS = -I m4
 
-bin_PROGRAMS = client_monitoring client_sample client_socket sender_json sender_sample sender_custom_encoding client_legacy_proto sender_cbor
+bin_PROGRAMS = client_monitoring client_sample client_socket sender_json sender_sample sender_custom_encoding client_legacy_proto sender_cbor client_bind_socket
 
 client_monitoring_SOURCES = client_monitoring.c
 client_monitoring_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC -pthread
@@ -39,6 +39,10 @@ client_legacy_proto_LDADD = $(srcdir)/../src/libunyte-udp-notif.la
 sender_cbor_SOURCES = sender_cbor.c
 sender_cbor_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC -pthread
 sender_cbor_LDADD = $(srcdir)/../src/libunyte-udp-notif.la
+
+client_bind_socket_SOURCES = client_bind_socket.c
+client_bind_socket_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC -pthread
+client_bind_socket_LDADD = $(srcdir)/../src/libunyte-udp-notif.la
 
 all-local:
 	@if [ ! -L $(builddir)/resources ]; then\

@@ -161,13 +161,24 @@ unsigned char *serialize_message(unyte_seg_met_t *message);
 unyte_IP_type_t get_IP_type(char *addr);
 
 /**
- * Creates socket and bind it to an address and port.
+ * Creates socket and binds it to an address and port.
  * char *address : string of the IPv4 or IPv6 to bind the socket to.
  * char *port : string of the port to be bind to.
  * uint64_t buffer_size : socket buffer size.
  * Returns socketfd of the created socket.
  */
 int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size);
+
+/**
+ * Creates socket and binds it to an interface using SO_BINDTODEVICE option.
+ * It is also boung to an IP and port.
+ * char *interface : string of the interface name to bind the socket to.
+ * char *address : string of the IPv4 or IPv6 to bind the socket to.
+ * char *port : string of the port to be bind to.
+ * uint64_t buffer_size : socket buffer size.
+ * Returns socketfd of the created socket.
+ */
+int unyte_udp_create_interface_bound_socket(char *interface, char *address, char *port, uint64_t buffer_size);
 
 uint options_total_bytes(unyte_option_t *options);
 

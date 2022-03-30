@@ -14,9 +14,11 @@ examples/resources
 sender_continuous
 sender_custom_encoding
 sender_cbor
+sender_json_bind_interface
 client_continuous
 client_monitoring
 client_socket
+client_interface_bind_socket
 client_ebpf_user
 client_legacy_proto
 vmlinux.h

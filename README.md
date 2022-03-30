@@ -10,6 +10,7 @@ The collector allows to read and parse UDP-notif protocol messages from a ip/por
 
 The api is in `unyte_udp_collector.h`:
 - `int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size)` from `unyte_udp_utils.h`: Helper that creates and binds a socket to an address and port.
+- `int unyte_udp_create_interface_bound_socket(char *interface, char *address, char *port, uint64_t buffer_size)` from `unyte_udp_utils.h`: Helper that creates a socket, binds it to an interface using SO_BINDTODEVICE option and binds it to an adress and port.
 - `unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: socketfd of the socket to listen to, recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)...
 - `void *unyte_udp_queue_read(unyte_udp_queue_t *queue)` from `unyte_udp_queue.h` : read from a queue a struct with all the message buffer and metadata.
 - `int unyte_udp_free_all(unyte_seg_met_t *seg)` from `unyte_udp_collector.h`: free all struct used on a message received.
@@ -232,8 +233,11 @@ There are some samples implemented during the development of the project [here](
 - `client_monitoring.c` : sample implementing the monitoring thread to read packets statistics.
 - `client_socket.c` : example using a custom socket instead of creating a new one from the library.
 - `client_legacy_proto.c` : example using a collector for legacy UDP-notif protocol: draft-ietf-netconf-udp-pub-channel-05.
+- `client_interface_bind_socket.c`: example using a socket bound to an interface, ip and port.
 - `sender_sample.c` : simple example for minimal usage of the sender library.
 - `sender_json.c` : sample reading a json file and sending the bytes by the library.
+- `sender_json_bind_interface.c` : sample reading a json file and sending the bytes by the library to a specific interface.
+- `sender_custom_encoding.c` : sample configurating a custom space and encoding type.
 - `sender_cbor.c` : sample reading a CBOR (RFC7049) file and sending the bytes by the library.
 - `eBPF/client_ebpf_user.c`: example with a custom eBPF load balancer.
 

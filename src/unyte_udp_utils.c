@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <net/if.h>
 #include <unistd.h>
 #include <assert.h>
 #include <stdbool.h>
@@ -580,6 +581,88 @@ int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size)
   {
     perror("Cannot set buffer size");
     exit(EXIT_FAILURE);
+  }
+
+  if (bind(sockfd, addr_info->ai_addr, (int)addr_info->ai_addrlen) == -1)
+  {
+    perror("Bind failed");
+    close(sockfd);
+    exit(EXIT_FAILURE);
+  }
+
+  // free addr_info after usage
+  freeaddrinfo(addr_info);
+
+  return sockfd;
+}
+
+
+int unyte_udp_create_interface_bound_socket(char *interface, char *address, char *port, uint64_t buffer_size)
+{
+  assert(interface != NULL);
+  assert(address != NULL);
+  assert(port != NULL);
+  assert(buffer_size > 0);
+
+  struct addrinfo *addr_info;
+  struct addrinfo hints;
+
+  memset(&hints, 0, sizeof(hints));
+
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV;
+
+  // Using getaddrinfo to support both IPv4 and IPv6
+  int rc = getaddrinfo(address, port, &hints, &addr_info);
+
+  if (rc != 0) {
+    printf("getaddrinfo error: %s\n", gai_strerror(rc));
+    exit(EXIT_FAILURE);
+  }
+
+  printf("Address type: %s | %d\n", (addr_info->ai_family == AF_INET) ? "IPv4" : "IPv6", ntohs(((struct sockaddr_in *)addr_info->ai_addr)->sin_port));
+
+  // create socket on UDP protocol
+  int sockfd = socket(addr_info->ai_family, addr_info->ai_socktype, addr_info->ai_protocol);
+
+  // handle error
+  if (sockfd < 0)
+  {
+    perror("Cannot create socket");
+    exit(EXIT_FAILURE);
+  }
+
+  // Use SO_REUSEPORT to be able to launch multiple collector on the same address
+  int optval = 1;
+  if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int)) < 0)
+  {
+    perror("Cannot set SO_REUSEPORT option on socket");
+    exit(EXIT_FAILURE);
+  }
+
+  uint64_t receive_buf_size = buffer_size;
+  if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size)) < 0)
+  {
+    perror("Cannot set buffer size");
+    exit(EXIT_FAILURE);
+  }
+
+  const char *interface_name = interface;
+  if (interface_name != NULL && (strlen(interface_name) > 0))
+  {
+    printf("Binding to interface: %s\n", interface_name);
+    int len = strnlen(interface_name, IFNAMSIZ);
+    if (len == IFNAMSIZ)
+    {
+      fprintf(stderr, "Too long iface name");
+      exit(EXIT_FAILURE);
+    }
+    if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, len) < 0)
+    {
+      perror("Bind socket to interface failed");
+      exit(EXIT_FAILURE);
+    }
   }
 
   if (bind(sockfd, addr_info->ai_addr, (int)addr_info->ai_addrlen) == -1)

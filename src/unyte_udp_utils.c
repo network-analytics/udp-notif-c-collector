@@ -651,7 +651,7 @@ int unyte_udp_create_interface_bound_socket(char *interface, char *address, char
   const char *interface_name = interface;
   if (interface_name != NULL && (strlen(interface_name) > 0))
   {
-    printf("Setting interface: %s\n", interface_name);
+    printf("Binding to interface: %s\n", interface_name);
     int len = strnlen(interface_name, IFNAMSIZ);
     if (len == IFNAMSIZ)
     {

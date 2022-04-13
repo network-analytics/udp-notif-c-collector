@@ -22,7 +22,8 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  int sockfd = unyte_udp_create_interface_bound_socket(argv[1], argv[2], argv[3], DEFAULT_SK_BUFF_SIZE);
+  bool ipv6_only = false;
+  int sockfd = unyte_udp_create_interface_bound_socket(argv[1], argv[2], argv[3], ipv6_only, DEFAULT_SK_BUFF_SIZE);
 
   // Initialize collector options
   unyte_udp_options_t options = {0};

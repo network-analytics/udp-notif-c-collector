@@ -9,7 +9,6 @@
 #include <net/if.h>
 #include <unistd.h>
 #include <assert.h>
-#include <stdbool.h>
 #include "unyte_udp_utils.h"
 #include "hexdump.h"
 #include "unyte_udp_constants.h"
@@ -597,7 +596,7 @@ int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size)
 }
 
 
-int unyte_udp_create_interface_bound_socket(char *interface, char *address, char *port, uint64_t buffer_size)
+int unyte_udp_create_interface_bound_socket(char *interface, char *address, char *port, bool ipv6_only, uint64_t buffer_size)
 {
   assert(interface != NULL);
   assert(address != NULL);
@@ -630,6 +629,7 @@ int unyte_udp_create_interface_bound_socket(char *interface, char *address, char
   if (sockfd < 0)
   {
     perror("Cannot create socket");
+    freeaddrinfo(addr_info);
     exit(EXIT_FAILURE);
   }
 
@@ -638,6 +638,7 @@ int unyte_udp_create_interface_bound_socket(char *interface, char *address, char
   if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int)) < 0)
   {
     perror("Cannot set SO_REUSEPORT option on socket");
+    freeaddrinfo(addr_info);
     exit(EXIT_FAILURE);
   }
 
@@ -645,6 +646,7 @@ int unyte_udp_create_interface_bound_socket(char *interface, char *address, char
   if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size)) < 0)
   {
     perror("Cannot set buffer size");
+    freeaddrinfo(addr_info);
     exit(EXIT_FAILURE);
   }
 
@@ -656,11 +658,24 @@ int unyte_udp_create_interface_bound_socket(char *interface, char *address, char
     if (len == IFNAMSIZ)
     {
       fprintf(stderr, "Too long iface name");
+      freeaddrinfo(addr_info);
       exit(EXIT_FAILURE);
     }
     if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, interface_name, len) < 0)
     {
       perror("Bind socket to interface failed");
+      freeaddrinfo(addr_info);
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  if (addr_info->ai_family == AF_INET6 && ipv6_only)
+  {
+    int optvalyes = 1;
+    if (setsockopt(sockfd, IPPROTO_IPV6, IPV6_V6ONLY, &optvalyes, sizeof(optvalyes)) < 0)
+    {
+      perror("Cannot set IPV6_V6ONLY");
+      freeaddrinfo(addr_info);
       exit(EXIT_FAILURE);
     }
   }
@@ -669,6 +684,7 @@ int unyte_udp_create_interface_bound_socket(char *interface, char *address, char
   {
     perror("Bind failed");
     close(sockfd);
+    freeaddrinfo(addr_info);
     exit(EXIT_FAILURE);
   }
 

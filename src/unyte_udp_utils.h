@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <stdbool.h>
 
 #define SPACE_MASK 0b00010000
 #define ET_MASK 0b00001111
@@ -175,10 +176,11 @@ int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size);
  * char *interface : string of the interface name to bind the socket to.
  * char *address : string of the IPv4 or IPv6 to bind the socket to.
  * char *port : string of the port to be bind to.
+ * bool ipv6_only : boolean activating ipv6 only. Only valid if *address is an IPv6.
  * uint64_t buffer_size : socket buffer size.
  * Returns socketfd of the created socket.
  */
-int unyte_udp_create_interface_bound_socket(char *interface, char *address, char *port, uint64_t buffer_size);
+int unyte_udp_create_interface_bound_socket(char *interface, char *address, char *port, bool ipv6_only, uint64_t buffer_size);
 
 uint options_total_bytes(unyte_option_t *options);
 

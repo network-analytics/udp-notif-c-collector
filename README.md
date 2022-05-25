@@ -1,5 +1,5 @@
 # C-Collector for UDP-notif
-Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-04](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-04).
+Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-06](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-06).
 
 ## Compiling and installing project
 See [INSTALL](INSTALL.md)
@@ -100,8 +100,8 @@ typedef struct unyte_segment_with_metadata
 } unyte_seg_met_t;
 ```
 ##### Getters for segments data
-- `uint8_t unyte_udp_get_version(unyte_seg_met_t *message);` : encoding version
-- `uint8_t unyte_udp_get_space(unyte_seg_met_t *message);` : space of encoding version
+- `uint8_t unyte_udp_get_version(unyte_seg_met_t *message);` : header encoding version
+- `uint8_t unyte_udp_get_space(unyte_seg_met_t *message);` : space of media type version
 - `uint8_t unyte_udp_get_media_type(unyte_seg_met_t *message);` : dentifier to indicate the media type used for the Notification Message
 - `uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message);` : length of the message header in octets
 - `uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message);` : total length of the message within one UDP datagram, measured in octets, including the message header
@@ -155,7 +155,7 @@ Limitations of udp-pub-channel-05:
 - Same output `struct unyte_seg_met_t` is given to the user.
 - Flags from the protocol are not parsed.
 - No options are possible and thus no segmentation is supported
-- The encoding type identifiers are taken from the IANA instead of the draft to maintain consistency in the different pipelines. IANA codes could be checked in the main [draft](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-04#section-9).
+- The media type identifiers are taken from the IANA instead of the draft to maintain consistency in the different pipelines. IANA codes could be checked in the main [draft](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-04#section-9).
 - Google protobuf is returned as RESERVED(0) encoding type.
 
 ### Usage of the sender
@@ -173,7 +173,7 @@ typedef struct unyte_message
   // UDP-notif
   uint8_t version : 3;            // UDP-notif protocol version
   uint8_t space : 1;              // UDP-notif protocol space
-  uint8_t encoding_type : 4;      // UDP-notif protocol encoding type
+  uint8_t media_type : 4;         // UDP-notif protocol media type
   uint32_t observation_domain_id; // UDP-notif protocol observation domain id
   uint32_t message_id;            // UDP-notif protocol message id
 } unyte_message_t;
@@ -212,7 +212,7 @@ int main()
   // UDP-notif
   message->version = 0;
   message->space = 0;
-  message->encoding_type = UNYTE_ENCODING_JSON; // json but sending string
+  message->media_type = UNYTE_MEDIATYPE_JSON; // json but sending string
   message->observation_domain_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 200; // If set to 0, the default mtu set on options is used, else, this one is used

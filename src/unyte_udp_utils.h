@@ -24,7 +24,7 @@ typedef struct unyte_header
 {
   uint8_t version : 3;
   uint8_t space : 1;
-  uint8_t encoding_type : 4;
+  uint8_t media_type : 4;
   uint8_t header_length : 8;
   uint16_t message_length;
   uint32_t observation_domain_id;
@@ -98,7 +98,7 @@ typedef struct unyte_message
   // UDP-notif
   uint8_t version : 3;
   uint8_t space : 1;
-  uint8_t encoding_type : 4;
+  uint8_t media_type : 4;
   uint32_t observation_domain_id;
   uint32_t message_id;
 

@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
   // UDP-notif
   message->version = 0;
   message->space = UNYTE_SPACE_STANDARD;
-  message->encoding_type = UNYTE_ENCODING_JSON;
+  message->media_type = UNYTE_MEDIATYPE_JSON;
   message->observation_domain_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 0;   // use default configured

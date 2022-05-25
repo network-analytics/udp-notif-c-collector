@@ -84,7 +84,7 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 
   header->version = segment[0] >> 5;
   header->space = (segment[0] & SPACE_MASK);
-  header->encoding_type = (segment[0] & ET_MASK);
+  header->media_type = (segment[0] & ET_MASK);
   header->header_length = segment[1];
   header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
   header->observation_domain_id = ntohl(deserialize_uint32((char *)segment, 4));
@@ -167,7 +167,7 @@ int get_encoding_IANA_ET_from_legacy(uint8_t legacy_ET)
 {
   // TODO: error ?
   if (legacy_ET > SUPPORTED_ET_LEN)
-    return UNYTE_ENCODING_RESERVED;
+    return UNYTE_MEDIATYPE_RESERVED;
 
   return LEGACY_ET_TO_IANA[legacy_ET];
 }
@@ -185,7 +185,7 @@ unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um)
 
   header->version = segment[0] >> 4;
   header->space = 0;  // arbitrary
-  header->encoding_type = get_encoding_IANA_ET_from_legacy((segment[1] & ET_MASK));
+  header->media_type = get_encoding_IANA_ET_from_legacy((segment[1] & ET_MASK));
   header->header_length = HEADER_BYTES;
   header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
   header->observation_domain_id = ntohl(deserialize_uint32((char *)segment, 4));
@@ -230,7 +230,7 @@ unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um)
  */
 unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met_t *src)
 {
-  dest->header->encoding_type = src->header->encoding_type;
+  dest->header->media_type = src->header->media_type;
   dest->header->observation_domain_id = src->header->observation_domain_id;
   dest->header->header_length = src->header->header_length;
   dest->header->message_id = src->header->message_id;
@@ -260,7 +260,7 @@ void print_udp_notif_header(unyte_header_t *header, FILE *std)
   fprintf(std, "\n###### Unyte header ######\n");
   fprintf(std, "Version: %u\n", header->version);
   fprintf(std, "Space: %u\n", header->space);
-  fprintf(std, "Encoding: %u\n", header->encoding_type);
+  fprintf(std, "Media type: %u\n", header->media_type);
   fprintf(std, "Header length: %u\n", header->header_length);
   fprintf(std, "Message length: %u\n", header->message_length);
   fprintf(std, "Observation domain ID: %u\n", header->observation_domain_id);
@@ -403,7 +403,7 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
     current_seg->header->message_id = message->message_id;
     current_seg->header->space = message->space;
     current_seg->header->version = message->version;
-    current_seg->header->encoding_type = message->encoding_type;
+    current_seg->header->media_type = message->media_type;
     current_seg->header->header_length = HEADER_BYTES + options_header_bytes;
     current_seg->header->message_length = message->buffer_len;
     current_seg->header->options = options_header;
@@ -437,7 +437,7 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
       current_seg->header->message_id = message->message_id;
       current_seg->header->space = message->space;
       current_seg->header->version = message->version;
-      current_seg->header->encoding_type = message->encoding_type;
+      current_seg->header->media_type = message->media_type;
       current_seg->header->message_length = bytes_to_send;
       current_seg->header->header_length = HEADER_BYTES + UNYTE_SEGMENTATION_OPTION_LEN;
 
@@ -478,7 +478,7 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
     packet_size += UNYTE_SEGMENTATION_OPTION_LEN;
   }
   unsigned char *parsed_bytes = (unsigned char *)malloc(packet_size);
-  parsed_bytes[0] = (((msg->header->version << 5) + (msg->header->space << 4) + (msg->header->encoding_type)));
+  parsed_bytes[0] = (((msg->header->version << 5) + (msg->header->space << 4) + (msg->header->media_type)));
   parsed_bytes[1] = msg->header->header_length;
   // message length
   parsed_bytes[2] = ((packet_size) >> 8);
@@ -696,7 +696,7 @@ int unyte_udp_create_interface_bound_socket(char *interface, char *address, char
 
 uint8_t unyte_udp_get_version(unyte_seg_met_t *message) { return message->header->version; }
 uint8_t unyte_udp_get_space(unyte_seg_met_t *message) { return message->header->space; }
-uint8_t unyte_udp_get_media_type(unyte_seg_met_t *message) { return message->header->encoding_type; }
+uint8_t unyte_udp_get_media_type(unyte_seg_met_t *message) { return message->header->media_type; }
 uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message) { return message->header->header_length; }
 uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message) { return message->header->message_length; }
 uint32_t unyte_udp_get_observation_domain_id(unyte_seg_met_t *message) { return message->header->observation_domain_id; }

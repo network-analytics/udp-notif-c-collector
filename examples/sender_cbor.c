@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
   // UDP-notif
   message->version = 0;
   message->space = UNYTE_SPACE_STANDARD;
-  message->media_type = UNYTE_MEDIATYPE_CBOR; // sending CBOR
+  message->media_type = UNYTE_MEDIATYPE_YANG_CBOR; // sending CBOR
   message->observation_domain_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 0;   // use default configured

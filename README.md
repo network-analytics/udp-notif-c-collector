@@ -212,7 +212,7 @@ int main()
   // UDP-notif
   message->version = 0;
   message->space = 0;
-  message->media_type = UNYTE_MEDIATYPE_JSON; // json but sending string
+  message->media_type = UNYTE_MEDIATYPE_YANG_JSON; // json but sending string
   message->observation_domain_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 200; // If set to 0, the default mtu set on options is used, else, this one is used

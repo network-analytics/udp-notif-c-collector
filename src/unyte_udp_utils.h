@@ -24,10 +24,10 @@ typedef struct unyte_header
 {
   uint8_t version : 3;
   uint8_t space : 1;
-  uint8_t encoding_type : 4;
+  uint8_t media_type : 4;
   uint8_t header_length : 8;
   uint16_t message_length;
-  uint32_t generator_id;
+  uint32_t observation_domain_id;
   uint32_t message_id;
 
   /* Segmentation options */
@@ -58,7 +58,7 @@ typedef struct unyte_segment_with_metadata
 typedef struct unyte_minimal
 {
   /* Dispatching informations */
-  uint32_t generator_id;
+  uint32_t observation_domain_id;
   uint32_t message_id;
 
   /* Serialized datas */
@@ -98,8 +98,8 @@ typedef struct unyte_message
   // UDP-notif
   uint8_t version : 3;
   uint8_t space : 1;
-  uint8_t encoding_type : 4;
-  uint32_t generator_id;
+  uint8_t media_type : 4;
+  uint32_t observation_domain_id;
   uint32_t message_id;
 
   // Custom options
@@ -186,10 +186,10 @@ uint options_total_bytes(unyte_option_t *options);
 
 uint8_t unyte_udp_get_version(unyte_seg_met_t *message);
 uint8_t unyte_udp_get_space(unyte_seg_met_t *message);
-uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message);
+uint8_t unyte_udp_get_media_type(unyte_seg_met_t *message);
 uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message);
 uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message);
-uint32_t unyte_udp_get_generator_id(unyte_seg_met_t *message);
+uint32_t unyte_udp_get_observation_domain_id(unyte_seg_met_t *message);
 uint32_t unyte_udp_get_message_id(unyte_seg_met_t *message);
 struct sockaddr_storage *unyte_udp_get_src(unyte_seg_met_t *message);
 struct sockaddr_storage *unyte_udp_get_dest_addr(unyte_seg_met_t *message);

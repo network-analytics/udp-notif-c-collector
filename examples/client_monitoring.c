@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     // Getters
     // printf("Thread id: %ld\n", unyte_udp_get_thread_id(counter));
     // printf("Thread type: %d\n", unyte_udp_get_th_type(counter));
-    // printf("Generator id: %d\n", unyte_udp_get_gen_id(counter));
+    // printf("Observation domain id: %d\n", unyte_udp_get_od_id(counter));
     // printf("Last msg id: %d\n", unyte_udp_get_last_msg_id(counter));
     // printf("Received OK: %d\n", unyte_udp_get_received_seg(counter));
     // printf("Dropped: %d\n", unyte_udp_get_dropped_seg(counter));

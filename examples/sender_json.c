@@ -57,8 +57,8 @@ int main(int argc, char *argv[])
 
   struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
 
-  struct buffer_to_send *bf_send = read_json_file(200); // resources/json-200.json
-  // struct buffer_to_send *bf_send = read_json_file(8950); // resources/json-8950.json
+  // struct buffer_to_send *bf_send = read_json_file(200); // resources/json-200.json
+  struct buffer_to_send *bf_send = read_json_file(8950); // resources/json-8950.json
 
   unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
   message->buffer = bf_send->buffer;
@@ -66,8 +66,8 @@ int main(int argc, char *argv[])
   // UDP-notif
   message->version = 0;
   message->space = UNYTE_SPACE_STANDARD;
-  message->encoding_type = UNYTE_ENCODING_JSON;
-  message->generator_id = 1000;
+  message->media_type = UNYTE_MEDIATYPE_YANG_JSON;
+  message->observation_domain_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 0;   // use default configured
   message->options = NULL; // no custom options sent

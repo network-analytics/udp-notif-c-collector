@@ -65,9 +65,9 @@ int main(int argc, char *argv[])
   message->buffer_len = bf_send->buffer_len;
   // UDP-notif
   message->version = 0;
-  message->space = UNYTE_SPACE_NON_STANDARD; // Custom space
-  message->encoding_type = 4;                // Custom encoding type
-  message->generator_id = 1000;
+  message->space = UNYTE_SPACE_NON_STANDARD;  // Custom space
+  message->media_type = 4;                    // Custom encoding type
+  message->observation_domain_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 0; // use default configured
 

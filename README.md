@@ -1,5 +1,5 @@
 # C-Collector for UDP-notif
-Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-04](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-04).
+Library for collecting UDP-notif protocol messages defined in the IETF draft [draft-ietf-netconf-udp-notif-06](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-06).
 
 ## Compiling and installing project
 See [INSTALL](INSTALL.md)
@@ -10,7 +10,7 @@ The collector allows to read and parse UDP-notif protocol messages from a ip/por
 
 The api is in `unyte_udp_collector.h`:
 - `int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size)` from `unyte_udp_utils.h`: Helper that creates and binds a socket to an address and port.
-- `int unyte_udp_create_interface_bound_socket(char *interface, char *address, char *port, uint64_t buffer_size)` from `unyte_udp_utils.h`: Helper that creates a socket, binds it to an interface using SO_BINDTODEVICE option and binds it to an adress and port.
+- `int unyte_udp_create_interface_bound_socket(char *interface, char *address, char *port, uint64_t buffer_size)` from `unyte_udp_utils.h`: Helper that creates a socket, binds it to an interface using SO_BINDTODEVICE option and binds it to an address and port.
 - `unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: socketfd of the socket to listen to, recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)...
 - `void *unyte_udp_queue_read(unyte_udp_queue_t *queue)` from `unyte_udp_queue.h` : read from a queue a struct with all the message buffer and metadata.
 - `int unyte_udp_free_all(unyte_seg_met_t *seg)` from `unyte_udp_collector.h`: free all struct used on a message received.
@@ -62,10 +62,10 @@ int main()
     // TODO: Process the UDP-notif message here
     printf("unyte_udp_get_version: %u\n", unyte_udp_get_version(seg));
     printf("unyte_udp_get_space: %u\n", unyte_udp_get_space(seg));
-    printf("unyte_udp_get_encoding_type: %u\n", unyte_udp_get_encoding_type(seg));
+    printf("unyte_udp_get_media_type: %u\n", unyte_udp_get_media_type(seg));
     printf("unyte_udp_get_header_length: %u\n", unyte_udp_get_header_length(seg));
     printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
-    printf("unyte_udp_get_generator_id: %u\n", unyte_udp_get_generator_id(seg));
+    printf("unyte_udp_get_observation_domain_id: %u\n", unyte_udp_get_observation_domain_id(seg));
     printf("unyte_udp_get_message_id: %u\n", unyte_udp_get_message_id(seg));
     printf("unyte_udp_get_src[family]: %u\n", unyte_udp_get_src(seg)->ss_family);               // AF_INET for IPv4 or AF_INET6 for IPv6
     printf("unyte_udp_get_dest_addr[family]: %u\n", unyte_udp_get_dest_addr(seg)->ss_family);   // AF_INET for IPv4 or AF_INET6 for IPv6
@@ -100,12 +100,12 @@ typedef struct unyte_segment_with_metadata
 } unyte_seg_met_t;
 ```
 ##### Getters for segments data
-- `uint8_t unyte_udp_get_version(unyte_seg_met_t *message);` : encoding version
-- `uint8_t unyte_udp_get_space(unyte_seg_met_t *message);` : space of encoding version
-- `uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message);` : dentifier to indicate the encoding type used for the Notification Message
+- `uint8_t unyte_udp_get_version(unyte_seg_met_t *message);` : header encoding version
+- `uint8_t unyte_udp_get_space(unyte_seg_met_t *message);` : space of media type version
+- `uint8_t unyte_udp_get_media_type(unyte_seg_met_t *message);` : dentifier to indicate the media type used for the Notification Message
 - `uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message);` : length of the message header in octets
 - `uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message);` : total length of the message within one UDP datagram, measured in octets, including the message header
-- `uint32_t unyte_udp_get_generator_id(unyte_seg_met_t *message);` : observation domain id of the message
+- `uint32_t unyte_udp_get_observation_domain_id(unyte_seg_met_t *message);` : observation domain id of the message
 - `uint32_t unyte_udp_get_message_id(unyte_seg_met_t *message);` : message id of the message
 - `struct sockaddr_storage * unyte_udp_get_src(unyte_seg_met_t *message);` : source IP and port of the message. Could be IPv4 or IPv6.
 - `struct sockaddr_storage * unyte_udp_get_dest_addr(unyte_seg_met_t *message);` : collector address. Could be IPv4 or IPv6.
@@ -124,7 +124,7 @@ typedef struct
   uint monitoring_delay;        // monitoring queue frequence in seconds. Default: 5 seconds
 } unyte_udp_options_t;
 ```
-The thread will every `monitoring_delay` seconds send all generators id's counters.
+The thread will every `monitoring_delay` seconds send all observation domain id's counters.
 
 ##### Type of threads
 The threads types are defined in `monitoring_worker.h`:
@@ -155,7 +155,7 @@ Limitations of udp-pub-channel-05:
 - Same output `struct unyte_seg_met_t` is given to the user.
 - Flags from the protocol are not parsed.
 - No options are possible and thus no segmentation is supported
-- The encoding type identifiers are taken from the IANA instead of the draft to maintain consistency in the different pipelines. IANA codes could be checked in the main [draft](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-04#section-9).
+- The media type identifiers are taken from the IANA instead of the draft to maintain consistency in the different pipelines. IANA codes could be checked in the main [draft](https://datatracker.ietf.org/doc/html/draft-ietf-netconf-udp-notif-04#section-9).
 - Google protobuf is returned as RESERVED(0) encoding type.
 
 ### Usage of the sender
@@ -166,16 +166,16 @@ The message to send have the following structure:
 ```c
 typedef struct unyte_message
 {
-  uint used_mtu;              // MTU to use for cutting the message to segments
-  void *buffer;               // pointer to buffer to send
-  uint buffer_len;            // length of the buffer to send
+  uint used_mtu;                  // MTU to use for cutting the message to segments
+  void *buffer;                   // pointer to buffer to send
+  uint buffer_len;                // length of the buffer to send
 
   // UDP-notif
-  uint8_t version : 3;        // UDP-notif protocol version
-  uint8_t space : 1;          // UDP-notif protocol space
-  uint8_t encoding_type : 4;  // UDP-notif protocol encoding type
-  uint32_t generator_id;      // UDP-notif protocol observation domain id
-  uint32_t message_id;        // UDP-notif protocol message id
+  uint8_t version : 3;            // UDP-notif protocol version
+  uint8_t space : 1;              // UDP-notif protocol space
+  uint8_t media_type : 4;         // UDP-notif protocol media type
+  uint32_t observation_domain_id; // UDP-notif protocol observation domain id
+  uint32_t message_id;            // UDP-notif protocol message id
 } unyte_message_t;
 ```
 
@@ -212,8 +212,8 @@ int main()
   // UDP-notif
   message->version = 0;
   message->space = 0;
-  message->encoding_type = UNYTE_ENCODING_JSON; // json but sending string
-  message->generator_id = 1000;
+  message->media_type = UNYTE_MEDIATYPE_YANG_JSON; // json but sending string
+  message->observation_domain_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 200; // If set to 0, the default mtu set on options is used, else, this one is used
 

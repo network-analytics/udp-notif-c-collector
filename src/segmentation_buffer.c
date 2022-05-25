@@ -229,12 +229,12 @@ struct message_segment_list_cell *get_segment_list(struct segment_buffer *buf, u
 
 void print_segment_list_header(struct message_segment_list_cell *head)
 {
-  printf("Segment list: gid %d mid %d current size %d total size %d\n", head->gid, head->mid, head->current_size, head->total_size);
+  printf("Segment list: odid %d mid %d current size %d total size %d\n", head->odid, head->mid, head->current_size, head->total_size);
 }
 
 void print_segment_list_int(struct message_segment_list_cell *head)
 {
-  printf("Segment list: gid %d mid %d current size %d total size %d\n", head->gid, head->mid, head->current_size, head->total_size);
+  printf("Segment list: odid %d mid %d current size %d total size %d\n", head->odid, head->mid, head->current_size, head->total_size);
   struct message_segment_list_cell *cur = head;
   while (cur->next != NULL)
   {
@@ -245,7 +245,7 @@ void print_segment_list_int(struct message_segment_list_cell *head)
 
 void print_segment_list_string(struct message_segment_list_cell *head)
 {
-  printf("Segment list: gid %d mid %d current size %d total size %d\n", head->gid, head->mid, head->current_size, head->total_size);
+  printf("Segment list: odid %d mid %d current size %d total size %d\n", head->odid, head->mid, head->current_size, head->total_size);
   struct message_segment_list_cell *cur = head;
   while (cur->next != NULL)
   {
@@ -254,12 +254,12 @@ void print_segment_list_string(struct message_segment_list_cell *head)
   }
 }
 
-struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint32_t mid)
+struct message_segment_list_cell *create_message_segment_list(uint32_t odid, uint32_t mid)
 {
   struct message_segment_list_cell *res = malloc(sizeof(struct message_segment_list_cell));
   if (res == NULL)
     return NULL;
-  res->gid = gid;
+  res->odid = odid;
   res->mid = mid;
   res->current_size = 0;
   res->total_size = 0;
@@ -318,7 +318,7 @@ int clear_collision_list(struct segment_buffer *buf, struct collision_list_cell 
   {
     res++;
     temp = cur->next;
-    clear_segment_list(buf, cur->head->gid, cur->head->mid);
+    clear_segment_list(buf, cur->head->odid, cur->head->mid);
     cur = temp;
   }
   free(head);

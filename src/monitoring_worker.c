@@ -6,34 +6,34 @@
 #include "unyte_udp_defaults.h"
 
 // TODO: new hashkey function + prepend unyte
-uint32_t hash_key(uint32_t gid)
+uint32_t hash_key(uint32_t odid)
 {
-  return (gid) % GID_COUNTERS;
+  return (odid) % GID_COUNTERS;
 }
 
 /**
  * Initialize element unyte_gid_counter_t
  */
-void init_gid_counter(unyte_gid_counter_t *gid_counters)
+void init_gid_counter(unyte_gid_counter_t *odid_counters)
 {
-  unyte_gid_counter_t *cur = gid_counters;
+  unyte_gid_counter_t *cur = odid_counters;
   cur->segments_received = 0;
   cur->segments_dropped = 0;
   cur->segments_reordered = 0;
   cur->last_message_id = 0;
-  cur->generator_id = 0;
+  cur->observation_domain_id = 0;
   cur->next = NULL;
 }
 
 /**
- * Reinitialize the counter for the element *gid_counter
+ * Reinitialize the counter for the element *odid_counter
  */
-void reinit_gid_counters(unyte_gid_counter_t *gid_counter)
+void reinit_odid_counters(unyte_gid_counter_t *odid_counter)
 {
-  gid_counter->last_message_id = 0;
-  gid_counter->segments_received = 0;
-  gid_counter->segments_dropped = 0;
-  gid_counter->segments_reordered = 0;
+  odid_counter->last_message_id = 0;
+  odid_counter->segments_received = 0;
+  odid_counter->segments_dropped = 0;
+  odid_counter->segments_reordered = 0;
 }
 
 /**
@@ -108,7 +108,7 @@ unyte_gid_counter_t *get_gid_counter(unyte_seg_counters_t *counters, uint32_t gi
   while (cur->next != NULL)
   {
     cur = cur->next;
-    if (cur->generator_id == gid)
+    if (cur->observation_domain_id == gid)
       return cur;
   }
   // Creates a new one on last element of linear probing linked list
@@ -116,7 +116,7 @@ unyte_gid_counter_t *get_gid_counter(unyte_seg_counters_t *counters, uint32_t gi
   // Malloc failed
   if (cur->next == NULL)
     return NULL;
-  cur->next->generator_id = gid;
+  cur->next->observation_domain_id = gid;
   cur->next->segments_received = 0;
   cur->next->segments_dropped = 0;
   cur->next->segments_reordered = 0;
@@ -129,7 +129,7 @@ unyte_gid_counter_t *get_gid_counter(unyte_seg_counters_t *counters, uint32_t gi
       printf("Malloc failed.\n");
   }
   // add gid to active gids
-  counters->active_gids[counters->active_gids_length].generator_id = gid;
+  counters->active_gids[counters->active_gids_length].observation_domain_id = gid;
   counters->active_gids[counters->active_gids_length].active = 0;
   counters->active_gids_length += 1;
   return cur->next;
@@ -147,7 +147,7 @@ void remove_gid_counter(unyte_seg_counters_t *counters, uint32_t gid)
     next_counter = cur->next;
     if (next_counter != NULL)
     {
-      if (next_counter->generator_id == gid)
+      if (next_counter->observation_domain_id == gid)
       {
         unyte_gid_counter_t *to_remove = next_counter;
         unyte_gid_counter_t *precedent = cur;
@@ -159,12 +159,12 @@ void remove_gid_counter(unyte_seg_counters_t *counters, uint32_t gid)
   }
   for (uint i = 0; i < counters->active_gids_length; i++)
   {
-    if (counters->active_gids[i].generator_id == gid)
+    if (counters->active_gids[i].observation_domain_id == gid)
     {
       // Reordering array to reduce size
       for (uint o = i + 1; o < counters->active_gids_length; o++)
       {
-        counters->active_gids[i].generator_id = counters->active_gids[o].generator_id;
+        counters->active_gids[i].observation_domain_id = counters->active_gids[o].observation_domain_id;
         counters->active_gids[i].active = counters->active_gids[o].active;
       }
       counters->active_gids_length -= 1;
@@ -237,7 +237,7 @@ unyte_udp_sum_counter_t *get_summary(unyte_gid_counter_t *gid_counter, pthread_t
     printf("get_summary(): Malloc error\n");
     return NULL;
   }
-  summary->observation_domain_id = gid_counter->generator_id;
+  summary->observation_domain_id = gid_counter->observation_domain_id;
   summary->last_message_id = gid_counter->last_message_id;
   summary->segments_received = gid_counter->segments_received;
   summary->segments_dropped = gid_counter->segments_dropped;
@@ -264,7 +264,7 @@ void *t_monitoring_unyte_udp(void *in)
       // seg_counter_cur->active_gids is the indexed generator ids received
       for (uint y = 0; y < active_gids; y++)
       {
-        unyte_gid_counter_t *cur_gid_counter = get_gid_counter(seg_counter_cur, seg_counter_cur->active_gids[y].generator_id);
+        unyte_gid_counter_t *cur_gid_counter = get_gid_counter(seg_counter_cur, seg_counter_cur->active_gids[y].observation_domain_id);
         // if non-zero values, clone stats and send to queue
         if (gid_counter_has_values(cur_gid_counter))
         {
@@ -272,14 +272,14 @@ void *t_monitoring_unyte_udp(void *in)
           if (summary != NULL)
           {
             unyte_udp_queue_destructive_write(output_queue, summary);
-            reinit_gid_counters(cur_gid_counter);
+            reinit_odid_counters(cur_gid_counter);
           }
           seg_counter_cur->active_gids[y].active = 0;
         }
         // if generator id has zeros-values and read GID_TIME_TO_LIVE, remove structs from thread stats
         else if (seg_counter_cur->active_gids[y].active == GID_TIME_TO_LIVE)
         {
-          remove_gid_counter(seg_counter_cur, seg_counter_cur->active_gids[y].generator_id);
+          remove_gid_counter(seg_counter_cur, seg_counter_cur->active_gids[y].observation_domain_id);
         }
         // counters are zero and read < GID_TIME_TO_LIVE, send to queue and active++
         else
@@ -288,7 +288,7 @@ void *t_monitoring_unyte_udp(void *in)
           if (summary != NULL)
           {
             unyte_udp_queue_destructive_write(output_queue, summary);
-            reinit_gid_counters(cur_gid_counter);
+            reinit_odid_counters(cur_gid_counter);
           }
           seg_counter_cur->active_gids[y].active += 1;
         }

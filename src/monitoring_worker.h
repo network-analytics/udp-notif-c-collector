@@ -14,14 +14,14 @@ typedef enum
 
 typedef struct active_gid
 {
-  uint32_t generator_id; // generator id / observation id
+  uint32_t observation_domain_id; // generator id / observation id
   int active;            // if > GID_TIME_TO_LIVE gen_id considered not receiving anymore
 } active_gid_t;
 
 // linear probing
 typedef struct gid_counter
 {
-  uint32_t generator_id;
+  uint32_t observation_domain_id;
   uint32_t segments_received;
   uint32_t segments_dropped;
   uint32_t segments_reordered;

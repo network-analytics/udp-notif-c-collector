@@ -18,7 +18,7 @@ struct message_segment_list_cell
   uint32_t total_size;              // total segments for a complete message, 0 if unknown
   uint32_t current_size;            // present segments in a list
   uint32_t total_payload_byte_size; // sum of segments size for this segment list
-  uint32_t gid;                     // generator_id, observation_domain_id in scapy
+  uint32_t odid;                     // observation_domain_id in scapy
   uint32_t mid;                     // message_id, segment_id in scapy
   uint32_t seqnum;                  // ordered by seqnum
   void *content;

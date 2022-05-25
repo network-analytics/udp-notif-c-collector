@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
   message->version = 0;
   message->space = 0;
   message->encoding_type = 1; // json but sending string
-  message->generator_id = 1000;
+  message->observation_domain_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 200; // use other than default configured
   message->options = NULL;

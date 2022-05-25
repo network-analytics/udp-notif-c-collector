@@ -105,7 +105,7 @@ int parser(struct parser_thread_input *in)
     // Not segmented message
     if (!is_segmented)
     {
-      uint32_t gid = parsed_segment->header->generator_id;
+      uint32_t gid = parsed_segment->header->observation_domain_id;
       uint32_t mid = parsed_segment->header->message_id;
       int ret = unyte_udp_queue_write(in->output, parsed_segment);
       // ret == -1 queue already full, segment discarded
@@ -126,7 +126,7 @@ int parser(struct parser_thread_input *in)
     else
     {
       int insert_res = insert_segment(segment_buff,
-                                      parsed_segment->header->generator_id,
+                                      parsed_segment->header->observation_domain_id,
                                       parsed_segment->header->message_id,
                                       parsed_segment->header->f_num,
                                       parsed_segment->header->f_last,
@@ -152,7 +152,7 @@ int parser(struct parser_thread_input *in)
       // completed message
       if (insert_res == 1 || insert_res == -2)
       {
-        struct message_segment_list_cell *msg_seg_list = get_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
+        struct message_segment_list_cell *msg_seg_list = get_segment_list(segment_buff, parsed_segment->header->observation_domain_id, parsed_segment->header->message_id);
         char *complete_msg = reassemble_payload(msg_seg_list);
 
         unyte_seg_met_t *parsed_msg = create_assembled_msg(complete_msg, parsed_segment, msg_seg_list->total_payload_byte_size, msg_seg_list->options_head, msg_seg_list->options_length);
@@ -166,18 +166,18 @@ int parser(struct parser_thread_input *in)
         if (ret < 0)
         {
           if (in->monitoring_running)
-            unyte_udp_update_dropped_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
+            unyte_udp_update_dropped_segment(counters, parsed_segment->header->observation_domain_id, parsed_segment->header->message_id);
           // printf("3.losing message on output queue\n");
           //TODO: syslog drop package + count
           unyte_udp_free_all(parsed_msg);
         }
         else if (in->monitoring_running)
         {
-          unyte_udp_update_received_segment(counters, parsed_segment->header->generator_id, parsed_segment->header->message_id);
+          unyte_udp_update_received_segment(counters, parsed_segment->header->observation_domain_id, parsed_segment->header->message_id);
         }
 
       clear_and_cleanup_buffer:
-        clear_segment_list(segment_buff, parsed_segment->header->generator_id, parsed_segment->header->message_id);
+        clear_segment_list(segment_buff, parsed_segment->header->observation_domain_id, parsed_segment->header->message_id);
         segment_buff->count--;
       }
 

@@ -204,7 +204,7 @@ void unyte_udp_print_counters(unyte_udp_sum_counter_t *counter, FILE *std)
 {
   fprintf(std, "th_id:%10lu|gen_id:%5u|type: %15s|received:%7u|dropped:%7u|reordered:%5u|last_msg_id:%9u\n",
           counter->thread_id,
-          counter->generator_id,
+          counter->observation_domain_id,
           counter->type == PARSER_WORKER ? "PARSER_WORKER" : "LISTENER_WORKER",
           counter->segments_received,
           counter->segments_dropped,
@@ -237,7 +237,7 @@ unyte_udp_sum_counter_t *get_summary(unyte_gid_counter_t *gid_counter, pthread_t
     printf("get_summary(): Malloc error\n");
     return NULL;
   }
-  summary->generator_id = gid_counter->generator_id;
+  summary->observation_domain_id = gid_counter->generator_id;
   summary->last_message_id = gid_counter->last_message_id;
   summary->segments_received = gid_counter->segments_received;
   summary->segments_dropped = gid_counter->segments_dropped;
@@ -327,7 +327,7 @@ void unyte_udp_free_seg_counters(unyte_seg_counters_t *counter, uint nb_counter)
 
 // Getters
 pthread_t unyte_udp_get_thread_id(unyte_udp_sum_counter_t *counter) { return counter->thread_id; }
-uint32_t unyte_udp_get_gen_id(unyte_udp_sum_counter_t *counter) { return counter->generator_id; }
+uint32_t unyte_udp_get_od_id(unyte_udp_sum_counter_t *counter) { return counter->observation_domain_id; }
 uint32_t unyte_udp_get_last_msg_id(unyte_udp_sum_counter_t *counter) { return counter->last_message_id; }
 uint32_t unyte_udp_get_received_seg(unyte_udp_sum_counter_t *counter) { return counter->segments_received; }
 uint32_t unyte_udp_get_dropped_seg(unyte_udp_sum_counter_t *counter) { return counter->segments_dropped; }

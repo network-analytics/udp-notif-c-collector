@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
   message->version = 0;
   message->space = UNYTE_SPACE_STANDARD;
   message->encoding_type = UNYTE_ENCODING_CBOR; // sending CBOR
-  message->generator_id = 1000;
+  message->observation_domain_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 0;   // use default configured
   message->options = NULL; // no custom options sent

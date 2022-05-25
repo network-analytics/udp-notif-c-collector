@@ -45,7 +45,7 @@ typedef struct seg_counters
 typedef struct counter_summary
 {
   pthread_t thread_id;
-  uint32_t generator_id;
+  uint32_t observation_domain_id;
   uint32_t last_message_id;
   uint32_t segments_received;
   uint32_t segments_dropped;
@@ -79,7 +79,7 @@ void unyte_udp_free_seg_counters(unyte_seg_counters_t *counters, uint nb_counter
 
 // Getters
 pthread_t unyte_udp_get_thread_id(unyte_udp_sum_counter_t *counter);
-uint32_t unyte_udp_get_gen_id(unyte_udp_sum_counter_t *counter);
+uint32_t unyte_udp_get_od_id(unyte_udp_sum_counter_t *counter);
 uint32_t unyte_udp_get_last_msg_id(unyte_udp_sum_counter_t *counter);
 uint32_t unyte_udp_get_received_seg(unyte_udp_sum_counter_t *counter);
 uint32_t unyte_udp_get_dropped_seg(unyte_udp_sum_counter_t *counter);

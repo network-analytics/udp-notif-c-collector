@@ -57,7 +57,7 @@ unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struc
     return NULL;
   }
 
-  um->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
+  um->observation_domain_id = ntohl(deserialize_uint32((char *)segment, 4));
   um->message_id = ntohl(deserialize_uint32((char *)segment, 8));
 
   um->buffer = segment;
@@ -87,7 +87,7 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   header->encoding_type = (segment[0] & ET_MASK);
   header->header_length = segment[1];
   header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
-  header->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
+  header->observation_domain_id = ntohl(deserialize_uint32((char *)segment, 4));
   header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
   header->options = options_head;
 
@@ -188,7 +188,7 @@ unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um)
   header->encoding_type = get_encoding_IANA_ET_from_legacy((segment[1] & ET_MASK));
   header->header_length = HEADER_BYTES;
   header->message_length = ntohs(deserialize_uint16((char *)segment, 2));
-  header->generator_id = ntohl(deserialize_uint32((char *)segment, 4));
+  header->observation_domain_id = ntohl(deserialize_uint32((char *)segment, 4));
   header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
   header->options = options_head;
 
@@ -231,7 +231,7 @@ unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um)
 unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met_t *src)
 {
   dest->header->encoding_type = src->header->encoding_type;
-  dest->header->generator_id = src->header->generator_id;
+  dest->header->observation_domain_id = src->header->observation_domain_id;
   dest->header->header_length = src->header->header_length;
   dest->header->message_id = src->header->message_id;
   dest->header->message_length = src->header->message_length;
@@ -263,7 +263,7 @@ void print_udp_notif_header(unyte_header_t *header, FILE *std)
   fprintf(std, "Encoding: %u\n", header->encoding_type);
   fprintf(std, "Header length: %u\n", header->header_length);
   fprintf(std, "Message length: %u\n", header->message_length);
-  fprintf(std, "Generator ID: %u\n", header->generator_id);
+  fprintf(std, "Observation domain ID: %u\n", header->observation_domain_id);
   fprintf(std, "Mesage ID: %u\n", header->message_id);
 
   // Header contains options
@@ -399,7 +399,7 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
 
     memcpy(current_seg->payload, message->buffer, message->buffer_len);
 
-    current_seg->header->generator_id = message->generator_id;
+    current_seg->header->observation_domain_id = message->observation_domain_id;
     current_seg->header->message_id = message->message_id;
     current_seg->header->space = message->space;
     current_seg->header->version = message->version;
@@ -433,7 +433,7 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
         printf("Malloc failed \n");
         return NULL;
       }
-      current_seg->header->generator_id = message->generator_id;
+      current_seg->header->observation_domain_id = message->observation_domain_id;
       current_seg->header->message_id = message->message_id;
       current_seg->header->space = message->space;
       current_seg->header->version = message->version;
@@ -485,10 +485,10 @@ unsigned char *serialize_message(unyte_seg_met_t *msg)
   parsed_bytes[3] = (packet_size);
 
   // observation id
-  parsed_bytes[4] = (msg->header->generator_id >> 24);
-  parsed_bytes[5] = (msg->header->generator_id >> 16);
-  parsed_bytes[6] = (msg->header->generator_id >> 8);
-  parsed_bytes[7] = (msg->header->generator_id);
+  parsed_bytes[4] = (msg->header->observation_domain_id >> 24);
+  parsed_bytes[5] = (msg->header->observation_domain_id >> 16);
+  parsed_bytes[6] = (msg->header->observation_domain_id >> 8);
+  parsed_bytes[7] = (msg->header->observation_domain_id);
   // message id
   parsed_bytes[8] = (msg->header->message_id >> 24);
   parsed_bytes[9] = (msg->header->message_id >> 16);
@@ -699,7 +699,7 @@ uint8_t unyte_udp_get_space(unyte_seg_met_t *message) { return message->header->
 uint8_t unyte_udp_get_media_type(unyte_seg_met_t *message) { return message->header->encoding_type; }
 uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message) { return message->header->header_length; }
 uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message) { return message->header->message_length; }
-uint32_t unyte_udp_get_observation_domain_id(unyte_seg_met_t *message) { return message->header->generator_id; }
+uint32_t unyte_udp_get_observation_domain_id(unyte_seg_met_t *message) { return message->header->observation_domain_id; }
 uint32_t unyte_udp_get_message_id(unyte_seg_met_t *message) { return message->header->message_id; }
 struct sockaddr_storage *unyte_udp_get_src(unyte_seg_met_t *message) { return message->metadata->src; }
 struct sockaddr_storage *unyte_udp_get_dest_addr(unyte_seg_met_t *message) { return message->metadata->dest; }

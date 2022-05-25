@@ -166,16 +166,16 @@ The message to send have the following structure:
 ```c
 typedef struct unyte_message
 {
-  uint used_mtu;              // MTU to use for cutting the message to segments
-  void *buffer;               // pointer to buffer to send
-  uint buffer_len;            // length of the buffer to send
+  uint used_mtu;                  // MTU to use for cutting the message to segments
+  void *buffer;                   // pointer to buffer to send
+  uint buffer_len;                // length of the buffer to send
 
   // UDP-notif
-  uint8_t version : 3;        // UDP-notif protocol version
-  uint8_t space : 1;          // UDP-notif protocol space
-  uint8_t encoding_type : 4;  // UDP-notif protocol encoding type
-  uint32_t generator_id;      // UDP-notif protocol observation domain id
-  uint32_t message_id;        // UDP-notif protocol message id
+  uint8_t version : 3;            // UDP-notif protocol version
+  uint8_t space : 1;              // UDP-notif protocol space
+  uint8_t encoding_type : 4;      // UDP-notif protocol encoding type
+  uint32_t observation_domain_id; // UDP-notif protocol observation domain id
+  uint32_t message_id;            // UDP-notif protocol message id
 } unyte_message_t;
 ```
 
@@ -213,7 +213,7 @@ int main()
   message->version = 0;
   message->space = 0;
   message->encoding_type = UNYTE_ENCODING_JSON; // json but sending string
-  message->generator_id = 1000;
+  message->observation_domain_id = 1000;
   message->message_id = 2147483669;
   message->used_mtu = 200; // If set to 0, the default mtu set on options is used, else, this one is used
 

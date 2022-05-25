@@ -133,12 +133,12 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
 
   for (uint i = 0; i < ACTIVE_GIDS; i++)
   {
-    (parser_input->counters->active_gids + i)->active = 0;
+    (parser_input->counters->active_odids + i)->active = 0;
   }
 
   parser_input->monitoring_running = monitoring_running;
 
-  if (parser_input->segment_buff == NULL || parser_input->counters->active_gids == NULL)
+  if (parser_input->segment_buff == NULL || parser_input->counters->active_odids == NULL)
   {
     printf("Create segment buffer failed.\n");
     return -1;

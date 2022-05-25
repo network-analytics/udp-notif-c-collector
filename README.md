@@ -124,7 +124,7 @@ typedef struct
   uint monitoring_delay;        // monitoring queue frequence in seconds. Default: 5 seconds
 } unyte_udp_options_t;
 ```
-The thread will every `monitoring_delay` seconds send all generators id's counters.
+The thread will every `monitoring_delay` seconds send all observation domain id's counters.
 
 ##### Type of threads
 The threads types are defined in `monitoring_worker.h`:

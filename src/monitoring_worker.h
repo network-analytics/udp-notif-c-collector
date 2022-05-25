@@ -15,28 +15,28 @@ typedef enum
 typedef struct active_gid
 {
   uint32_t observation_domain_id; // generator id / observation id
-  int active;            // if > GID_TIME_TO_LIVE gen_id considered not receiving anymore
-} active_gid_t;
+  int active;            // if > ODID_TIME_TO_LIVE observation_domain_id considered not receiving anymore
+} active_odid_t;
 
 // linear probing
-typedef struct gid_counter
+typedef struct odid_counter
 {
   uint32_t observation_domain_id;
   uint32_t segments_received;
   uint32_t segments_dropped;
   uint32_t segments_reordered;
   uint32_t last_message_id;
-  struct gid_counter *next;
-} unyte_gid_counter_t;
+  struct odid_counter *next;
+} unyte_odid_counter_t;
 
 typedef struct seg_counters
 {
-  pthread_t thread_id;               // thread id
-  unyte_gid_counter_t *gid_counters; // hashmap array of n unyte_gid_counter_t
-  thread_type_t type;                // type of thread: PARSER_WORKER | LISTENER_WORKER
-  active_gid_t *active_gids;         // active generator ids array
-  uint active_gids_length;           // active generator used
-  uint active_gids_max_length;       // active_gids max array length. Used to resize if active_gids is full
+  pthread_t thread_id;                  // thread id
+  unyte_odid_counter_t *odid_counters;  // hashmap array of n unyte_odid_counter_t
+  thread_type_t type;                   // type of thread: PARSER_WORKER | LISTENER_WORKER
+  active_odid_t *active_odids;          // active observation domain ids array
+  uint active_odids_length;             // active observation domain used
+  uint active_odids_max_length;         // active_gids max array length. Used to resize if active_gids is full
 } unyte_seg_counters_t;
 
 /**

@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
     // printf("unyte_udp_get_encoding_type: %u\n", unyte_udp_get_encoding_type(seg));
     // printf("unyte_udp_get_header_length: %u\n", unyte_udp_get_header_length(seg));
     // printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
-    // printf("unyte_udp_get_generator_id: %u\n", unyte_udp_get_generator_id(seg));
+    // printf("unyte_udp_get_observation_domain_id: %u\n", unyte_udp_get_observation_domain_id(seg));
     // printf("unyte_udp_get_message_id: %u\n", unyte_udp_get_message_id(seg));
     // printf("unyte_udp_get_src[family]: %u\n", unyte_udp_get_src(seg)->ss_family);
     // printf("unyte_udp_get_dest_addr[family]: %u\n", unyte_udp_get_dest_addr(seg)->ss_family);

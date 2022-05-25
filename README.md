@@ -65,7 +65,7 @@ int main()
     printf("unyte_udp_get_encoding_type: %u\n", unyte_udp_get_encoding_type(seg));
     printf("unyte_udp_get_header_length: %u\n", unyte_udp_get_header_length(seg));
     printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
-    printf("unyte_udp_get_generator_id: %u\n", unyte_udp_get_generator_id(seg));
+    printf("unyte_udp_get_observation_domain_id: %u\n", unyte_udp_get_observation_domain_id(seg));
     printf("unyte_udp_get_message_id: %u\n", unyte_udp_get_message_id(seg));
     printf("unyte_udp_get_src[family]: %u\n", unyte_udp_get_src(seg)->ss_family);               // AF_INET for IPv4 or AF_INET6 for IPv6
     printf("unyte_udp_get_dest_addr[family]: %u\n", unyte_udp_get_dest_addr(seg)->ss_family);   // AF_INET for IPv4 or AF_INET6 for IPv6
@@ -105,7 +105,7 @@ typedef struct unyte_segment_with_metadata
 - `uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message);` : dentifier to indicate the encoding type used for the Notification Message
 - `uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message);` : length of the message header in octets
 - `uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message);` : total length of the message within one UDP datagram, measured in octets, including the message header
-- `uint32_t unyte_udp_get_generator_id(unyte_seg_met_t *message);` : observation domain id of the message
+- `uint32_t unyte_udp_get_observation_domain_id(unyte_seg_met_t *message);` : observation domain id of the message
 - `uint32_t unyte_udp_get_message_id(unyte_seg_met_t *message);` : message id of the message
 - `struct sockaddr_storage * unyte_udp_get_src(unyte_seg_met_t *message);` : source IP and port of the message. Could be IPv4 or IPv6.
 - `struct sockaddr_storage * unyte_udp_get_dest_addr(unyte_seg_met_t *message);` : collector address. Could be IPv4 or IPv6.

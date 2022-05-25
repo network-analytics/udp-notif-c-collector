@@ -105,21 +105,21 @@ int parser(struct parser_thread_input *in)
     // Not segmented message
     if (!is_segmented)
     {
-      uint32_t gid = parsed_segment->header->observation_domain_id;
+      uint32_t odid = parsed_segment->header->observation_domain_id;
       uint32_t mid = parsed_segment->header->message_id;
       int ret = unyte_udp_queue_write(in->output, parsed_segment);
       // ret == -1 queue already full, segment discarded
       if (ret < 0)
       {
         if (in->monitoring_running)
-          unyte_udp_update_dropped_segment(counters, gid, mid);
+          unyte_udp_update_dropped_segment(counters, odid, mid);
         // printf("2.losing message on output queue\n");
         //TODO: syslog drop package + count
         unyte_udp_free_all(parsed_segment);
       }
       else if (in->monitoring_running)
       {
-        unyte_udp_update_received_segment(counters, gid, mid);
+        unyte_udp_update_received_segment(counters, odid, mid);
       }
     }
     // Segmented message

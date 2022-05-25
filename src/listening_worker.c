@@ -332,7 +332,7 @@ int listener(struct listener_thread_input *in)
           return -1;
         }
         /* Dispatching by modulo on threads */
-        uint32_t seg_gid = seg->observation_domain_id;
+        uint32_t seg_odid = seg->observation_domain_id;
         uint32_t seg_mid = seg->message_id;
         int ret = unyte_udp_queue_write((parsers + (seg->observation_domain_id % in->nb_parsers))->queue, seg);
         // if ret == -1 --> queue is full, we discard message
@@ -340,12 +340,12 @@ int listener(struct listener_thread_input *in)
         {
           // printf("1.losing message on parser queue\n");
           if (monitoring->running)
-            unyte_udp_update_dropped_segment(listener_counter, seg_gid, seg_mid);
+            unyte_udp_update_dropped_segment(listener_counter, seg_odid, seg_mid);
           free(seg->buffer);
           free(seg);
         }
         else if (monitoring->running)
-          unyte_udp_update_received_segment(listener_counter, seg_gid, seg_mid);
+          unyte_udp_update_received_segment(listener_counter, seg_odid, seg_mid);
       }
       else
         free(messages[i].msg_hdr.msg_iov->iov_base);

@@ -50,14 +50,14 @@ int init_active_odid_index(unyte_seg_counters_t *counters)
 }
 
 /**
- * Resize active generators id index array if it is full
+ * Resize active observation domain id index array if it is full
  */
 int resize_active_odid_index(unyte_seg_counters_t *counters)
 {
-  active_odid_t *new_active_gid = (active_odid_t *)realloc(counters->active_odids, sizeof(active_odid_t) * (counters->active_odids_max_length + ACTIVE_GIDS));
-  if (new_active_gid == NULL)
+  active_odid_t *new_active_odid = (active_odid_t *)realloc(counters->active_odids, sizeof(active_odid_t) * (counters->active_odids_max_length + ACTIVE_GIDS));
+  if (new_active_odid == NULL)
     return -1;
-  counters->active_odids = new_active_gid;
+  counters->active_odids = new_active_odid;
   counters->active_odids_max_length = counters->active_odids_max_length + ACTIVE_GIDS;
   return 0;
 }
@@ -98,7 +98,7 @@ unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads)
 
 /**
  * Returns existant odid_counter if exists, creates a new one if not existant
- * Saves the gid on a indexed array (active_odids)
+ * Saves the odid on a indexed array (active_odids)
  */
 unyte_odid_counter_t *get_odid_counter(unyte_seg_counters_t *counters, uint32_t odid)
 {
@@ -122,13 +122,13 @@ unyte_odid_counter_t *get_odid_counter(unyte_seg_counters_t *counters, uint32_t 
   cur->next->segments_reordered = 0;
   cur->next->last_message_id = 0;
   cur->next->next = NULL;
-  // resize active generators id index array if it is full
+  // resize active observation domain id index array if it is full
   if (counters->active_odids_length + 1 >= counters->active_odids_max_length)
   {
     if (resize_active_odid_index(counters) < 0)
       printf("Malloc failed.\n");
   }
-  // add gid to active gids
+  // add odid to active odids
   counters->active_odids[counters->active_odids_length].observation_domain_id = odid;
   counters->active_odids[counters->active_odids_length].active = 0;
   counters->active_odids_length += 1;
@@ -136,18 +136,18 @@ unyte_odid_counter_t *get_odid_counter(unyte_seg_counters_t *counters, uint32_t 
 }
 
 /**
- * Removes a gid from the linked list unyte_seg_counters_t and removes the gid from indexed array
+ * Removes a odid from the linked list unyte_seg_counters_t and removes the odid from indexed array
  */
-void remove_odid_counter(unyte_seg_counters_t *counters, uint32_t gid)
+void remove_odid_counter(unyte_seg_counters_t *counters, uint32_t odid)
 {
-  unyte_odid_counter_t *cur = counters->odid_counters + hash_key(gid);
+  unyte_odid_counter_t *cur = counters->odid_counters + hash_key(odid);
   unyte_odid_counter_t *next_counter;
   while (cur != NULL)
   {
     next_counter = cur->next;
     if (next_counter != NULL)
     {
-      if (next_counter->observation_domain_id == gid)
+      if (next_counter->observation_domain_id == odid)
       {
         unyte_odid_counter_t *to_remove = next_counter;
         unyte_odid_counter_t *precedent = cur;
@@ -159,7 +159,7 @@ void remove_odid_counter(unyte_seg_counters_t *counters, uint32_t gid)
   }
   for (uint i = 0; i < counters->active_odids_length; i++)
   {
-    if (counters->active_odids[i].observation_domain_id == gid)
+    if (counters->active_odids[i].observation_domain_id == odid)
     {
       // Reordering array to reduce size
       for (uint o = i + 1; o < counters->active_odids_length; o++)
@@ -173,9 +173,9 @@ void remove_odid_counter(unyte_seg_counters_t *counters, uint32_t gid)
   }
 }
 
-void unyte_udp_update_dropped_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
+void unyte_udp_update_dropped_segment(unyte_seg_counters_t *counters, uint32_t last_odid, uint32_t last_mid)
 {
-  unyte_odid_counter_t *odid_counter = get_odid_counter(counters, last_gid);
+  unyte_odid_counter_t *odid_counter = get_odid_counter(counters, last_odid);
   if (odid_counter == NULL)
     printf("Malloc failed\n");
   else
@@ -185,9 +185,9 @@ void unyte_udp_update_dropped_segment(unyte_seg_counters_t *counters, uint32_t l
   }
 }
 
-void unyte_udp_update_received_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid)
+void unyte_udp_update_received_segment(unyte_seg_counters_t *counters, uint32_t last_odid, uint32_t last_mid)
 {
-  unyte_odid_counter_t *odid_counter = get_odid_counter(counters, last_gid);
+  unyte_odid_counter_t *odid_counter = get_odid_counter(counters, last_odid);
   if (odid_counter == NULL)
     printf("Malloc failed\n");
   else
@@ -260,8 +260,8 @@ void *t_monitoring_unyte_udp(void *in)
     {
       seg_counter_cur = (input->counters + i);
       uint active_odids = seg_counter_cur->active_odids_length;
-      // every generator id read on the worker thread
-      // seg_counter_cur->active_odids is the indexed generator ids received
+      // every observation domain id read on the worker thread
+      // seg_counter_cur->active_odids is the indexed observation domain ids received
       for (uint y = 0; y < active_odids; y++)
       {
         unyte_odid_counter_t *cur_odid_counter = get_odid_counter(seg_counter_cur, seg_counter_cur->active_odids[y].observation_domain_id);
@@ -276,7 +276,7 @@ void *t_monitoring_unyte_udp(void *in)
           }
           seg_counter_cur->active_odids[y].active = 0;
         }
-        // if generator id has zeros-values and read ODID_TIME_TO_LIVE, remove structs from thread stats
+        // if observation domain id has zeros-values and read ODID_TIME_TO_LIVE, remove structs from thread stats
         else if (seg_counter_cur->active_odids[y].active == ODID_TIME_TO_LIVE)
         {
           remove_odid_counter(seg_counter_cur, seg_counter_cur->active_odids[y].observation_domain_id);
@@ -306,10 +306,10 @@ void unyte_udp_free_seg_counters(unyte_seg_counters_t *counter, uint nb_counter)
   for (uint i = 0; i < nb_counter; i++)
   {
     free((counter + i)->active_odids);
-    unyte_odid_counter_t *cur_gid = (counter + i)->odid_counters;
+    unyte_odid_counter_t *cur_odid = (counter + i)->odid_counters;
     for (uint o = 0; o < ODID_COUNTERS; o++)
     {
-      unyte_odid_counter_t *head = (cur_gid + o);
+      unyte_odid_counter_t *head = (cur_odid + o);
       unyte_odid_counter_t *cur_counter = head->next;
       unyte_odid_counter_t *tmp;
       while (cur_counter != NULL)
@@ -320,7 +320,7 @@ void unyte_udp_free_seg_counters(unyte_seg_counters_t *counter, uint nb_counter)
       }
       free(cur_counter);
     }
-    free(cur_gid);
+    free(cur_odid);
   }
   free(counter);
 }

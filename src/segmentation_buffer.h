@@ -10,7 +10,7 @@
 #include "unyte_udp_defaults.h"
 
 /**
- * total_size, current_size, gid, mid, only relevant for header cell
+ * total_size, current_size, odid, mid, only relevant for header cell
  * seqnum, content only relevant for non header cell
  */
 struct message_segment_list_cell
@@ -32,11 +32,11 @@ struct message_segment_list_cell
 };
 
 /**
- * gid, id, seglist  only relevant for non header cell
+ * odid, id, seglist  only relevant for non header cell
  */
 struct collision_list_cell
 {
-  uint32_t gid;
+  uint32_t odid;
   uint32_t mid;
   struct message_segment_list_cell *head;
   struct collision_list_cell *next;
@@ -87,24 +87,24 @@ char *reassemble_payload(struct message_segment_list_cell *);
  * returns -2 if a content was already present and message is complete
  * returns -3 if a memory allocation failed
 */
-int insert_segment(struct segment_buffer *buf, uint32_t gid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content, unyte_option_t *options);
+int insert_segment(struct segment_buffer *buf, uint32_t odid, uint32_t mid, uint32_t seqnum, int last, uint32_t payload_size, void *content, unyte_option_t *options);
 
 // Segment buffer management
 
 /**
  * Retrieve the header cell of a segment list for a given message 
  */
-struct message_segment_list_cell *get_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid);
+struct message_segment_list_cell *get_segment_list(struct segment_buffer *buf, uint32_t odid, uint32_t mid);
 /**
  * Clear a list of segments
  */
-int clear_segment_list(struct segment_buffer *buf, uint32_t gid, uint32_t mid);
+int clear_segment_list(struct segment_buffer *buf, uint32_t odid, uint32_t mid);
 /**
  * Hash function used on segmentation buffer hashmap
- * uint32_t gid: generator id / observation domain id
+ * uint32_t odid: observation domain id
  * uint32_t mid: message id
  */
-uint32_t hashKey(uint32_t gid, uint32_t mid);
+uint32_t hashKey(uint32_t odid, uint32_t mid);
 
 // Print functions
 void print_segment_list_header(struct message_segment_list_cell *head);
@@ -124,7 +124,7 @@ void clear_msl(struct message_segment_list_cell *head);
 /**
  * Initialise a message segment list 
  */
-struct message_segment_list_cell *create_message_segment_list(uint32_t gid, uint32_t mid);
+struct message_segment_list_cell *create_message_segment_list(uint32_t odid, uint32_t mid);
 
 /**
  * Clean segmentation buffer messages.

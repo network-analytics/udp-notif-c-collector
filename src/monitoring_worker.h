@@ -12,10 +12,10 @@ typedef enum
   LISTENER_WORKER
 } thread_type_t;
 
-typedef struct active_gid
+typedef struct active_odid
 {
-  uint32_t observation_domain_id; // generator id / observation id
-  int active;            // if > ODID_TIME_TO_LIVE observation_domain_id considered not receiving anymore
+  uint32_t observation_domain_id;   // observation id
+  int active;                       // if > ODID_TIME_TO_LIVE observation_domain_id considered not receiving anymore
 } active_odid_t;
 
 // linear probing
@@ -36,7 +36,7 @@ typedef struct seg_counters
   thread_type_t type;                   // type of thread: PARSER_WORKER | LISTENER_WORKER
   active_odid_t *active_odids;          // active observation domain ids array
   uint active_odids_length;             // active observation domain used
-  uint active_odids_max_length;         // active_gids max array length. Used to resize if active_gids is full
+  uint active_odids_max_length;         // active_odids max array length. Used to resize if active_odids is full
 } unyte_seg_counters_t;
 
 /**
@@ -67,12 +67,12 @@ unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads);
 /**
  * Updates counters with a dropped segment
  */
-void unyte_udp_update_dropped_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
+void unyte_udp_update_dropped_segment(unyte_seg_counters_t *counters, uint32_t last_odid, uint32_t last_mid);
 
 /**
  * Updates counters with a received segment
  */
-void unyte_udp_update_received_segment(unyte_seg_counters_t *counters, uint32_t last_gid, uint32_t last_mid);
+void unyte_udp_update_received_segment(unyte_seg_counters_t *counters, uint32_t last_odid, uint32_t last_mid);
 void *t_monitoring_unyte_udp(void *in);
 void unyte_udp_print_counters(unyte_udp_sum_counter_t *counter, FILE *std);
 void unyte_udp_free_seg_counters(unyte_seg_counters_t *counters, uint nb_counter);

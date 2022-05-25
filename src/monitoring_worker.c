@@ -41,11 +41,11 @@ void reinit_odid_counters(unyte_odid_counter_t *odid_counter)
  */
 int init_active_odid_index(unyte_seg_counters_t *counters)
 {
-  counters->active_odids = (active_odid_t *)malloc(sizeof(active_odid_t) * ACTIVE_GIDS);
+  counters->active_odids = (active_odid_t *)malloc(sizeof(active_odid_t) * ACTIVE_ODIDS);
   if (counters->active_odids == NULL)
     return -1;
   counters->active_odids_length = 0;
-  counters->active_odids_max_length = ACTIVE_GIDS;
+  counters->active_odids_max_length = ACTIVE_ODIDS;
   return 0;
 }
 
@@ -54,11 +54,11 @@ int init_active_odid_index(unyte_seg_counters_t *counters)
  */
 int resize_active_odid_index(unyte_seg_counters_t *counters)
 {
-  active_odid_t *new_active_odid = (active_odid_t *)realloc(counters->active_odids, sizeof(active_odid_t) * (counters->active_odids_max_length + ACTIVE_GIDS));
+  active_odid_t *new_active_odid = (active_odid_t *)realloc(counters->active_odids, sizeof(active_odid_t) * (counters->active_odids_max_length + ACTIVE_ODIDS));
   if (new_active_odid == NULL)
     return -1;
   counters->active_odids = new_active_odid;
-  counters->active_odids_max_length = counters->active_odids_max_length + ACTIVE_GIDS;
+  counters->active_odids_max_length = counters->active_odids_max_length + ACTIVE_ODIDS;
   return 0;
 }
 

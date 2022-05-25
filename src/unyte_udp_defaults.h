@@ -16,7 +16,7 @@
 
 // monitoring_worker
 #define ODID_COUNTERS 10    // hashmap modulo
-#define ACTIVE_GIDS 500    // how many active odids do we are waiting for
+#define ACTIVE_ODIDS 500    // how many active odids do we are waiting for
 #define ODID_TIME_TO_LIVE 4 // times monitoring thread consider observation_domain_id active without stats
 
 // Segmentation_buffer parameters  | not settable by the user

@@ -1,9 +1,9 @@
 Copyright (c) 2020 Unyte Project members 
-Authors Tom Sampic, Axel Rosensthiel, Alex Huang, Pierre Francois, Stéphane Frénot
+Authors Tom Sampic, Axel Rosensthiel, Alex Huang Feng, Pierre Francois, Stéphane Frénot
 WIRED Team 
 Telecommunications Department
 INSA Lyon
-contact: <pierre-francois@insa-lyon.fr>
+contact: <pierre-francois@insa-lyon.fr>;<alex.huang-feng@insa-lyon.fr>
 
 
 Permission to use, copy, modify, and distribute this software for any
@@ -20,4 +20,4 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
 This code is an implementation of a collector for UDP-Notif messages as defined in 
-draft-ietf-netconf-udp-notif-01
+draft-ietf-netconf-udp-notif-06

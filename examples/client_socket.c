@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 
     // printf("unyte_udp_get_version: %u\n", unyte_udp_get_version(seg));
     // printf("unyte_udp_get_space: %u\n", unyte_udp_get_space(seg));
-    // printf("unyte_udp_get_encoding_type: %u\n", unyte_udp_get_encoding_type(seg));
+    // printf("unyte_udp_get_media_type: %u\n", unyte_udp_get_media_type(seg));
     // printf("unyte_udp_get_header_length: %u\n", unyte_udp_get_header_length(seg));
     // printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
     // printf("unyte_udp_get_observation_domain_id: %u\n", unyte_udp_get_observation_domain_id(seg));

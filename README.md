@@ -10,7 +10,7 @@ The collector allows to read and parse UDP-notif protocol messages from a ip/por
 
 The api is in `unyte_udp_collector.h`:
 - `int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size)` from `unyte_udp_utils.h`: Helper that creates and binds a socket to an address and port.
-- `int unyte_udp_create_interface_bound_socket(char *interface, char *address, char *port, uint64_t buffer_size)` from `unyte_udp_utils.h`: Helper that creates a socket, binds it to an interface using SO_BINDTODEVICE option and binds it to an adress and port.
+- `int unyte_udp_create_interface_bound_socket(char *interface, char *address, char *port, uint64_t buffer_size)` from `unyte_udp_utils.h`: Helper that creates a socket, binds it to an interface using SO_BINDTODEVICE option and binds it to an address and port.
 - `unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)` from `unyte_udp_collector.h`: Initialize the UDP-notif messages collector. It accepts a struct with different options: socketfd of the socket to listen to, recvmmsg_vlen (vlen used on recvmmsg syscall meaning how many messages to receive on every syscall, by default 10)...
 - `void *unyte_udp_queue_read(unyte_udp_queue_t *queue)` from `unyte_udp_queue.h` : read from a queue a struct with all the message buffer and metadata.
 - `int unyte_udp_free_all(unyte_seg_met_t *seg)` from `unyte_udp_collector.h`: free all struct used on a message received.
@@ -62,7 +62,7 @@ int main()
     // TODO: Process the UDP-notif message here
     printf("unyte_udp_get_version: %u\n", unyte_udp_get_version(seg));
     printf("unyte_udp_get_space: %u\n", unyte_udp_get_space(seg));
-    printf("unyte_udp_get_encoding_type: %u\n", unyte_udp_get_encoding_type(seg));
+    printf("unyte_udp_get_media_type: %u\n", unyte_udp_get_media_type(seg));
     printf("unyte_udp_get_header_length: %u\n", unyte_udp_get_header_length(seg));
     printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
     printf("unyte_udp_get_observation_domain_id: %u\n", unyte_udp_get_observation_domain_id(seg));
@@ -102,7 +102,7 @@ typedef struct unyte_segment_with_metadata
 ##### Getters for segments data
 - `uint8_t unyte_udp_get_version(unyte_seg_met_t *message);` : encoding version
 - `uint8_t unyte_udp_get_space(unyte_seg_met_t *message);` : space of encoding version
-- `uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message);` : dentifier to indicate the encoding type used for the Notification Message
+- `uint8_t unyte_udp_get_media_type(unyte_seg_met_t *message);` : dentifier to indicate the media type used for the Notification Message
 - `uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message);` : length of the message header in octets
 - `uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message);` : total length of the message within one UDP datagram, measured in octets, including the message header
 - `uint32_t unyte_udp_get_observation_domain_id(unyte_seg_met_t *message);` : observation domain id of the message

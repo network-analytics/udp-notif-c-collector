@@ -186,7 +186,7 @@ uint options_total_bytes(unyte_option_t *options);
 
 uint8_t unyte_udp_get_version(unyte_seg_met_t *message);
 uint8_t unyte_udp_get_space(unyte_seg_met_t *message);
-uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message);
+uint8_t unyte_udp_get_media_type(unyte_seg_met_t *message);
 uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message);
 uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message);
 uint32_t unyte_udp_get_observation_domain_id(unyte_seg_met_t *message);

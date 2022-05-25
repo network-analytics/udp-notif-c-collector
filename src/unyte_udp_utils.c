@@ -696,7 +696,7 @@ int unyte_udp_create_interface_bound_socket(char *interface, char *address, char
 
 uint8_t unyte_udp_get_version(unyte_seg_met_t *message) { return message->header->version; }
 uint8_t unyte_udp_get_space(unyte_seg_met_t *message) { return message->header->space; }
-uint8_t unyte_udp_get_encoding_type(unyte_seg_met_t *message) { return message->header->encoding_type; }
+uint8_t unyte_udp_get_media_type(unyte_seg_met_t *message) { return message->header->encoding_type; }
 uint16_t unyte_udp_get_header_length(unyte_seg_met_t *message) { return message->header->header_length; }
 uint16_t unyte_udp_get_message_length(unyte_seg_met_t *message) { return message->header->message_length; }
 uint32_t unyte_udp_get_observation_domain_id(unyte_seg_met_t *message) { return message->header->generator_id; }

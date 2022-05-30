@@ -15,9 +15,9 @@
 #define CLEANUP_FLAG_CRON 1000 // clean up cron in milliseconds
 
 // monitoring_worker
-#define GID_COUNTERS 10    // hashmap modulo
-#define ACTIVE_GIDS 500    // how many active gids do we are waiting for
-#define GID_TIME_TO_LIVE 4 // times monitoring thread consider generator_id active without stats
+#define ODID_COUNTERS 10    // hashmap modulo
+#define ACTIVE_ODIDS 500    // how many active odids do we are waiting for
+#define ODID_TIME_TO_LIVE 4 // times monitoring thread consider observation_domain_id active without stats
 
 // Segmentation_buffer parameters  | not settable by the user
 #define SIZE_BUF 10000         // size of buffer

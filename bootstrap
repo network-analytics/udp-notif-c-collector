@@ -15,6 +15,6 @@ check_command() {
 
 check_command "$AUTORECONF"
 
-autoreconf --install
+autoreconf -vif
 
 exit 0

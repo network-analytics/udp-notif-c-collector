@@ -1,3 +1,4 @@
+m4_include([VERSION])
 AC_INIT([unyte_udp_notif], m4_esyscmd_s(cat VERSION), [alex.huang-feng@insa-lyon.fr])
 AC_CONFIG_AUX_DIR([build-aux])
 

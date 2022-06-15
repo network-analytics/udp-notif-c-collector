@@ -11,7 +11,6 @@
 #include <assert.h>
 #include "unyte_udp_utils.h"
 #include "hexdump.h"
-#include "unyte_udp_constants.h"
 
 /**
  * Return 32 bits unsigned integer value out of *C+P char pointer value.

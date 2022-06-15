@@ -3,7 +3,6 @@
 
 #include "../src/unyte_sender.h"
 #include "../src/unyte_udp_utils.h"
-#include "../src/unyte_udp_constants.h"
 
 #define MTU 1500
 

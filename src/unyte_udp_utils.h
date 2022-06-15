@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdbool.h>
+#include "unyte_udp_constants.h"
 
 #define SPACE_MASK 0b00010000
 #define ET_MASK 0b00001111
@@ -130,13 +131,13 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um);
 unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um);
 
 /**
- * Deep copies header values without options from src to dest 
+ * Deep copies header values without options from src to dest
  * Returns dest
  */
 unyte_seg_met_t *copy_unyte_seg_met_headers(unyte_seg_met_t *dest, unyte_seg_met_t *src);
 
 /**
- * Deep copies metadata values from src to dest 
+ * Deep copies metadata values from src to dest
  * Returns dest
  */
 unyte_seg_met_t *copy_unyte_seg_met_metadata(unyte_seg_met_t *dest, unyte_seg_met_t *src);

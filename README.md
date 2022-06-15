@@ -23,9 +23,6 @@ Simple example of usage :
 
 // include installed library headers
 #include <unyte-udp-notif/unyte_udp_collector.h>
-#include <unyte-udp-notif/unyte_udp_utils.h>
-#include <unyte-udp-notif/unyte_udp_queue.h>
-#include <unyte-udp-notif/unyte_udp_defaults.h>
 
 #define PORT "10001"
 #define ADDR "192.168.0.17"
@@ -185,7 +182,6 @@ Simple usage of the sender :
 #include <stdlib.h>
 
 #include <unyte-udp-notif/unyte_sender.h>
-#include <unyte-udp-notif/unyte_udp_utils.h>
 
 #define PORT "10001"
 #define ADDR "192.168.0.17"

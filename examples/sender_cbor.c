@@ -2,7 +2,6 @@
 #include <stdlib.h>
 
 #include "../src/unyte_sender.h"
-#include "../src/unyte_udp_utils.h"
 
 #define MTU 1500
 

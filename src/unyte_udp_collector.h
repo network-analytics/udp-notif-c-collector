@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "unyte_udp_queue.h"
 #include "unyte_udp_utils.h"
+#include "unyte_udp_defaults.h"
 
 /**
  * Struct to use to pass information to the user

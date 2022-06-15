@@ -23,9 +23,6 @@
 
 #include "../../src/hexdump.h"
 #include "../../src/unyte_udp_collector.h"
-#include "../../src/unyte_udp_utils.h"
-#include "../../src/unyte_udp_queue.h"
-#include "../../src/unyte_udp_defaults.h"
 
 #define USED_VLEN 1
 #define MAX_TO_RECEIVE 20

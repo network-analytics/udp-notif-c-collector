@@ -4,9 +4,6 @@
 
 #include "../src/hexdump.h"
 #include "../src/unyte_udp_collector.h"
-#include "../src/unyte_udp_utils.h"
-#include "../src/unyte_udp_queue.h"
-#include "../src/unyte_udp_defaults.h"
 #include "../src/monitoring_worker.h"
 
 #define USED_VLEN 10

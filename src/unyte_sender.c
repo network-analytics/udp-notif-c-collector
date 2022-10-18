@@ -115,32 +115,32 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
     if ((sender_sk->dtls.ctx = wolfSSL_CTX_new(wolfDTLSv1_3_client_method())) == NULL)
     {
         fprintf(stderr, "wolfSSL_CTX_new error.\n");
-        cleanup(sender_sk);
+        cleanup_wolfssl(sender_sk);
     }
 
     if (wolfSSL_CTX_load_verify_locations(sender_sk->dtls.ctx, caCertLoc, 0) != SSL_SUCCESS)
     {
         fprintf(stderr, "Error loading %s, please check the file.\n", caCertLoc);
-        cleanup(sender_sk);
+        cleanup_wolfssl(sender_sk);
     }
 
     sender_sk->dtls.ssl = wolfSSL_new(sender_sk->dtls.ctx); // création d'une nouvelle session SSL à partir d'un contexte précis
     if (sender_sk->dtls.ssl == NULL)
     {
         fprintf(stderr, "unable to get ssl object\n");
-        cleanup(sender_sk);
+        cleanup_wolfssl(sender_sk);
     }
 
     if (wolfSSL_dtls_set_peer(sender_sk->dtls.ssl, (struct sockaddr_in*)sender_sk->sock_in, sizeof(struct sockaddr_in)) != WOLFSSL_SUCCESS)
     {
         fprintf(stderr, "wolfSSL_dtls_set_peer failed\n");
-        cleanup(sender_sk);
+        cleanup_wolfssl(sender_sk);
     }
 
     if (wolfSSL_set_fd(sender_sk->dtls.ssl, sender_sk->sockfd) != WOLFSSL_SUCCESS)
     {
         fprintf(stderr, "cannot set socket file descriptor\n");
-        cleanup(sender_sk);
+        cleanup_wolfssl(sender_sk);
     }
 
     if (wolfSSL_connect(sender_sk->dtls.ssl) != SSL_SUCCESS)
@@ -148,7 +148,7 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
         err = wolfSSL_get_error(sender_sk->dtls.ssl, 0);
         fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
         fprintf(stderr, "wolfSSL_connect failed\n");
-        cleanup(sender_sk);
+        cleanup_wolfssl(sender_sk);
     }
 
     showConnInfo(sender_sk->dtls.ssl);
@@ -185,20 +185,26 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
   }
   free_seg_msgs(packets);
 
-  // unsigned char *parsed_packet_received;
-  // int res_length = wolfSSL_read(sender_sk->dtls.ssl, parsed_packet_received, sizeof(parsed_packet_received));
-
   return exitVal;
 }
 
-int cleanup(struct unyte_sender_socket *sender_sk){
+int cleanup_wolfssl(struct unyte_sender_socket *sender_sk){
     int ret = 0;
     int err = 0;
     if (sender_sk->dtls.ssl != NULL) {
+
+        printf("WANT WRITE = %d\n", wolfSSL_want_write(sender_sk->dtls.ssl));
+        printf("WANT READ = %d\n", wolfSSL_want_read(sender_sk->dtls.ssl));
+
       /* Attempt a full shutdown */
       ret = wolfSSL_shutdown(sender_sk->dtls.ssl);
+
       if (ret == WOLFSSL_SHUTDOWN_NOT_DONE)
+      {
           ret = wolfSSL_shutdown(sender_sk->dtls.ssl);
+          printf("shutdown2 fait\n");
+          printf("RET = %d\n", ret);
+      }
       if (ret != WOLFSSL_SUCCESS) {
           err = wolfSSL_get_error(sender_sk->dtls.ssl, 0);
           fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
@@ -217,9 +223,10 @@ int cleanup(struct unyte_sender_socket *sender_sk){
 
 int free_sender_socket(struct unyte_sender_socket *sender_sk)
 {
-  free(sender_sk->sock_in);
-  free(sender_sk);
-  return 0;
+    cleanup_wolfssl(sender_sk);
+    free(sender_sk->sock_in);
+    free(sender_sk);
+    return 0;
 }
 
 int free_seg_msgs(struct unyte_segmented_msg *packets)

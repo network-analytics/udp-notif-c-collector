@@ -62,9 +62,4 @@ int free_sender_socket(struct unyte_sender_socket *sender_sk);
 int free_seg_msgs(struct unyte_segmented_msg *packets);
 int free_unyte_sent_message(unyte_message_t *msg);
 
-/**
- * Cleanup mistakes from WolfSSL
- */
-int cleanup(struct unyte_sender_socket *sender_sk);
-
 #endif

@@ -8,6 +8,7 @@
 #include <net/if.h>
 #include <netdb.h>
 #include "unyte_sender.h"
+#include "hexdump.h"
 
 struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
 {
@@ -40,6 +41,10 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
   memset(address, 0, sizeof(*address));
   memcpy(address, addr_info->ai_addr, addr_info->ai_addrlen);
 
+  // printf("%d\n", addr_info->ai_family); //2 AFINET
+  // printf("%d\n", addr_info->ai_socktype); //2 SOCK_DGRAM
+  // printf("%d\n", addr_info->ai_protocol); //17 UDP
+
   int sockfd = socket(addr_info->ai_family, addr_info->ai_socktype, addr_info->ai_protocol);
 
   if (sockfd < 0)
@@ -70,19 +75,19 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
   if (options->socket_buff_size > 0)
     send_buf_size = options->socket_buff_size;
 
-  if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &send_buf_size, sizeof(send_buf_size)))
-  {
-    perror("Set socket buffer size");
-    exit(EXIT_FAILURE);
-  }
+  // if (setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &send_buf_size, sizeof(send_buf_size)))
+  // {
+  //   perror("Set socket buffer size");
+  //   exit(EXIT_FAILURE);
+  // }
 
   // connect socket to destination address
-  if (connect(sockfd, addr_info->ai_addr, (int)addr_info->ai_addrlen) == -1)
-  {
-    perror("Connect failed");
-    close(sockfd);
-    exit(EXIT_FAILURE);
-  }
+  // if (connect(sockfd, addr_info->ai_addr, (int)addr_info->ai_addrlen) == -1)
+  // {
+  //   perror("Connect failed");
+  //   close(sockfd);
+  //   exit(EXIT_FAILURE);
+  // }
 
   // free addr_info after usage
   freeaddrinfo(addr_info);
@@ -95,6 +100,61 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
 
 int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
 {
+    //dtls
+    int err;
+    int exitVal = 1;
+
+    if (wolfSSL_Init() != WOLFSSL_SUCCESS)
+    {
+        fprintf(stderr, "wolfSSL_CTX_new error.\n");
+        return exitVal;
+    }
+
+    wolfSSL_Debugging_ON();
+
+    if ((sender_sk->dtls.ctx = wolfSSL_CTX_new(wolfDTLSv1_3_client_method())) == NULL)
+    {
+        fprintf(stderr, "wolfSSL_CTX_new error.\n");
+        cleanup(sender_sk);
+    }
+
+    if (wolfSSL_CTX_load_verify_locations(sender_sk->dtls.ctx, caCertLoc, 0) != SSL_SUCCESS)
+    {
+        fprintf(stderr, "Error loading %s, please check the file.\n", caCertLoc);
+        cleanup(sender_sk);
+    }
+
+    sender_sk->dtls.ssl = wolfSSL_new(sender_sk->dtls.ctx); // création d'une nouvelle session SSL à partir d'un contexte précis
+    if (sender_sk->dtls.ssl == NULL)
+    {
+        fprintf(stderr, "unable to get ssl object\n");
+        cleanup(sender_sk);
+    }
+
+    if (wolfSSL_dtls_set_peer(sender_sk->dtls.ssl, (struct sockaddr_in*)sender_sk->sock_in, sizeof(struct sockaddr_in)) != WOLFSSL_SUCCESS)
+    {
+        fprintf(stderr, "wolfSSL_dtls_set_peer failed\n");
+        cleanup(sender_sk);
+    }
+
+    if (wolfSSL_set_fd(sender_sk->dtls.ssl, sender_sk->sockfd) != WOLFSSL_SUCCESS)
+    {
+        fprintf(stderr, "cannot set socket file descriptor\n");
+        cleanup(sender_sk);
+    }
+
+    if (wolfSSL_connect(sender_sk->dtls.ssl) != SSL_SUCCESS)
+    {
+        err = wolfSSL_get_error(sender_sk->dtls.ssl, 0);
+        fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
+        fprintf(stderr, "wolfSSL_connect failed\n");
+        cleanup(sender_sk);
+    }
+
+    showConnInfo(sender_sk->dtls.ssl);
+    //fin dtls
+
+
   uint mtu = message->used_mtu;
   if (mtu <= 0)
   {
@@ -109,7 +169,12 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
   for (uint i = 0; i < packets->segments_len; i++)
   {
     unsigned char *parsed_packet = serialize_message(current_seg);
-    int res_send = send(sender_sk->sockfd, parsed_packet, current_seg->header->header_length + current_seg->header->message_length, 0);
+    //int res_send = send(sender_sk->sockfd, parsed_packet, current_seg->header->header_length + current_seg->header->message_length, 0);
+
+    int res_send = wolfSSL_write(sender_sk->dtls.ssl, parsed_packet, (current_seg->header->header_length + current_seg->header->message_length));
+    printf("RES = %d\n", res_send);
+
+    hexdump(parsed_packet, (current_seg->header->header_length + current_seg->header->message_length));
 
     if (res_send < 0)
     {
@@ -120,7 +185,34 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
   }
   free_seg_msgs(packets);
 
-  return 0;
+  // unsigned char *parsed_packet_received;
+  // int res_length = wolfSSL_read(sender_sk->dtls.ssl, parsed_packet_received, sizeof(parsed_packet_received));
+
+  return exitVal;
+}
+
+int cleanup(struct unyte_sender_socket *sender_sk){
+    int ret = 0;
+    int err = 0;
+    if (sender_sk->dtls.ssl != NULL) {
+      /* Attempt a full shutdown */
+      ret = wolfSSL_shutdown(sender_sk->dtls.ssl);
+      if (ret == WOLFSSL_SHUTDOWN_NOT_DONE)
+          ret = wolfSSL_shutdown(sender_sk->dtls.ssl);
+      if (ret != WOLFSSL_SUCCESS) {
+          err = wolfSSL_get_error(sender_sk->dtls.ssl, 0);
+          fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
+          fprintf(stderr, "wolfSSL_shutdown failed\n");
+      }
+      wolfSSL_free(sender_sk->dtls.ssl);
+    }
+    if (sender_sk->sockfd != INVALID_SOCKET)
+      close(sender_sk->sockfd);
+    if (sender_sk->dtls.ctx != NULL)
+      wolfSSL_CTX_free(sender_sk->dtls.ctx);
+    wolfSSL_Cleanup();
+
+    return 0;
 }
 
 int free_sender_socket(struct unyte_sender_socket *sender_sk)

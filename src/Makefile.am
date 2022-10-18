@@ -1,4 +1,4 @@
-AM_LDFLAGS = $(EXTRA_LDFLAGS)
+AM_LDFLAGS = $(EXTRA_LDFLAGS) -I/usr/local/include -L/usr/local/lib -lwolfssl
 
 lib_LTLIBRARIES = libunyte-udp-notif.la
 

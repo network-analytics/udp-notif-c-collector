@@ -98,9 +98,9 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
   return sender_sk;
 }
 
-int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
+
+int set_context(struct unyte_sender_socket *sender_sk)
 {
-    //dtls
     int err;
     int exitVal = 1;
 
@@ -152,8 +152,15 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
     }
 
     showConnInfo(sender_sk->dtls.ssl);
-    //fin dtls
 
+    return 0;
+}
+
+
+
+int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
+{
+    int exitVal = 1;
 
   uint mtu = message->used_mtu;
   if (mtu <= 0)
@@ -188,6 +195,52 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
   return exitVal;
 }
 
+
+int unyte_send_with_context(struct unyte_sender_socket *sender_sk, unyte_message_t *message, int reuse)
+{
+    int exitVal = 1;
+
+    if(reuse == 0)
+    {
+        set_context(sender_sk);
+    }
+
+
+  uint mtu = message->used_mtu;
+  if (mtu <= 0)
+  {
+    if (sender_sk->default_mtu > 0)
+      mtu = sender_sk->default_mtu;
+    else
+      mtu = DEFAULT_MTU;
+  }
+
+  struct unyte_segmented_msg *packets = build_message(message, mtu);
+  unyte_seg_met_t *current_seg = packets->segments;
+  for (uint i = 0; i < packets->segments_len; i++)
+  {
+    unsigned char *parsed_packet = serialize_message(current_seg);
+    //int res_send = send(sender_sk->sockfd, parsed_packet, current_seg->header->header_length + current_seg->header->message_length, 0);
+
+    int res_send = wolfSSL_write(sender_sk->dtls.ssl, parsed_packet, (current_seg->header->header_length + current_seg->header->message_length));
+    printf("RES = %d\n", res_send);
+    int err = wolfSSL_get_error(sender_sk->dtls.ssl, res_send);
+    fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
+
+    hexdump(parsed_packet, (current_seg->header->header_length + current_seg->header->message_length));
+
+    if (res_send < 0)
+    {
+      // perror("send()");
+    }
+    free(parsed_packet);
+    current_seg++;
+  }
+  free_seg_msgs(packets);
+
+  return exitVal;
+}
+
 int cleanup_wolfssl(struct unyte_sender_socket *sender_sk){
     int ret = 0;
     int err = 0;
@@ -198,14 +251,16 @@ int cleanup_wolfssl(struct unyte_sender_socket *sender_sk){
 
       /* Attempt a full shutdown */
       ret = wolfSSL_shutdown(sender_sk->dtls.ssl);
-
+      printf("coucou\n");
       if (ret == WOLFSSL_SHUTDOWN_NOT_DONE)
       {
           ret = wolfSSL_shutdown(sender_sk->dtls.ssl);
           printf("shutdown2 fait\n");
           printf("RET = %d\n", ret);
       }
+      printf("RET3 = %d\n", ret);
       if (ret != WOLFSSL_SUCCESS) {
+          printf("RET2 = %d\n", ret);
           err = wolfSSL_get_error(sender_sk->dtls.ssl, 0);
           fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
           fprintf(stderr, "wolfSSL_shutdown failed\n");

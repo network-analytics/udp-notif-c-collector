@@ -7,7 +7,7 @@
 //dtls header
 #include <wolfssl/options.h>
 #include <wolfssl/ssl.h>
-#include "dtls-common.h"
+#include "../dtls-common.h"
 
 
 #define DEFAULT_MTU 1500
@@ -50,6 +50,7 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options);
  * Sends message to unyte socket
  */
 int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message);
+int unyte_send_with_context(struct unyte_sender_socket *sender_sk, unyte_message_t *message, int reuse);
 
 /**
  * Free unyte socket sender struct

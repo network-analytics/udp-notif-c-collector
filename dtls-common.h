@@ -35,13 +35,12 @@
 #define SFD_TIMEOUT 1
 
 /* Loc short for "location" */
-const char caCertLoc[] = "./certs/ca-cert.pem";
-const char servCertLoc[] = "./certs/server-cert.pem";
-const char servKeyLoc[] = "./certs/server-key.pem";
+const char caCertLoc[] = "../certs/ca-cert.pem";
+const char servCertLoc[] = "../certs/server-cert.pem";
+const char servKeyLoc[] = "../certs/server-key.pem";
 
 static inline void showConnInfo(WOLFSSL* ssl) {
-    printf("New connection established using %s %s\n",
-            wolfSSL_get_version(ssl), wolfSSL_get_cipher(ssl));
+    printf("New connection established using %s %s\n", wolfSSL_get_version(ssl), wolfSSL_get_cipher(ssl));
 }
 
 

@@ -16,6 +16,21 @@
 #include "cleanup_worker.h"
 #include "unyte_udp_defaults.h"
 
+#include <wolfssl/options.h>             /* defines system calls */
+#include <netdb.h>
+#include <sys/socket.h>             /* used for all socket calls */
+#include <wolfssl/ssl.h>
+#include <signal.h>
+
+#include "../dtls-common.h"
+
+WOLFSSL_CTX*  ctx = NULL;
+WOLFSSL*      ssl = NULL;
+int           listenfd = INVALID_SOCKET;
+
+static void sig_handler(const int sig);
+static void free_resources(void);
+
 void stop_parsers_and_monitoring(struct parse_worker *parsers, struct listener_thread_input *in, struct monitoring_worker *monitoring)
 {
   for (uint i = 0; i < in->nb_parsers; i++)
@@ -235,6 +250,50 @@ int listener(struct listener_thread_input *in)
 {
   /* errno used to handle socket read errors */
   errno = 0;
+
+  int           exitVal = 1;
+  struct sockaddr_in servAddr;        /* our server's address */
+  struct sockaddr_in cliaddr;         /* the client's address */
+  int           ret;
+  int           err;
+  int           recvLen = 0;    /* length of message */
+  socklen_t     cliLen;
+  char          buff[MAXLINE];   /* the incoming message */
+  char          ack[] = "I hear you fashizzle!\n";
+
+  if (wolfSSL_Init() != WOLFSSL_SUCCESS)
+  {
+      fprintf(stderr, "wolfSSL_Init error.\n");
+      return exitVal;
+  }
+
+  /* No-op when debugging is not compiled in */
+  wolfSSL_Debugging_ON();
+
+  /* Set ctx to DTLS 1.3 */
+  if ((ctx = wolfSSL_CTX_new(wolfDTLSv1_3_server_method())) == NULL)
+  {
+      fprintf(stderr, "wolfSSL_CTX_new error.\n");
+      goto cleanup;
+  }
+  /* Load CA certificates */
+  if (wolfSSL_CTX_load_verify_locations(ctx,caCertLoc,0) != SSL_SUCCESS)
+  {
+      fprintf(stderr, "Error loading %s, please check the file.\n", caCertLoc);
+      goto cleanup;
+  }
+  /* Load server certificates */
+  if (wolfSSL_CTX_use_certificate_file(ctx, servCertLoc, SSL_FILETYPE_PEM) != SSL_SUCCESS)
+  {
+      fprintf(stderr, "Error loading %s, please check the file.\n", servCertLoc);
+      goto cleanup;
+  }
+  /* Load server Keys */
+  if (wolfSSL_CTX_use_PrivateKey_file(ctx, servKeyLoc, SSL_FILETYPE_PEM) != SSL_SUCCESS)
+  {
+      fprintf(stderr, "Error loading %s, please check the file.\n", servKeyLoc);
+      goto cleanup;
+  }
 
   // Create parsing workers and monitoring worker
   struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * in->nb_parsers);

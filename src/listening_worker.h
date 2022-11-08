@@ -6,6 +6,20 @@
 #include "unyte_udp_utils.h"
 #include "monitoring_worker.h"
 
+#include "dtls-common.h"
+#include <wolfssl/options.h>             /* defines system calls */
+#include <wolfssl/ssl.h>
+
+
+//#ifdef ENABLE_DTLS_
+typedef struct
+{
+    WOLFSSL* ssl;
+    WOLFSSL_CTX* ctx;
+} dtls_params;
+//#endif
+
+
 /**
  * Input given to the listener thread when creating it.
  */
@@ -20,6 +34,9 @@ struct listener_thread_input
   uint monitoring_delay;               /* Monitoring frequence in seconds */
   bool msg_dst_ip;                     /* IP packet dst IP parsed */
   bool legacy_proto;                   /* Legacy UDP-notif protocol */
+//#ifdef ENABLE_DTLS_
+  dtls_params dtls;
+//#endif
 };
 
 struct parse_worker

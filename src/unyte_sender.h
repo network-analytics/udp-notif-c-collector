@@ -7,7 +7,7 @@
 //dtls header
 #include <wolfssl/options.h>
 #include <wolfssl/ssl.h>
-#include "../dtls-common.h"
+#include "dtls-common.h"
 
 
 #define DEFAULT_MTU 1500
@@ -22,7 +22,7 @@ typedef struct
   uint64_t socket_buff_size;  // socket buffer size in bytes
 } unyte_sender_options_t;
 
-//#ifdef ENABLE_DTLS
+//#ifdef ENABLE_DTLS_
 typedef struct
 {
     WOLFSSL* ssl;
@@ -35,7 +35,7 @@ struct unyte_sender_socket
   int sockfd;
   struct sockaddr_storage *sock_in;
   uint default_mtu;
-//#ifdef ENABLE_DTLS
+//#ifdef ENABLE_DTLS_
     dtls_params dtls;
 //#endif
 };

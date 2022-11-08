@@ -9,27 +9,15 @@
 #include <errno.h>
 #include <ctype.h>
 #include <pthread.h>
+#include <signal.h>
 #include "listening_worker.h"
 #include "segmentation_buffer.h"
 #include "parsing_worker.h"
 #include "unyte_udp_collector.h"
 #include "cleanup_worker.h"
 #include "unyte_udp_defaults.h"
+#include "hexdump.h"
 
-#include <wolfssl/options.h>             /* defines system calls */
-#include <netdb.h>
-#include <sys/socket.h>             /* used for all socket calls */
-#include <wolfssl/ssl.h>
-#include <signal.h>
-
-#include "../dtls-common.h"
-
-WOLFSSL_CTX*  ctx = NULL;
-WOLFSSL*      ssl = NULL;
-int           listenfd = INVALID_SOCKET;
-
-static void sig_handler(const int sig);
-static void free_resources(void);
 
 void stop_parsers_and_monitoring(struct parse_worker *parsers, struct listener_thread_input *in, struct monitoring_worker *monitoring)
 {
@@ -243,6 +231,56 @@ struct sockaddr_storage *get_dest_addr(struct msghdr *mh, unyte_udp_sock_t *sock
   return addr;
 }
 
+int cleanup_wolfssl_listening(struct listener_thread_input *in)
+{
+  int exitVal = 1;
+  int ret;
+  int err;
+  if (in->dtls.ssl != NULL) {
+        /* Attempt a full shutdown */
+        ret = wolfSSL_shutdown(in->dtls.ssl);
+        if (ret == WOLFSSL_SHUTDOWN_NOT_DONE)
+            ret = wolfSSL_shutdown(in->dtls.ssl);
+        if (ret != WOLFSSL_SUCCESS) {
+            err = wolfSSL_get_error(in->dtls.ssl, 0);
+            fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
+            fprintf(stderr, "wolfSSL_shutdown failed\n");
+        }
+        wolfSSL_free(in->dtls.ssl);
+    }
+    if (*(in->conn->sockfd) != INVALID_SOCKET)
+        close(*(in->conn->sockfd));
+    if (in->dtls.ctx != NULL)
+        wolfSSL_CTX_free(in->dtls.ctx);
+    wolfSSL_Cleanup();
+
+    return exitVal;
+}
+
+static void free_resources(struct listener_thread_input *in)
+{
+    if (in->dtls.ssl != NULL) {
+        wolfSSL_shutdown(in->dtls.ssl);
+        wolfSSL_free(in->dtls.ssl);
+        in->dtls.ssl = NULL;
+    }
+    if (in->dtls.ctx != NULL) {
+        wolfSSL_CTX_free(in->dtls.ctx);
+        in->dtls.ctx = NULL;
+    }
+    if (*(in->conn->sockfd) != INVALID_SOCKET) {
+        close(*(in->conn->sockfd));
+        *(in->conn->sockfd) = INVALID_SOCKET;
+    }
+}
+
+static void sig_handler(const int sig, struct listener_thread_input *in)
+{
+    (void)sig;
+    free_resources(in);
+    wolfSSL_Cleanup();
+}
+
 /**
  * Udp listener worker on PORT port.
  */
@@ -251,51 +289,51 @@ int listener(struct listener_thread_input *in)
   /* errno used to handle socket read errors */
   errno = 0;
 
-  int           exitVal = 1;
-  struct sockaddr_in servAddr;        /* our server's address */
-  struct sockaddr_in cliaddr;         /* the client's address */
-  int           ret;
-  int           err;
-  int           recvLen = 0;    /* length of message */
-  socklen_t     cliLen;
-  char          buff[MAXLINE];   /* the incoming message */
-  char          ack[] = "I hear you fashizzle!\n";
+  // Create parsing workers and monitoring worker
 
-  if (wolfSSL_Init() != WOLFSSL_SUCCESS)
+  int exitVal = 1;
+
+  if (wolfSSL_Init() != WOLFSSL_SUCCESS) 
   {
-      fprintf(stderr, "wolfSSL_Init error.\n");
-      return exitVal;
+    fprintf(stderr, "wolfSSL_CTX_new error.\n");
+    return exitVal;
   }
 
-  /* No-op when debugging is not compiled in */
   wolfSSL_Debugging_ON();
 
-  /* Set ctx to DTLS 1.3 */
-  if ((ctx = wolfSSL_CTX_new(wolfDTLSv1_3_server_method())) == NULL)
+  if ((in->dtls.ctx = wolfSSL_CTX_new(wolfDTLSv1_3_server_method())) == NULL) 
   {
-      fprintf(stderr, "wolfSSL_CTX_new error.\n");
-      goto cleanup;
-  }
-  /* Load CA certificates */
-  if (wolfSSL_CTX_load_verify_locations(ctx,caCertLoc,0) != SSL_SUCCESS)
-  {
-      fprintf(stderr, "Error loading %s, please check the file.\n", caCertLoc);
-      goto cleanup;
-  }
-  /* Load server certificates */
-  if (wolfSSL_CTX_use_certificate_file(ctx, servCertLoc, SSL_FILETYPE_PEM) != SSL_SUCCESS)
-  {
-      fprintf(stderr, "Error loading %s, please check the file.\n", servCertLoc);
-      goto cleanup;
-  }
-  /* Load server Keys */
-  if (wolfSSL_CTX_use_PrivateKey_file(ctx, servKeyLoc, SSL_FILETYPE_PEM) != SSL_SUCCESS)
-  {
-      fprintf(stderr, "Error loading %s, please check the file.\n", servKeyLoc);
-      goto cleanup;
+    fprintf(stderr, "wolfSSL_CTX_new error.\n");
+    cleanup_wolfssl_listening(in);
   }
 
-  // Create parsing workers and monitoring worker
+  if (wolfSSL_CTX_load_verify_locations(in->dtls.ctx, caCertLoc, 0) != SSL_SUCCESS) 
+  {
+    fprintf(stderr, "Error loading %s, please check the file.\n", caCertLoc);
+    cleanup_wolfssl_listening(in);
+  }
+
+  if (wolfSSL_CTX_use_certificate_file(in->dtls.ctx, servCertLoc, SSL_FILETYPE_PEM) != SSL_SUCCESS)
+  {
+    fprintf(stderr, "Error loading %s, please check the file.\n", servCertLoc);
+    cleanup_wolfssl_listening(in);
+  }
+
+  if (wolfSSL_CTX_use_PrivateKey_file(in->dtls.ctx, servKeyLoc, SSL_FILETYPE_PEM) != SSL_SUCCESS)
+  {
+    fprintf(stderr, "Error loading %s, please check the file.\n", servKeyLoc);
+    cleanup_wolfssl_listening(in);
+  }
+
+  int reuse = 1;
+  setsockopt(*(in->conn->sockfd), SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse));
+
+  // printf("SOCKFD = %d\n", *(in->conn->sockfd));
+  // printf("ADDR LENGTH = %ld\n", sizeof(*(in->conn->addr)));
+  // printf("ADDR = %s\n", (struct sockaddr*)in->conn->addr);
+
+  signal(SIGINT, (void (*)(int))sig_handler);
+
   struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * in->nb_parsers);
   struct monitoring_worker *monitoring = malloc(sizeof(struct monitoring_worker));
 
@@ -352,6 +390,7 @@ int listener(struct listener_thread_input *in)
   unyte_seg_counters_t *listener_counter = monitoring->monitoring_in->counters + in->nb_parsers;
   listener_counter->thread_id = pthread_self();
   listener_counter->type = LISTENER_WORKER;
+   
   while (1)
   {
     for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
@@ -363,7 +402,7 @@ int listener(struct listener_thread_input *in)
       messages[i].msg_hdr.msg_name = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
       messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_storage);
     }
-    int read_count = recvmmsg(*in->conn->sockfd, messages, in->recvmmsg_vlen, 0, NULL);
+    int read_count = recvmmsg(*(in->conn->sockfd), messages, in->recvmmsg_vlen, 0, NULL);
     if (read_count == -1)
     {
       perror("recvmmsg failed");
@@ -379,10 +418,13 @@ int listener(struct listener_thread_input *in)
       // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
       if (messages[i].msg_len > 0)
       {
-        if (in->msg_dst_ip)
+        if (in->msg_dst_ip){
           dest_addr = get_dest_addr(&(messages[i].msg_hdr), in->conn);
-        else
+        }
+        else{
           dest_addr = NULL;
+        }
+
 
         unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_storage *)messages[i].msg_hdr.msg_name), dest_addr);
         if (seg == NULL)
@@ -390,10 +432,56 @@ int listener(struct listener_thread_input *in)
           printf("minimal_parse error\n");
           return -1;
         }
+
+        // if (bind(*(in->conn->sockfd), (struct sockaddr*)seg->src, sizeof(*(seg->src))) < 0)
+        // {
+        //   perror("bind()");
+        //   cleanup_wolfssl_listening(in);
+        // }
+
+        printf("Awaiting client connection\n");
+        if ((in->dtls.ssl = wolfSSL_new(in->dtls.ctx)) == NULL) 
+        {
+          fprintf(stderr, "wolfSSL_new error.\n");
+          cleanup_wolfssl_listening(in);
+        }
+        socklen_t cliLen = sizeof(dest_addr);
+        if (wolfSSL_dtls_set_peer(in->dtls.ssl, dest_addr, cliLen) != WOLFSSL_SUCCESS) 
+        {
+            fprintf(stderr, "wolfSSL_dtls_set_peer error.\n");
+            cleanup_wolfssl_listening(in);
+        }
+        if (wolfSSL_set_fd(in->dtls.ssl, *(in->conn->sockfd)) != WOLFSSL_SUCCESS) 
+        {
+            fprintf(stderr, "wolfSSL_set_fd error.\n");
+            break;
+        }
+        if (wolfSSL_accept(in->dtls.ssl) != SSL_SUCCESS)
+        {
+          int err = wolfSSL_get_error(in->dtls.ssl, 0);
+          fprintf(stderr, "error = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
+          fprintf(stderr, "SSL_accept failed.\n");
+          cleanup_wolfssl_listening(in);
+        }
+        showConnInfo(in->dtls.ssl);
+
+        char res_buff[2048];
+
+        int res_len = wolfSSL_read(in->dtls.ssl, res_buff, sizeof(res_buff-1));
+        printf("RES LEN = %d\n", res_len);
+        if(res_len > 0)
+        {
+          printf("heard %d bytes\n", res_len);
+          res_buff[res_len] = '\0';
+          printf("I heard this: \"%s\"\n", res_buff);
+          hexdump(res_buff, res_len);
+        }
+
         /* Dispatching by modulo on threads */
         uint32_t seg_odid = seg->observation_domain_id;
         uint32_t seg_mid = seg->message_id;
-        int ret = unyte_udp_queue_write((parsers + (seg->observation_domain_id % in->nb_parsers))->queue, seg);
+        //int ret = unyte_udp_queue_write((parsers + (seg->observation_domain_id % in->nb_parsers))->queue, seg);
+        int ret = wolfSSL_write(in->dtls.ssl, seg, sizeof(seg));
         // if ret == -1 --> queue is full, we discard message
         if (ret < 0)
         {

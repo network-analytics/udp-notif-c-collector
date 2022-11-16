@@ -87,13 +87,14 @@ int main(int argc, char *argv[])
 
       message->buffer = string_to_send;
       message->buffer_len = strlen(string_to_send);
+      printf("BUFFER LENGTH = %ld\n", strlen(string_to_send));
       // UDP-notif
       message->version = 0;
       message->space = 0;
       message->media_type = 1; // json but sending string
       message->observation_domain_id = 1000;
       message->message_id = 2147483669;
-      message->used_mtu = 200; // use other than default configured
+      message->used_mtu = MTU; // use other than default configured
       message->options = NULL;
       message->options_len = 0; // should be initialized to 0 if no options are wanted
 

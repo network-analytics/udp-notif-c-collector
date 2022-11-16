@@ -89,7 +89,7 @@ int create_cleanup_thread(struct segment_buffer *seg_buff, struct parse_worker *
 
   if (clean_up_thread == NULL || cleanup_in == NULL || parser->cleanup_worker == NULL)
   {
-    printf("Malloc failed.\n");
+    printf("Malloc failed thread\n");
     return -1;
   }
 
@@ -122,7 +122,7 @@ int create_parse_worker(struct parse_worker *parser, struct listener_thread_inpu
   struct parser_thread_input *parser_input = (struct parser_thread_input *)malloc(sizeof(struct parser_thread_input));
   if (parser->worker == NULL || parser_input == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed parser worker\n");
     return -1;
   }
 
@@ -164,7 +164,7 @@ int create_monitoring_thread(struct monitoring_worker *monitoring, unyte_udp_que
 
   if (mnt_input == NULL || th_monitoring == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed monitoring\n");
     return -1;
   }
 
@@ -198,7 +198,7 @@ struct sockaddr_storage *get_dest_addr(struct msghdr *mh, unyte_udp_sock_t *sock
 
   if (addr == NULL)
   {
-    printf("Malloc failed\n");
+    printf("Malloc failed addr\n");
     return NULL;
   }
 
@@ -291,6 +291,7 @@ int listener(struct listener_thread_input *in)
 
   // Create parsing workers and monitoring worker
 
+  //DTLS
   int exitVal = 1;
 
   if (wolfSSL_Init() != WOLFSSL_SUCCESS) 
@@ -339,7 +340,7 @@ int listener(struct listener_thread_input *in)
 
   if (parsers == NULL || monitoring == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed parsers\n");
     return -1;
   }
 
@@ -347,7 +348,7 @@ int listener(struct listener_thread_input *in)
   unyte_seg_counters_t *counters = unyte_udp_init_counters(nb_counters); // parsers + listening workers
   if (parsers == NULL || monitoring == NULL || counters == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed counters\n");
     return -1;
   }
 
@@ -365,7 +366,7 @@ int listener(struct listener_thread_input *in)
   struct mmsghdr *messages = (struct mmsghdr *)malloc(in->recvmmsg_vlen * sizeof(struct mmsghdr));
   if (messages == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed messages\n");
     return -1;
   }
   int cmbuf_len = 1024;
@@ -393,45 +394,42 @@ int listener(struct listener_thread_input *in)
    
   while (1)
   {
-    for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
-    {
-      messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(UDP_SIZE * sizeof(char));
-      messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
-      if (in->msg_dst_ip)
-        memset(messages[i].msg_hdr.msg_control, 0, cmbuf_len);
-      messages[i].msg_hdr.msg_name = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
-      messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_storage);
-    }
-    int read_count = recvmmsg(*(in->conn->sockfd), messages, in->recvmmsg_vlen, 0, NULL);
-    if (read_count == -1)
-    {
-      perror("recvmmsg failed");
-      close(*in->conn->sockfd);
-      stop_parsers_and_monitoring(parsers, in, monitoring);
-      free_parsers(parsers, in, messages);
-      free_monitoring_worker(monitoring);
-      return -1;
-    }
-    struct sockaddr_storage *dest_addr;
-    for (int i = 0; i < read_count; i++)
-    {
-      // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
-      if (messages[i].msg_len > 0)
-      {
-        if (in->msg_dst_ip){
-          dest_addr = get_dest_addr(&(messages[i].msg_hdr), in->conn);
-        }
-        else{
-          dest_addr = NULL;
-        }
+    // for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+    // {
+    //   messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(UDP_SIZE * sizeof(char));
+    //   messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
+    //   if (in->msg_dst_ip)
+    //     memset(messages[i].msg_hdr.msg_control, 0, cmbuf_len);
+    //   messages[i].msg_hdr.msg_name = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+    //   messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_storage);
+    // }
+    // int read_count = recvmmsg(*(in->conn->sockfd), messages, in->recvmmsg_vlen, 0, NULL);
+    // if (read_count == -1)
+    // {
+    //   perror("recvmmsg failed");
+    //   close(*in->conn->sockfd);
+    //   stop_parsers_and_monitoring(parsers, in, monitoring);
+    //   free_parsers(parsers, in, messages);
+    //   free_monitoring_worker(monitoring);
+    //   return -1;
+    // }
+    // struct sockaddr_storage *dest_addr;
+    // for (int i = 0; i < read_count; i++)
+    // {
+      //If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
+      // if (messages[i].msg_len > 0)
+      // {
+      //   if (in->msg_dst_ip){
+      //     dest_addr = get_dest_addr(&(messages[i].msg_hdr), in->conn);
+      //     printf("coucou\n");
+      //   }
+      //   else{
+      //     printf("coucou2\n");
+      //     dest_addr = NULL;
+      //   }
 
+        // printf("DEST ADDR = %s\n", dest_addr);
 
-        unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_storage *)messages[i].msg_hdr.msg_name), dest_addr);
-        if (seg == NULL)
-        {
-          printf("minimal_parse error\n");
-          return -1;
-        }
 
         // if (bind(*(in->conn->sockfd), (struct sockaddr*)seg->src, sizeof(*(seg->src))) < 0)
         // {
@@ -445,12 +443,7 @@ int listener(struct listener_thread_input *in)
           fprintf(stderr, "wolfSSL_new error.\n");
           cleanup_wolfssl_listening(in);
         }
-        socklen_t cliLen = sizeof(dest_addr);
-        if (wolfSSL_dtls_set_peer(in->dtls.ssl, dest_addr, cliLen) != WOLFSSL_SUCCESS) 
-        {
-            fprintf(stderr, "wolfSSL_dtls_set_peer error.\n");
-            cleanup_wolfssl_listening(in);
-        }
+        
         if (wolfSSL_set_fd(in->dtls.ssl, *(in->conn->sockfd)) != WOLFSSL_SUCCESS) 
         {
             fprintf(stderr, "wolfSSL_set_fd error.\n");
@@ -465,49 +458,70 @@ int listener(struct listener_thread_input *in)
         }
         showConnInfo(in->dtls.ssl);
 
-        char res_buff[2048];
+        int res_len = 1;
+        while(res_len > 0){
+          char * res_buff = malloc(2048);
 
-        int res_len = wolfSSL_read(in->dtls.ssl, res_buff, sizeof(res_buff-1));
-        printf("RES LEN = %d\n", res_len);
-        if(res_len > 0)
-        {
-          printf("heard %d bytes\n", res_len);
-          res_buff[res_len] = '\0';
-          printf("I heard this: \"%s\"\n", res_buff);
-          hexdump(res_buff, res_len);
-        }
+          res_len = wolfSSL_read(in->dtls.ssl, res_buff, 2047);
+          //printf("RES LEN = %d\n", res_len);
+          if(res_len > 0)
+          {
+            printf("heard %d bytes\n", res_len);
+            res_buff[res_len] = '\0';
+            printf("I heard this: \"%s\"\n", res_buff);
+            hexdump(res_buff, res_len);
+          } else 
+          {
+            int err = wolfSSL_get_error(in->dtls.ssl, 0);
+            if (err == WOLFSSL_ERROR_ZERO_RETURN) /* Received shutdown */
+                break;
+            fprintf(stderr, "error = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
+            fprintf(stderr, "SSL_read failed.\n");
+            cleanup_wolfssl_listening(in);
+          }
+          printf("ok\n");
+          printf("LISTENING ADDRESS = %s\n", (in->conn->addr));
+          unyte_min_t *seg = minimal_parse((char *)res_buff, ((struct sockaddr_storage *)(in->conn->addr)), NULL);
+          printf("ok2\n");
+          if (seg == NULL)
+          {
+            printf("minimal_parse error\n");
+            return -1;
+          }
 
-        /* Dispatching by modulo on threads */
-        uint32_t seg_odid = seg->observation_domain_id;
-        uint32_t seg_mid = seg->message_id;
-        //int ret = unyte_udp_queue_write((parsers + (seg->observation_domain_id % in->nb_parsers))->queue, seg);
-        int ret = wolfSSL_write(in->dtls.ssl, seg, sizeof(seg));
-        // if ret == -1 --> queue is full, we discard message
-        if (ret < 0)
-        {
-          // printf("1.losing message on parser queue\n");
-          if (monitoring->running)
-            unyte_udp_update_dropped_segment(listener_counter, seg_odid, seg_mid);
-          free(seg->buffer);
-          free(seg);
+          /* Dispatching by modulo on threads */
+          uint32_t seg_odid = seg->observation_domain_id;
+          uint32_t seg_mid = seg->message_id;
+          int ret = unyte_udp_queue_write((parsers + (seg->observation_domain_id % in->nb_parsers))->queue, seg);
+          // if ret == -1 --> queue is full, we discard message
+          if (ret < 0)
+          {
+            printf("1.losing message on parser queue\n");
+            if (monitoring->running){
+              unyte_udp_update_dropped_segment(listener_counter, seg_odid, seg_mid);
+              free(seg->buffer);
+              free(seg);
+            }
+          }
+          else if (monitoring->running){
+            unyte_udp_update_received_segment(listener_counter, seg_odid, seg_mid);
+          }
         }
-        else if (monitoring->running)
-          unyte_udp_update_received_segment(listener_counter, seg_odid, seg_mid);
       }
-      else
-        free(messages[i].msg_hdr.msg_iov->iov_base);
-    }
+    //  else
+    //     free(messages[i].msg_hdr.msg_iov->iov_base);
+    //}
   }
 
   // Never called cause while(1)
-  for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
-  {
-    free(messages[i].msg_hdr.msg_iov);
-  }
-  free(messages);
+  // for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+  // {
+  //   free(messages[i].msg_hdr.msg_iov);
+  // }
+  // free(messages);
 
-  return 0;
-}
+  //return 0;
+//}
 
 /**
  * Threadified app functin listening on *P port.

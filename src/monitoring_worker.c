@@ -70,7 +70,7 @@ unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads)
   unyte_seg_counters_t *counters = (unyte_seg_counters_t *)malloc(sizeof(unyte_seg_counters_t) * (nb_threads));
   if (counters == NULL)
   {
-    printf("Malloc failed\n");
+    printf("Malloc failed counters\n");
     return NULL;
   }
   unyte_seg_counters_t *cur = counters;
@@ -79,7 +79,7 @@ unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads)
     cur->odid_counters = malloc(sizeof(unyte_odid_counter_t) * ODID_COUNTERS);
     if (cur->odid_counters == NULL)
     {
-      printf("Malloc failed\n");
+      printf("Malloc failed size of counters\n");
       return NULL;
     }
     for (uint o = 0; o < ODID_COUNTERS; o++)
@@ -88,7 +88,7 @@ unyte_seg_counters_t *unyte_udp_init_counters(uint nb_threads)
     }
     if (init_active_odid_index(cur) < 0)
     {
-      printf("Malloc failed\n");
+      printf("Malloc failed active index\n");
       return NULL;
     }
     cur++;
@@ -126,7 +126,7 @@ unyte_odid_counter_t *get_odid_counter(unyte_seg_counters_t *counters, uint32_t 
   if (counters->active_odids_length + 1 >= counters->active_odids_max_length)
   {
     if (resize_active_odid_index(counters) < 0)
-      printf("Malloc failed.\n");
+      printf("Malloc failed active index 2\n");
   }
   // add odid to active odids
   counters->active_odids[counters->active_odids_length].observation_domain_id = odid;
@@ -177,7 +177,7 @@ void unyte_udp_update_dropped_segment(unyte_seg_counters_t *counters, uint32_t l
 {
   unyte_odid_counter_t *odid_counter = get_odid_counter(counters, last_odid);
   if (odid_counter == NULL)
-    printf("Malloc failed\n");
+    printf("Malloc failed update dropped segments\n");
   else
   {
     odid_counter->segments_dropped++;
@@ -189,7 +189,7 @@ void unyte_udp_update_received_segment(unyte_seg_counters_t *counters, uint32_t 
 {
   unyte_odid_counter_t *odid_counter = get_odid_counter(counters, last_odid);
   if (odid_counter == NULL)
-    printf("Malloc failed\n");
+    printf("Malloc failed update received segment\n");
   else
   {
     odid_counter->segments_received++;

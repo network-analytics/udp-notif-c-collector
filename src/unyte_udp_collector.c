@@ -198,9 +198,15 @@ int unyte_udp_free_header(unyte_seg_met_t *seg)
 
 int unyte_udp_free_metadata(unyte_seg_met_t *seg)
 {
-  free(seg->metadata->src);
-  free(seg->metadata->dest);
-  free(seg->metadata);
+  if(seg->metadata->src != NULL){
+    free(seg->metadata->src);
+  }
+  if(seg->metadata->dest != NULL){
+    free(seg->metadata->dest);
+  }
+  if(seg->metadata != NULL){
+    free(seg->metadata);
+  }
   return 0;
 }
 

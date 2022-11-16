@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
   options.recvmmsg_vlen = USED_VLEN;
   options.socket_fd = socketfd; // passing socket file descriptor to listen to
   options.msg_dst_ip = false;   // destination IP not parsed from IP packet to improve performance
+  options.nb_parsers = 1;
 
   /* Initialize collector */
   unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);
@@ -46,12 +47,12 @@ int main(int argc, char *argv[])
     // printf("unyte_udp_get_version: %u\n", unyte_udp_get_version(seg));
     // printf("unyte_udp_get_space: %u\n", unyte_udp_get_space(seg));
     // printf("unyte_udp_get_media_type: %u\n", unyte_udp_get_media_type(seg));
-    // printf("unyte_udp_get_header_length: %u\n", unyte_udp_get_header_length(seg));
-    // printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
+    printf("unyte_udp_get_header_length: %u\n", unyte_udp_get_header_length(seg));
+    printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
     // printf("unyte_udp_get_observation_domain_id: %u\n", unyte_udp_get_observation_domain_id(seg));
     // printf("unyte_udp_get_message_id: %u\n", unyte_udp_get_message_id(seg));
     // printf("unyte_udp_get_src[family]: %u\n", unyte_udp_get_src(seg)->ss_family);
-    printf("unyte_udp_get_dest_addr[family]: %u\n", unyte_udp_get_dest_addr(seg) == NULL ? 0 : unyte_udp_get_dest_addr(seg)->ss_family); // NULL if options.msg_dst_ip is set to false (default)
+    // printf("unyte_udp_get_dest_addr[family]: %u\n", unyte_udp_get_dest_addr(seg) == NULL ? 0 : unyte_udp_get_dest_addr(seg)->ss_family); // NULL if options.msg_dst_ip is set to false (default)
     // char ip_canonical[100];
     // if (unyte_udp_get_src(seg)->ss_family == AF_INET) {
     //   printf("src IPv4: %s\n", inet_ntop(unyte_udp_get_src(seg)->ss_family, &((struct sockaddr_in*)unyte_udp_get_src(seg))->sin_addr.s_addr, ip_canonical, sizeof ip_canonical));

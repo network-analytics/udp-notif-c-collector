@@ -104,21 +104,21 @@ int cleanup_wolfssl(struct unyte_sender_socket *sender_sk){
     int err = 0;
     if (sender_sk->dtls.ssl != NULL) {
 
-        printf("WANT WRITE = %d\n", wolfSSL_want_write(sender_sk->dtls.ssl));
-        printf("WANT READ = %d\n", wolfSSL_want_read(sender_sk->dtls.ssl));
+        // printf("WANT WRITE = %d\n", wolfSSL_want_write(sender_sk->dtls.ssl));
+        // printf("WANT READ = %d\n", wolfSSL_want_read(sender_sk->dtls.ssl));
 
       /* Attempt a full shutdown */
       ret = wolfSSL_shutdown(sender_sk->dtls.ssl);
-      printf("coucou\n");
+      //printf("coucou\n");
       if (ret == WOLFSSL_SHUTDOWN_NOT_DONE)
       {
           ret = wolfSSL_shutdown(sender_sk->dtls.ssl);
-          printf("shutdown2 fait\n");
-          printf("RET = %d\n", ret);
+          //printf("shutdown2 fait\n");
+          //printf("RET = %d\n", ret);
       }
-      printf("RET3 = %d\n", ret);
+      //printf("RET3 = %d\n", ret);
       if (ret != WOLFSSL_SUCCESS) {
-          printf("RET2 = %d\n", ret);
+          //printf("RET2 = %d\n", ret);
           err = wolfSSL_get_error(sender_sk->dtls.ssl, 0);
           fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
           fprintf(stderr, "wolfSSL_shutdown failed\n");
@@ -268,6 +268,7 @@ int unyte_send_with_context(struct unyte_sender_socket *sender_sk, unyte_message
 
     int res_send = wolfSSL_write(sender_sk->dtls.ssl, parsed_packet, (current_seg->header->header_length + current_seg->header->message_length));
     printf("RES = %d\n", res_send);
+    printf("LONGUEUR WRITE = %d\n", (current_seg->header->header_length + current_seg->header->message_length));
     int err = wolfSSL_get_error(sender_sk->dtls.ssl, res_send);
     fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
 

@@ -52,7 +52,7 @@ unyte_min_t *minimal_parse(char *segment, struct sockaddr_storage *source, struc
 
   if (um == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed minimal parse\n");
     return NULL;
   }
 
@@ -77,7 +77,7 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   unyte_metadata_t *meta = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
   if (header == NULL || options_head == NULL || meta == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed metadata\n");
     return NULL;
   }
 
@@ -90,15 +90,24 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
   header->message_id = ntohl(deserialize_uint32((char *)segment, 8));
   header->options = options_head;
 
+  printf("HEADER 1 = %d\n", segment[0]);
+
+  hexdump(segment, 21);
+
   // Header contains options
   unyte_option_t *last_option = options_head;
   int options_length = 0;
+  printf("HEADER LENGTH = %d\n", header->header_length);
+  printf("MESSAGE LENGTH = %d\n", header->message_length);
   while((options_length + HEADER_BYTES) < header->header_length)
   {
+    printf("HEADER BYTES = %d\n", HEADER_BYTES);
+    printf("HEADER BYTES + OPTION = %d\n", (HEADER_BYTES + options_length));
     uint8_t type = segment[HEADER_BYTES + options_length];
     uint8_t length = segment[HEADER_BYTES + options_length + 1];
+    printf("LENGTH 100 = %d\n", length);
     // segmented message
-    if (type == UNYTE_TYPE_SEGMENTATION)
+    if (type == UNYTE_TYPE_SEGMENTATION) // 4
     {
       header->f_type = type;
       header->f_len = length;
@@ -113,10 +122,11 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
     else // custom options 
     {
       unyte_option_t *custom_option = malloc(sizeof(unyte_option_t));
+      printf("LENGTH = %d\n", (length - 2));
       char *options_data = malloc(length - 2); // 1 byte for type and 1 byte for length
       if (custom_option == NULL || options_data == NULL)
       {
-        printf("Malloc failed\n");
+        printf("Malloc failed option\n");
         return NULL;
       }
       custom_option->type = type;
@@ -136,7 +146,7 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 
   if (payload == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed payload\n");
     return NULL;
   }
 
@@ -151,7 +161,7 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
 
   if (seg == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed segment\n");
     return NULL;
   }
 
@@ -178,7 +188,7 @@ unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um)
   unyte_metadata_t *meta = (unyte_metadata_t *)malloc(sizeof(unyte_metadata_t));
   if (header == NULL || options_head == NULL || meta == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed metadata legacy\n");
     return NULL;
   }
 
@@ -197,7 +207,7 @@ unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um)
 
   if (payload == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed payload2\n");
     return NULL;
   }
 
@@ -212,7 +222,7 @@ unyte_seg_met_t *parse_with_metadata_legacy(char *segment, unyte_min_t *um)
 
   if (seg == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed segment 2\n");
     return NULL;
   }
 
@@ -336,7 +346,7 @@ unyte_option_t *build_message_options(unyte_send_option_t *options, uint options
     buffer = malloc(options[i].data_length);
     if (current->next == NULL || buffer == NULL) 
     {
-      printf("Malloc failed\n");
+      printf("Malloc failed option 2\n");
       return NULL;
     }
     current = current->next;
@@ -355,7 +365,7 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
   struct unyte_segmented_msg *segments_msg = (struct unyte_segmented_msg *)malloc(sizeof(struct unyte_segmented_msg));
   if (segments_msg == NULL)
   {
-    printf("Malloc failed.\n");
+    printf("Malloc failed segmented\n");
     return NULL;
   }
 
@@ -379,7 +389,7 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
 
   if (segments_msg->segments == NULL || options_header == NULL)
   {
-    printf("Malloc failed \n");
+    printf("Malloc failed segmented 2\n");
     return NULL;
   }
   unyte_seg_met_t *current_seg = segments_msg->segments;
@@ -392,7 +402,7 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
 
     if (current_seg->payload == NULL || current_seg->header == NULL)
     {
-      printf("Malloc failed \n");
+      printf("Malloc failed payload 2\n");
       return NULL;
     }
 
@@ -422,14 +432,14 @@ struct unyte_segmented_msg *build_message(unyte_message_t *message, uint mtu)
       current_seg->payload = (char *)malloc(bytes_to_send);
       if (current_seg->payload == NULL)
       {
-        printf("Malloc failed \n");
+        printf("Malloc failed byte to send\n");
         return NULL;
       }
       memcpy(current_seg->payload, (message->buffer + copy_it), bytes_to_send);
       current_seg->header = (unyte_header_t *)malloc(sizeof(unyte_header_t));
       if (current_seg->header == NULL)
       {
-        printf("Malloc failed \n");
+        printf("Malloc failed payload 3\n");
         return NULL;
       }
       current_seg->header->observation_domain_id = message->observation_domain_id;

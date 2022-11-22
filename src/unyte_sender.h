@@ -50,7 +50,7 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options);
  * Sends message to unyte socket
  */
 int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message);
-int unyte_send_with_context(struct unyte_sender_socket *sender_sk, unyte_message_t *message, int reuse);
+int unyte_send_with_dtls_context(struct unyte_sender_socket *sender_sk, unyte_message_t *message, int reuse);
 
 /**
  * Free unyte socket sender struct

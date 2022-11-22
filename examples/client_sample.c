@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
     // printf("unyte_udp_get_version: %u\n", unyte_udp_get_version(seg));
     // printf("unyte_udp_get_space: %u\n", unyte_udp_get_space(seg));
     // printf("unyte_udp_get_media_type: %u\n", unyte_udp_get_media_type(seg));
+    printf("ok client sample\n");
     printf("unyte_udp_get_header_length: %u\n", unyte_udp_get_header_length(seg));
     printf("unyte_udp_get_message_length: %u\n", unyte_udp_get_message_length(seg));
     // printf("unyte_udp_get_observation_domain_id: %u\n", unyte_udp_get_observation_domain_id(seg));
@@ -62,6 +63,7 @@ int main(int argc, char *argv[])
     //   printf("src port: %u\n", ntohs(((struct sockaddr_in6*)unyte_udp_get_src(seg))->sin6_port));
     // }
     // Only if options.msg_dst_ip is set to true
+    // printf("ok client sample\n");
     if (unyte_udp_get_dest_addr(seg) != NULL) {
       char ip_dest_canonical[100];
       if (unyte_udp_get_dest_addr(seg)->ss_family == AF_INET) {

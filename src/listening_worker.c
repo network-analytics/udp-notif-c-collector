@@ -326,12 +326,12 @@ int listener(struct listener_thread_input *in)
     cleanup_wolfssl_listening(in);
   }
 
-  int reuse = 1;
-  setsockopt(*(in->conn->sockfd), SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse));
+  // int reuse = 1;
+  // setsockopt(*(in->conn->sockfd), SOL_SOCKET, SO_REUSEPORT, &reuse, sizeof(reuse));
 
   // printf("SOCKFD = %d\n", *(in->conn->sockfd));
-  // printf("ADDR LENGTH = %ld\n", sizeof(*(in->conn->addr)));
-  // printf("ADDR = %s\n", (struct sockaddr*)in->conn->addr);
+  printf("ADDR LENGTH = %ld\n", sizeof(*(in->conn->addr)));
+  printf("ADDR = %s\n", (struct sockaddr*)in->conn->addr);
 
   signal(SIGINT, (void (*)(int))sig_handler);
 
@@ -363,29 +363,29 @@ int listener(struct listener_thread_input *in)
       return created;
   }
 
-  struct mmsghdr *messages = (struct mmsghdr *)malloc(in->recvmmsg_vlen * sizeof(struct mmsghdr));
-  if (messages == NULL)
-  {
-    printf("Malloc failed messages\n");
-    return -1;
-  }
-  int cmbuf_len = 1024;
-  // Init msg_iov first to reduce mallocs every iteration of while
-  for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
-  {
-    messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
-    messages[i].msg_hdr.msg_iovlen = 1;
-    if (in->msg_dst_ip)
-    {
-      messages[i].msg_hdr.msg_control = (char *)malloc(cmbuf_len);
-      messages[i].msg_hdr.msg_controllen = cmbuf_len;
-    }
-    else
-    {
-      messages[i].msg_hdr.msg_control = NULL;
-      messages[i].msg_hdr.msg_controllen = 0;
-    }
-  }
+  // struct mmsghdr *messages = (struct mmsghdr *)malloc(in->recvmmsg_vlen * sizeof(struct mmsghdr));
+  // if (messages == NULL)
+  // {
+  //   printf("Malloc failed messages\n");
+  //   return -1;
+  // }
+  // int cmbuf_len = 1024;
+  // // Init msg_iov first to reduce mallocs every iteration of while
+  // for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+  // {
+  //   messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
+  //   messages[i].msg_hdr.msg_iovlen = 1;
+  //   if (in->msg_dst_ip)
+  //   {
+  //     messages[i].msg_hdr.msg_control = (char *)malloc(cmbuf_len);
+  //     messages[i].msg_hdr.msg_controllen = cmbuf_len;
+  //   }
+  //   else
+  //   {
+  //     messages[i].msg_hdr.msg_control = NULL;
+  //     messages[i].msg_hdr.msg_controllen = 0;
+  //   }
+  // }
   // FIXME: malloc failed
   // TODO: malloc array of msg_hdr.msg_name and assign addresss to every messages[i]
   unyte_seg_counters_t *listener_counter = monitoring->monitoring_in->counters + in->nb_parsers;
@@ -430,88 +430,106 @@ int listener(struct listener_thread_input *in)
 
         // printf("DEST ADDR = %s\n", dest_addr);
 
+    if(in->dtls.ctx == NULL){
+      printf("PB CONTEXT NULL\n");
+    }
 
-        // if (bind(*(in->conn->sockfd), (struct sockaddr*)seg->src, sizeof(*(seg->src))) < 0)
-        // {
-        //   perror("bind()");
-        //   cleanup_wolfssl_listening(in);
-        // }
+    printf("Awaiting client connection\n");
+    if ((in->dtls.ssl = wolfSSL_new(in->dtls.ctx)) == NULL) 
+    {
+      fprintf(stderr, "wolfSSL_new error.\n");
+      cleanup_wolfssl_listening(in);
+    }
+    struct sockaddr_in cliaddr;
+    // cliaddr.sin_family = AF_INET;
+    // cliaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    // cliaddr.sin_port = htons(5000);
+    int cliLen = sizeof(struct sockaddr_in);
+    
+    char buff[1024];
+    int ret = (int)recvfrom(*(in->conn->sockfd), (char *)&buff, sizeof(buff), MSG_PEEK, (struct sockaddr*)&cliaddr, &cliLen);
+    if (ret <= 0) 
+    {
+        perror("pb recvfrom()");
+        cleanup_wolfssl_listening(in);
+    }
 
-        printf("Awaiting client connection\n");
-        if ((in->dtls.ssl = wolfSSL_new(in->dtls.ctx)) == NULL) 
-        {
-          fprintf(stderr, "wolfSSL_new error.\n");
-          cleanup_wolfssl_listening(in);
-        }
-        
-        if (wolfSSL_set_fd(in->dtls.ssl, *(in->conn->sockfd)) != WOLFSSL_SUCCESS) 
-        {
-            fprintf(stderr, "wolfSSL_set_fd error.\n");
+    if (wolfSSL_dtls_set_peer(in->dtls.ssl, &cliaddr, cliLen) != WOLFSSL_SUCCESS)
+    {
+      fprintf(stderr, "wolfSSL_dtls_set_peer error.\n");
+      cleanup_wolfssl_listening(in);
+    }
+    
+    if (wolfSSL_set_fd(in->dtls.ssl, *(in->conn->sockfd)) != WOLFSSL_SUCCESS) 
+    {
+      fprintf(stderr, "wolfSSL_set_fd error.\n");
+      break;
+    }
+
+    if (wolfSSL_accept(in->dtls.ssl) != SSL_SUCCESS)
+    {
+      int err = wolfSSL_get_error(in->dtls.ssl, 0);
+      fprintf(stderr, "error = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
+      fprintf(stderr, "SSL_accept failed.\n");
+      cleanup_wolfssl_listening(in);
+    }
+    //showConnInfo(in->dtls.ssl);
+
+    int res_len = 1;
+    while(res_len > 0){
+      char * res_buff = malloc(2048);
+
+      res_len = wolfSSL_read(in->dtls.ssl, res_buff, 2047);
+      //printf("RES LEN = %d\n", res_len);
+      if(res_len > 0)
+      {
+        printf("heard %d bytes\n", res_len);
+        res_buff[res_len] = '\0';
+        printf("I heard this: \"%s\"\n", res_buff);
+        hexdump(res_buff, res_len);
+      } else 
+      {
+        int err = wolfSSL_get_error(in->dtls.ssl, 0);
+        if (err == WOLFSSL_ERROR_ZERO_RETURN) /* Received shutdown */
             break;
-        }
-        if (wolfSSL_accept(in->dtls.ssl) != SSL_SUCCESS)
-        {
-          int err = wolfSSL_get_error(in->dtls.ssl, 0);
-          fprintf(stderr, "error = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
-          fprintf(stderr, "SSL_accept failed.\n");
-          cleanup_wolfssl_listening(in);
-        }
-        showConnInfo(in->dtls.ssl);
+        fprintf(stderr, "error = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
+        fprintf(stderr, "SSL_read failed.\n");
+        cleanup_wolfssl_listening(in);
+      }
+      printf("ok\n");
+      printf("LISTENING ADDRESS = %s\n", (in->conn->addr));
+      unyte_min_t *seg = minimal_parse((char *)res_buff, ((struct sockaddr_storage *)(in->conn->addr)), NULL);
+      printf("ok2\n");
+      if (seg == NULL)
+      {
+        printf("minimal_parse error\n");
+        return -1;
+      }
 
-        int res_len = 1;
-        while(res_len > 0){
-          char * res_buff = malloc(2048);
-
-          res_len = wolfSSL_read(in->dtls.ssl, res_buff, 2047);
-          //printf("RES LEN = %d\n", res_len);
-          if(res_len > 0)
-          {
-            printf("heard %d bytes\n", res_len);
-            res_buff[res_len] = '\0';
-            printf("I heard this: \"%s\"\n", res_buff);
-            hexdump(res_buff, res_len);
-          } else 
-          {
-            int err = wolfSSL_get_error(in->dtls.ssl, 0);
-            if (err == WOLFSSL_ERROR_ZERO_RETURN) /* Received shutdown */
-                break;
-            fprintf(stderr, "error = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
-            fprintf(stderr, "SSL_read failed.\n");
-            cleanup_wolfssl_listening(in);
-          }
-          printf("ok\n");
-          printf("LISTENING ADDRESS = %s\n", (in->conn->addr));
-          unyte_min_t *seg = minimal_parse((char *)res_buff, ((struct sockaddr_storage *)(in->conn->addr)), NULL);
-          printf("ok2\n");
-          if (seg == NULL)
-          {
-            printf("minimal_parse error\n");
-            return -1;
-          }
-
-          /* Dispatching by modulo on threads */
-          uint32_t seg_odid = seg->observation_domain_id;
-          uint32_t seg_mid = seg->message_id;
-          int ret = unyte_udp_queue_write((parsers + (seg->observation_domain_id % in->nb_parsers))->queue, seg);
-          // if ret == -1 --> queue is full, we discard message
-          if (ret < 0)
-          {
-            printf("1.losing message on parser queue\n");
-            if (monitoring->running){
-              unyte_udp_update_dropped_segment(listener_counter, seg_odid, seg_mid);
-              free(seg->buffer);
-              free(seg);
-            }
-          }
-          else if (monitoring->running){
-            unyte_udp_update_received_segment(listener_counter, seg_odid, seg_mid);
-          }
+      /* Dispatching by modulo on threads */
+      uint32_t seg_odid = seg->observation_domain_id;
+      uint32_t seg_mid = seg->message_id;
+      int ret = unyte_udp_queue_write((parsers + (seg->observation_domain_id % in->nb_parsers))->queue, seg);
+      // if ret == -1 --> queue is full, we discard message
+      if (ret < 0)
+      {
+        printf("1.losing message on parser queue\n");
+        if (monitoring->running){
+          unyte_udp_update_dropped_segment(listener_counter, seg_odid, seg_mid);
+          free(seg->buffer);
+          free(seg);
         }
       }
+      else if (monitoring->running){
+        unyte_udp_update_received_segment(listener_counter, seg_odid, seg_mid);
+      }
+    }
+  }
     //  else
     //     free(messages[i].msg_hdr.msg_iov->iov_base);
     //}
-  }
+    return 0;
+}
 
   // Never called cause while(1)
   // for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)

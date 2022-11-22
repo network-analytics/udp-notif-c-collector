@@ -98,11 +98,14 @@ int main(int argc, char *argv[])
       message->options = NULL;
       message->options_len = 0; // should be initialized to 0 if no options are wanted
 
-      unyte_send_with_context(sender_sk, message, reuse);
+      int res = unyte_send_with_dtls_context(sender_sk, message, reuse);
 
+      printf("RETURNED VALUE = %d\n", res);
+      printf("SORTIE\n");
       free(message);
   }
-
+  printf("avant free\n");
   free_sender_socket(sender_sk);
+  printf("apres sortie\n");
   return 0;
 }

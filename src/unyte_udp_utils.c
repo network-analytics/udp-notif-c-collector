@@ -577,19 +577,19 @@ int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size)
   }
 
   // Use SO_REUSEPORT to be able to launch multiple collector on the same address
-  int optval = 1;
-  if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int)) < 0)
-  {
-    perror("Cannot set SO_REUSEPORT option on socket");
-    exit(EXIT_FAILURE);
-  }
+  // int optval = 1;
+  // if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(int)) < 0)
+  // {
+  //   perror("Cannot set SO_REUSEPORT option on socket");
+  //   exit(EXIT_FAILURE);
+  // }
 
-  uint64_t receive_buf_size = buffer_size;
-  if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size)) < 0)
-  {
-    perror("Cannot set buffer size");
-    exit(EXIT_FAILURE);
-  }
+  // uint64_t receive_buf_size = buffer_size;
+  // if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size)) < 0)
+  // {
+  //   perror("Cannot set buffer size");
+  //   exit(EXIT_FAILURE);
+  // }
 
   if (bind(sockfd, addr_info->ai_addr, (int)addr_info->ai_addrlen) == -1)
   {

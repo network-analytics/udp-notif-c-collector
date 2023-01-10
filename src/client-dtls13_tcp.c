@@ -6,7 +6,7 @@
 #include <strings.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#define MAX 80
+#define MAX 1000
 #define PORT 5000
 #define SA struct sockaddr
 
@@ -28,15 +28,20 @@ void func(int sockfd)
         printf("From Server : %s", buff);
         if ((strncmp(buff, "exit", 4)) == 0) {
             printf("sortie...\n");
-            break;
+            close(sockfd);
+            return;
         }
     }
 }
  
-int main()
+int main(int argc, char *argv[])
 {
-    int sockfd, connfd;
-    struct sockaddr_in servaddr, cli;
+    if (argc != 3){
+        perror("Nombre d'arguments incorrect");
+        exit(1);
+    }
+    int sockfd;
+    struct sockaddr_in servaddr;
  
     // socket create and verification
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -50,8 +55,8 @@ int main()
  
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    servaddr.sin_port = htons(PORT);
+    inet_aton(argv[1], &servaddr.sin_addr);
+    servaddr.sin_port = htons(atoi(argv[2]));
  
     // connect the client socket to server socket
     if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr))

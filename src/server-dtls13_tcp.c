@@ -90,24 +90,26 @@ int main(int argc, char *argv[])
     len = sizeof(cli);
     printf("ok\n");
    
-    // Accept the data packet from client and verification
-    connfd = accept(sockfd, (SA*)&cli, &len);
-    printf("ok\n");
-    if (connfd < 0) {
-        printf("server accept failed...\n");
-        exit(0);
+    while(1){
+        // Accept the data packet from client and verification
+        connfd = accept(sockfd, (SA*)&cli, &len);
+        printf("ok\n");
+        if (connfd < 0) {
+            printf("server accept failed...\n");
+            exit(0);
+        }
+        else
+            printf("server accept the client...\n");
+        printf("ok\n");
+        // Function for chatting between client and server
+        pthread_t thread;
+        int res = pthread_create(&thread, NULL, func_thread, (void*) connfd);
+        if(res < 0){
+            perror("pb dans le thread");
+            exit(1);
+        }
+        pthread_exit(NULL);
     }
-    else
-        printf("server accept the client...\n");
-    printf("ok\n");
-    // Function for chatting between client and server
-    pthread_t thread;
-    int res = pthread_create(&thread, NULL, func_thread, (void*) connfd);
-    if(res < 0){
-        perror("pb dans le thread");
-        exit(1);
-    }
-    pthread_exit(NULL);
    
     // After chatting close the socket
     close(sockfd);

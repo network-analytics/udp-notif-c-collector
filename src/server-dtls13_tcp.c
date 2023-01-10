@@ -11,12 +11,19 @@
 #define MAX 1000
 #define PORT 5000
 #define SA struct sockaddr
+
+struct params{
+    int num_client;
+    int socket;
+};
    
 // Function designed for chat between client and server.
-void* func_thread(void* connfd_p)
+void* func_thread(void* args)
 {
-    int connfd = (intptr_t)connfd_p;
-    printf("conn fd = %d, %p\n", connfd, connfd_p);
+    struct params * to_use = (struct params *)args;
+    int connfd = to_use->socket;
+    int client = to_use->num_client;
+    printf("conn fd = %d\n", connfd);
     char buff[MAX];
     int n;
     // infinite loop for chat
@@ -26,7 +33,7 @@ void* func_thread(void* connfd_p)
         // read the message from client and copy it in buffer
         read(connfd, buff, sizeof(buff));
         // print buffer which contains the client contents
-        printf("From client: %s\t To client : %s\n", buff, buff);
+        printf("From client %d: %s\t To client : %s\n", client, buff, buff);
         // bzero(buff, MAX);
         // n = 0;
         // // copy server message in the buffer
@@ -92,23 +99,27 @@ int main(int argc, char *argv[])
     else
         printf("Server listening..\n");
     len = sizeof(cli);
-    printf("ok\n");
+    int client_number = 1;
    
     while(1){
         // Accept the data packet from client and verification
         printf("waiting for connection...\n");
         connfd = accept(sockfd, (SA*)&cli, &len);
-        printf("ok\n");
+
+        struct params to_send;
+        to_send.num_client = client_number;
+        to_send.socket = connfd;
+        client_number++;
+
         if (connfd < 0) {
             printf("server accept failed...\n");
             exit(0);
         }
         else
             printf("server accept the client...\n");
-        printf("ok\n");
         // Function for chatting between client and server
         pthread_t thread;
-        int res = pthread_create(&thread, NULL, func_thread, (void*) connfd);
+        int res = pthread_create(&thread, NULL, func_thread, (void*) &to_send);
         if(res < 0){
             perror("pb dans le thread");
             exit(1);

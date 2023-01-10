@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
             perror("pb dans le thread");
             exit(1);
         }
+        printf("exit du client\n");
     }
    
     // After chatting close the socket

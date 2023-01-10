@@ -35,6 +35,7 @@ void* func_thread(void* connfd_p)
    
         // and send that buffer to client
         write(connfd, buff, sizeof(buff));
+        printf("Buff transfert = %s\n", buff);
    
         // if msg contains "Exit" then server exit and chat ended.
         if (strncmp("exit", buff, 4) == 0) {
@@ -92,6 +93,7 @@ int main(int argc, char *argv[])
    
     while(1){
         // Accept the data packet from client and verification
+        printf("waiting for connection...\n");
         connfd = accept(sockfd, (SA*)&cli, &len);
         printf("ok\n");
         if (connfd < 0) {

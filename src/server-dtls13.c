@@ -1,324 +1,115 @@
-/* server-dtls-threaded.c
- *
- * Copyright (C) 2006-2020 wolfSSL Inc.
- *
- * This file is part of wolfSSL. (formerly known as CyaSSL)
- *
- * wolfSSL is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * wolfSSL is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
- *
- *=============================================================================
- *
- * Bare-bones example of a threaded DTLS server for instructional/learning
- * purposes. Utilizes DTLS 1.2 and multi-threading
- */
-
-#include <wolfssl/options.h>
-#include <wolfssl/ssl.h>
-#include <stdio.h>                  /* standard in/out procedures */
-#include <stdlib.h>                 /* defines system calls */
-#include <string.h>                 /* necessary for memset */
+#include <stdio.h>
 #include <netdb.h>
-#include <sys/socket.h>             /* used for all socket calls */
-#include <netinet/in.h>             /* used for sockaddr_in */
-#include <arpa/inet.h>
-#include <errno.h>
-#include <signal.h>
+#include <netinet/in.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <pthread.h>
 
-#include "hexdump.h"
-
-#define SERV_PORT   11111           /* define our server port number */
-#define MSGLEN      4096
-
-static WOLFSSL_CTX* ctx;                    /* global for ThreadControl*/
-static int          cleanup;                /* To handle shutdown */
-static struct       sockaddr_in cliAddr;    /* the client's address */
-static struct       sockaddr_in servAddr;   /* our server's address */
-
-void sig_handler(const int sig);
-void* ThreadControl(void*);
-
-typedef struct {
-    int activefd;
-    int size;
-    unsigned char b[MSGLEN];
-} threadArgs;
-
-void sig_handler(const int sig)
+#define MAX 1000
+#define PORT 5000
+#define SA struct sockaddr
+   
+// Function designed for chat between client and server.
+void* func_thread(void* connfd_p)
 {
-    printf("\nSIGINT %d handled\n", sig);
-    cleanup = 1;
-    return;
+    int connfd = (intptr_t)connfd_p;
+    printf("conn fd = %d, %p\n", connfd, connfd_p);
+    char buff[MAX];
+    int n;
+    // infinite loop for chat
+    for (;;) {
+        bzero(buff, MAX);
+   
+        // read the message from client and copy it in buffer
+        read(connfd, buff, sizeof(buff));
+        // print buffer which contains the client contents
+        printf("From client: %s\t To client : ", buff);
+        bzero(buff, MAX);
+        n = 0;
+        // copy server message in the buffer
+        while ((buff[n++] = getchar()) != '\n')
+            ;
+   
+        // and send that buffer to client
+        write(connfd, buff, sizeof(buff));
+   
+        // if msg contains "Exit" then server exit and chat ended.
+        if (strncmp("exit", buff, 4) == 0) {
+            printf("Server Exit...\n");
+            break;
+        }
+    }
+    pthread_exit(NULL);
 }
-
-void* ThreadControl(void* openSock)
+   
+// Driver function
+int main(int argc, char *argv[])
 {
-    pthread_detach(pthread_self());
-    printf("coucou3\n");
-
-    threadArgs* args = (threadArgs*)openSock;
-    int                recvLen = 0;                /* length of message     */
-    int                activefd = args->activefd;  /* the active descriptor */
-    int                msgLen = args->size;        /* the size of message   */
-    unsigned char      buff[msgLen];               /* the incoming message  */
-    char               ack[] = "I hear you fashizzle!\n";
-    WOLFSSL*           ssl;
-    int                e;                          /* error */
-
-    memcpy(buff, args->b, msgLen);
-    //hexdump(buff, msgLen);
-    printf("socket value = %d, message = %s\n", activefd, buff);
-
-
-    /* Create the WOLFSSL Object */
-    if ((ssl = wolfSSL_new(ctx)) == NULL) {
-        printf("wolfSSL_new error.\n");
-        cleanup = 1;
-        return NULL;
+    if (argc != 3){
+        perror("Nombre d'arguments incorrect");
+        exit(1);
     }
 
-    /* set the session ssl to client connection port */
-    wolfSSL_set_fd(ssl, activefd);
-    printf("coucou4\n");
-    printf("value success = %d\n", SSL_SUCCESS);
-    printf("accept value = %d\n", wolfSSL_accept(ssl));
-
-    if (wolfSSL_accept(ssl) != SSL_SUCCESS) {
-
-        e = wolfSSL_get_error(ssl, 0);
-
-        printf("error = %d, %s\n", e, wolfSSL_ERR_reason_error_string(e));
-        printf("SSL_accept failed.\n");
-        return NULL;
+    int sockfd, connfd;
+    socklen_t len;
+    struct sockaddr_in servaddr, cli;
+   
+    // socket create and verification
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
+        printf("socket creation failed...\n");
+        exit(0);
     }
-    printf("coucou accept\n");
-    if ((recvLen = wolfSSL_read(ssl, buff, msgLen-1)) > 0) {
-        printf("heard %d bytes\n", recvLen);
-
-        buff[recvLen] = 0;
-        printf("I heard this: \"%s\"\n", buff);
-
-    } else if (recvLen < 0) {
-        int readErr = wolfSSL_get_error(ssl, 0);
-        if(readErr != SSL_ERROR_WANT_READ) {
-            printf("SSL_read failed.\n");
-            cleanup = 1;
-            return NULL;
-        }
+    else
+        printf("Socket successfully created..\n");
+    bzero(&servaddr, sizeof(servaddr));
+   
+    // assign IP, PORT
+    servaddr.sin_family = AF_INET;
+    inet_aton(argv[1], &servaddr.sin_addr);
+    servaddr.sin_port = htons(atoi(argv[2]));
+   
+    // Binding newly created socket to given IP and verification
+    if ((bind(sockfd, (SA*)&servaddr, sizeof(servaddr))) != 0) {
+        printf("socket bind failed...\n");
+        exit(0);
     }
-    if (wolfSSL_write(ssl, ack, sizeof(ack)) < 0) {
-        printf("wolfSSL_write fail.\n");
-        cleanup = 1;
-        return NULL;
-
-    } else {
-        printf("Sending reply.\n");
+    else
+        printf("Socket successfully binded..\n");
+   
+    // Now server is ready to listen and verification
+    if ((listen(sockfd, 5)) != 0) {
+        printf("Listen failed...\n");
+        exit(0);
     }
-
-    printf("reply sent \"%s\"\n", ack);
-
-    wolfSSL_shutdown(ssl);
-    wolfSSL_free(ssl);
-    close(activefd);
-    free(openSock);                 /* valgrind friendly free */
-
-    printf("Client left return to idle state\n");
-    printf("Exiting thread.\n\n");
-    pthread_exit(openSock);
-}
-
-int main()
-{
-    /* cont short for "continue?", Loc short for "location" */
-    int         cont = 0;
-    char        caCertLoc[] = "./certs/ca-cert.pem";
-    char        servCertLoc[] = "./certs/server-cert.pem";
-    char        servKeyLoc[] = "./certs/server-key.pem";
-
-    int           on = 1;
-    int           res = 1;
-    int           bytesRcvd = 0;
-    int           listenfd = 0;   /* Initialize our socket */
-    socklen_t     cliLen;
-    socklen_t     len = sizeof(on);
-    unsigned char buf[MSGLEN];      /* watch for incoming messages */
-    /* variables needed for threading */
-    threadArgs* args;
-    pthread_t threadid;
-
-    /* Code for handling signals */
-    struct sigaction act, oact;
-    act.sa_handler = sig_handler;
-    sigemptyset(&act.sa_mask);
-    act.sa_flags = 0;
-    sigaction(SIGINT, &act, &oact);
-
-    /* "./config --enable-debug" and uncomment next line for debugging */
-    /* wolfSSL_Debugging_ON(); */
-
-    /* Initialize wolfSSL */
-    wolfSSL_Init();
-
-    /* Set ctx to DTLS 1.3 */
-    if ((ctx = wolfSSL_CTX_new(wolfDTLSv1_3_server_method())) == NULL) {
-        printf("wolfSSL_CTX_new error.\n");
-        return 1;
+    else
+        printf("Server listening..\n");
+    len = sizeof(cli);
+    printf("ok\n");
+   
+    // Accept the data packet from client and verification
+    connfd = accept(sockfd, (SA*)&cli, &len);
+    printf("ok\n");
+    if (connfd < 0) {
+        printf("server accept failed...\n");
+        exit(0);
     }
-    /* Load CA certificates */
-    if (wolfSSL_CTX_load_verify_locations(ctx,caCertLoc,0) !=
-            SSL_SUCCESS) {
-        printf("Error loading %s, please check the file.\n", caCertLoc);
-        return 1;
+    else
+        printf("server accept the client...\n");
+    printf("ok\n");
+    // Function for chatting between client and server
+    pthread_t thread;
+    int res = pthread_create(&thread, NULL, func_thread, (void*) connfd);
+    if(res < 0){
+        perror("pb dans le thread");
+        exit(1);
     }
-    /* Load server certificates */
-    if (wolfSSL_CTX_use_certificate_file(ctx, servCertLoc, SSL_FILETYPE_PEM) != 
-            SSL_SUCCESS) {
-        printf("Error loading %s, please check the file.\n", servCertLoc);
-        return 1;
-    }
-    /* Load server Keys */
-    if (wolfSSL_CTX_use_PrivateKey_file(ctx, servKeyLoc,
-                SSL_FILETYPE_PEM) != SSL_SUCCESS) {
-        printf("Error loading %s, please check the file.\n", servKeyLoc);
-        return 1;
-    }
-
-    /* Create a UDP/IP socket */
-    if ((listenfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
-        printf("Cannot create socket.\n");
-        cleanup = 1;
-    }
-    printf("Socket allocated\n");
-
-    /* clear servAddr each loop */
-    memset((char *)&servAddr, 0, sizeof(servAddr));
-
-    /* host-to-network-long conversion (htonl) */
-    /* host-to-network-short conversion (htons) */
-    servAddr.sin_family      = AF_INET;
-    servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servAddr.sin_port        = htons(SERV_PORT);
-
-    /* Eliminate socket already in use error */
-    res = setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &on, len);
-    if (res < 0) {
-        printf("Setsockopt SO_REUSEADDR failed.\n");
-        cleanup = 1;
-        return 1;
-    }
-
-    /*Bind Socket*/
-    if (bind(listenfd, (struct sockaddr *)&servAddr, sizeof(servAddr)) < 0) {
-        printf("Bind failed.\n");
-        cleanup = 1;
-        return 1;
-    }
-
-    printf("Awaiting client connection on port %d\n", SERV_PORT);
-
-    while (cleanup != 1) {
-
-        memset(&threadid, 0, sizeof(threadid));
-
-        args = (threadArgs *) malloc(sizeof(threadArgs));
-
-        cliLen = sizeof(cliAddr);
-       /* note argument 4 of recvfrom not MSG_PEEK as dtls will see
-        * handshake packets and think a message is arriving. Instead
-        * read any real message to struct and pass struct into thread
-        * for processing.
-        */
-
-        bytesRcvd = (int)recvfrom(listenfd, (char *)buf, sizeof(buf), 0, (struct sockaddr*)&cliAddr, &cliLen);
-
-        if (cleanup == 1) {
-            free(args);
-            return 1;
-        }
-
-        if (bytesRcvd < 0) {
-            printf("No clients in que, enter idle state\n");
-            continue;
-        }
-
-        else if (bytesRcvd > 0) {
-
-            /* put all the bytes from buf into args */
-            memcpy(args->b, buf, sizeof(buf));
-
-            args->size = bytesRcvd;
-
-            if ((args->activefd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
-                printf("Cannot create socket.\n");
-                cleanup = 1;
-            }
-
-            res = setsockopt(args->activefd, SOL_SOCKET, SO_REUSEADDR, &on, len);
-
-            if (res < 0) {
-                printf("Setsockopt SO_REUSEADDR failed.\n");
-                cleanup = 1;
-                return 1;
-            }
-
-            #ifdef SO_REUSEPORT
-                res = setsockopt(args->activefd, SOL_SOCKET, SO_REUSEPORT, &on, len);
-                if (res < 0) {
-                    printf("Setsockopt SO_REUSEPORT failed.\n");
-                    cleanup = 1;
-                    return 1;
-                }
-            #endif
-
-            if (connect(args->activefd, (const struct sockaddr *)&cliAddr, sizeof(cliAddr)) != 0) {
-                printf("Udp connect failed.\n");
-                cleanup = 1;
-                return 1;
-            }
-        }
-        else {
-            /* else bytesRcvd = 0 */
-            printf("Recvfrom failed.\n");
-            cleanup = 1;
-            return 1;
-        }
-        printf("Connected!\n");
-
-        if (cleanup != 1) {
-            /* SPIN A THREAD HERE TO HANDLE "buff" and "reply/ack" */
-            printf("coucou1\n");
-            pthread_create(&threadid, NULL, ThreadControl, args);
-            printf("coucou2\n");
-            //ThreadControl(args);
-            printf("control passed to ThreadControl.\n");
-        }
-        else if (cleanup == 1) {
-            return 1;
-        } else {
-            printf("I don't know what to tell ya man\n");
-        }
-
-        /* clear servAddr each loop */
-        memset((char *)&servAddr, 0, sizeof(servAddr));
-    }
-
-    if (cont == 1) {
-        wolfSSL_CTX_free(ctx);
-        wolfSSL_Cleanup();
-    }
-
+    pthread_exit(NULL);
+   
+    // After chatting close the socket
+    close(sockfd);
     return 0;
 }

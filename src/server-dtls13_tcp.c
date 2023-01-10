@@ -108,7 +108,6 @@ int main(int argc, char *argv[])
             perror("pb dans le thread");
             exit(1);
         }
-        pthread_exit(NULL);
     }
    
     // After chatting close the socket

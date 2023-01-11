@@ -89,6 +89,9 @@ int main(int argc, char *argv[])
     //initialisation de la librairie
     wolfSSL_Init();
 
+    //debuggage
+    wolfSSL_Debugging_ON();
+
     //initialisation des contextes
     if ((ctx = wolfSSL_CTX_new(wolfDTLSv1_2_client_method())) == NULL) {
         fprintf(stderr, "wolfSSL_CTX_new error.\n");
@@ -117,17 +120,20 @@ int main(int argc, char *argv[])
         printf("Socket successfully created..\n");
     }
     bzero(&servaddr, sizeof(servaddr));
- 
+    printf("coucou\n");
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
     inet_aton(argv[1], &servaddr.sin_addr);
     servaddr.sin_port = htons(atoi(argv[2]));
+    printf("coucou1\n");
 
     //set du peer du client du côté client
     wolfSSL_dtls_set_peer(ssl, &servaddr, sizeof(servaddr));
+    printf("coucou2\n");
 
     //liaison entre la socket et la connexion ssl
     wolfSSL_set_fd(ssl, sockfd);
+    printf("coucou4\n");
  
     // connect the client socket to server socket
     // if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr))
@@ -141,14 +147,20 @@ int main(int argc, char *argv[])
 
 
     //liaison du connect dtls avec le serveur 
+    printf("juste avant connexion\n");
+    printf("%d\n", SSL_SUCCESS);
+    printf("%d\n", wolfSSL_connect(ssl));
     if (wolfSSL_connect(ssl) != SSL_SUCCESS) {
+        printf("bonjour\n");
 	    int err1 = wolfSSL_get_error(ssl, 0);
 	    printf("err = %d, %s\n", err1, wolfSSL_ERR_reason_error_string(err1));
 	    printf("SSL_connect failed");
         return 1;
     }
+    printf("coucou5\n");
  
     func(ssl);
+    printf("coucou6\n");
  
     wolfSSL_shutdown(ssl);
     wolfSSL_free(ssl);

@@ -66,7 +66,7 @@ void* func_thread(void* args)
     int client = to_use->num_client;
     int size = to_use->size;
     char message[size];
-    strcpy(message, to->message, size);
+    strcpy(message, to_use->message);
 
     printf("conn fd = %d\n", connfd);
     char buff[MAX];
@@ -95,7 +95,7 @@ void* func_thread(void* args)
         printf("heard %d bytes\n", value_read);
 
         buff[value_read] = 0;
-        printf("I heard this: \"%s\"\n", buff);
+        printf("I heard, from client %d, this: \"%s\"\n", client, buff);
     } else if (value_read < 0) {
         int readErr = wolfSSL_get_error(ssl, 0);
         if(readErr != SSL_ERROR_WANT_READ) {
@@ -106,7 +106,7 @@ void* func_thread(void* args)
     }
 
     //dernière partie à modifier
-    if (wolfSSL_write(ssl, ack, sizeof(ack)) < 0) {
+    if (wolfSSL_write(ssl, buff, sizeof(buff)) < 0) {
         printf("wolfSSL_write fail.\n");
         cleanup = 1;
         return NULL;
@@ -115,16 +115,15 @@ void* func_thread(void* args)
         printf("Sending reply.\n");
     }
 
-    printf("reply sent \"%s\"\n", ack);
+    printf("reply sent \"%s\"\n", buff);
 
     wolfSSL_shutdown(ssl);
     wolfSSL_free(ssl);
-    close(activefd);
-    free(openSock);                 /* valgrind friendly free */
+    close(connfd);
 
     printf("Client left return to idle state\n");
     printf("Exiting thread.\n\n");
-    pthread_exit(openSock);
+    pthread_exit(args);
 
 
 }
@@ -155,6 +154,9 @@ int main(int argc, char *argv[])
 
     //initialisation de la librairie
     wolfSSL_Init();
+
+    //debuggage
+    wolfSSL_Debugging_ON();
 
     //création des contextes /!\ dtls 1.2 ici
     if ((ctx = wolfSSL_CTX_new(wolfDTLSv1_2_server_method())) == NULL) {
@@ -218,7 +220,7 @@ int main(int argc, char *argv[])
    
     while(!cleanup){
         // Accept the data packet from client and verification
-        printf("waiting for connection...\n");
+        //printf("waiting for connection...\n");
 
         //premier recvfrom pour savoir si un client est connecté
         len = sizeof(cli);
@@ -230,11 +232,11 @@ int main(int argc, char *argv[])
         }
 
         if (bytesRcvd < 0) {
-            printf("No clients in que, enter idle state\n");
+            //printf("No clients in que, enter idle state\n");
             continue;
         } else if (bytesRcvd > 0) {
             to_send.size = bytesRcvd;
-            strcpy(to_send.message, buf, bytesRcvd);
+            strcpy(to_send.message, buf);
             int socket_send;
             if ((socket_send = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
                 printf("Cannot create socket.\n");

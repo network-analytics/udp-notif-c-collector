@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "unyte_udp_utils.h"
 
-//dtls header
+//dtls header, add macro here
 #include <wolfssl/options.h>
 #include <wolfssl/ssl.h>
 #include "dtls-common.h"
@@ -22,22 +22,20 @@ typedef struct
   uint64_t socket_buff_size;  // socket buffer size in bytes
 } unyte_sender_options_t;
 
-//#ifdef ENABLE_DTLS_
-typedef struct
+
+struct dtls_params//add macro here
 {
-    WOLFSSL* ssl;
-    WOLFSSL_CTX* ctx;
-} dtls_params;
-//#endif
+    WOLFSSL * ssl;
+    WOLFSSL_CTX * ctx;
+};
+
 
 struct unyte_sender_socket
 {
   int sockfd;
-  struct sockaddr_storage *sock_in;
+  struct sockaddr_in *sock_in;
   uint default_mtu;
-//#ifdef ENABLE_DTLS_
-    dtls_params dtls;
-//#endif
+  struct dtls_params * dtls; //add macro here
 };
 
 
@@ -45,13 +43,13 @@ struct unyte_sender_socket
  * Initializes the sender to address and port set in options
  */
 struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options);
+struct unyte_sender_socket *unyte_start_sender_dtls(unyte_sender_options_t *options);
 
 /**
  * Sends message to unyte socket
  */
 int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message);
-int unyte_send_with_dtls_context(struct unyte_sender_socket *sender_sk, unyte_message_t *message, int reuse);
-
+int unyte_send_dtls(struct unyte_sender_socket * sender_sk, unyte_message_t * message);
 /**
  * Free unyte socket sender struct
  */

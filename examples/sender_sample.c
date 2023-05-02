@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
+// #include <stdio.h>
+// #include <stdlib.h>
 
-#include "../src/unyte_sender.h"
+// #include "../src/unyte_sender.h"
 
 // #define MTU 1500
 //
@@ -136,36 +136,41 @@
 
 int main(int argc, char *argv[])
 {
-  if (argc != 3)
+  printf("\n");
+  if (argc != 4)
   {
     printf("Error: arguments not valid\n");
-    printf("Usage: ./sender_sample <ip> <port>\n"); //on oublie le SERV_PORT dans le dtls-common
+    printf("Usage: ./sender_sample <ip> <port> <ca_cert_name>\n"); //on oublie le SERV_PORT dans le dtls-common
     exit(1);
   }
-
-  //TODO : faire le fork pour l'envoi des clients
+  char * temp_certificats = "../certs/";
 
   // Initialize collector options
   unyte_sender_options_t options = {0};
   options.address = argv[1];
   options.port = argv[2];
   options.default_mtu = MTU;
+
   printf("Init sender on %s:%s | mtu: %d\n", options.address, options.port, MTU);
+  
+  char * caCertLoc_name = argv[3];
+  char caCertLoc[100];
+  strcpy(caCertLoc, temp_certificats);
+  strcat(caCertLoc, caCertLoc_name);
+  options.caCertLoc = caCertLoc;
 
   //struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
   struct unyte_sender_socket *sender_sk = unyte_start_sender_dtls(&options);
-
   for(int i = 0; i < 5; i++){
 
       char string_to_send[50];
       sprintf((char *) string_to_send, "%s %d", "Message", i);
-      printf("message to send = %s\n", string_to_send);
+      printf("message to send = %s, len = %ld\n", string_to_send, strlen(string_to_send));
 
       unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
 
       message->buffer = string_to_send;
       message->buffer_len = strlen(string_to_send);
-      printf("buffer length = %ld\n", strlen(string_to_send));
 
       // UDP-notif
       message->version = 0;
@@ -183,5 +188,6 @@ int main(int argc, char *argv[])
       free(message);
   }
   free_sender_socket(sender_sk);
+  printf("\n");
   return 0;
 }

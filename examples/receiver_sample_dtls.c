@@ -11,7 +11,6 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "../dtls-common.h"
 #include "../src/hexdump.h"
 #include "../src/unyte_udp_collector.h"
 

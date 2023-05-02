@@ -147,10 +147,11 @@
 /* Requires libevent */
 #include <event2/event.h>
 
-#include "../src/dtls-common.h"
+#include "../src/unyte_sender.h"
 #include "../src/hexdump.h"
 
-
+#define INVALID_SOCKET -1
+#define MAXLINE   10000
 #define QUICK_MULT  4               /* Our quick timeout multiplier */
 #define CHGOODCB_E  (-1000)         /* An error outside the range of wolfSSL
                                      * errors */
@@ -177,6 +178,7 @@ int client_number = 1;
 struct thread_arguments{
     int client_number;
     int port_number;
+    char * ip_address;
 };
 
 static void sig_handler(const int sig); //gestion des signaux
@@ -186,7 +188,7 @@ static void dataReady(evutil_socket_t fd, short events, void* arg); //gestion de
 static int chGoodCb(WOLFSSL* ssl, void*); //check if everything with the connection is ok (fd, connect de la socket, création et gestion des events)
 static int hsDoneCb(WOLFSSL* ssl, void*); //print les infos de la connexion ssl
 static int newPendingSSL(struct thread_arguments * arguments); //définition et gestion de la connexion ssl (set_context + set_fd)
-static int newFD(int port_number); //création d'une nouvelle socket udp et est bind si tout est ok
+static int newFD(int port_number, char * ip_address); //création d'une nouvelle socket udp et est bind si tout est ok
 static void conn_ctx_free(conn_ctx* connCtx); //free des ressources de la connexion conn_ctx
 
 
@@ -197,7 +199,7 @@ void* thread_function(void * args){
 
     struct thread_arguments * args_to_send = (struct thread_arguments *)args;
 
-    listenfd = newFD(args_to_send->port_number);
+    listenfd = newFD(args_to_send->port_number, args_to_send->ip_address);
     if (listenfd == INVALID_SOCKET)
         exit(EXIT_FAILURE);
 
@@ -229,21 +231,35 @@ void* thread_function(void * args){
         exit(EXIT_FAILURE);
     }
 
-    printf("done with dispatching\n");
-
-
 
     pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2){
-        perror("Error in the number of arguments...");
+    if (argc != 6){
+        perror("Usage: ./client_sample <ip> <port> <ca_cert_name> <server_cert> <server_key_cert>");
         exit(1);
     }
     int exitVal = 1;
-    int port_number_main = atoi(argv[1]);
+    int port_number_main = atoi(argv[2]);
+
+    char * temp_certificats = "../certs/";
+    char * caCertLoc_name = argv[3];
+    char * servCertLoc_name = argv[4];
+    char * servKeyLoc_name = argv[5];
+    char caCertLoc[100];
+    char servCertLoc[100];
+    char servKeyLoc[100];
+
+    strcpy(caCertLoc, temp_certificats);
+    strcat(caCertLoc, caCertLoc_name);
+
+    strcpy(servCertLoc, temp_certificats);
+    strcat(servCertLoc, servCertLoc_name);
+
+    strcpy(servKeyLoc, temp_certificats);
+    strcat(servKeyLoc, servKeyLoc_name);
 
     /* Initialize wolfSSL before assigning ctx */
     if (wolfSSL_Init() != WOLFSSL_SUCCESS) {
@@ -287,6 +303,7 @@ int main(int argc, char *argv[])
     struct thread_arguments args;
     args.client_number = client_number;
     args.port_number = port_number_main;
+    args.ip_address = argv[1];
 
     pthread_t thread;
     int res_thread = pthread_create(&thread, NULL, thread_function, &args);
@@ -302,7 +319,7 @@ int main(int argc, char *argv[])
     return exitVal;
 }
 
-static int newFD(int port_number)
+static int newFD(int port_number, char * ip_address)
 {
     int fd;
     int on = 1;
@@ -317,8 +334,8 @@ static int newFD(int port_number)
     /* host-to-network-long conversion (htonl) */
     /* host-to-network-short conversion (htons) */
     servAddr.sin_family      = AF_INET;
-    servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servAddr.sin_port        = htons(port_number);
+    inet_aton(ip_address, &servAddr.sin_addr);
+    servAddr.sin_port = htons(port_number);
 
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof(on)) != 0) {
         perror("setsockopt() with SO_REUSEADDR");
@@ -459,6 +476,7 @@ static int chGoodCb(WOLFSSL* ssl, void* arg) //gestion de connexions clients
     struct thread_arguments * arguments = arg;
     connCtx->client_number = arguments->client_number;
     int port = arguments->port_number;
+    char * ip_address = arguments->ip_address;
 
     if (connCtx == NULL) {
         fprintf(stderr, "Out of memory!\n");
@@ -497,7 +515,7 @@ static int chGoodCb(WOLFSSL* ssl, void* arg) //gestion de connexions clients
 
     /* We need to change the SFD here so that the ssl object doesn't drop any
      * new connections */
-    fd = newFD(port);
+    fd = newFD(port, ip_address);
     if (fd == INVALID_SOCKET){
         if (fd != INVALID_SOCKET) {
             close(fd);
@@ -608,7 +626,7 @@ static int chGoodCb(WOLFSSL* ssl, void* arg) //gestion de connexions clients
 
 static int hsDoneCb(WOLFSSL* ssl, void* arg) //print les infos de la connexion 
 {
-    showConnInfo(ssl);
+    printf("New connection established using %s %s\n", wolfSSL_get_version(ssl), wolfSSL_get_cipher(ssl));
     (void)arg;
     return 0;
 }
@@ -664,7 +682,6 @@ static void dataReady(evutil_socket_t fd, short events, void* arg) //lecture et 
         ret = wolfSSL_read(connCtx->ssl, msg, sizeof(msg) - 1);
         if (ret > 0) {
             msgSz = ret;
-            printf("length value to read : %d\n", ret);
             msg[msgSz] = '\0';
             printf("Received message from client %d :\n", client_number);
             hexdump(msg, msgSz); //pas d'affichage correct avec la taille spécifiée

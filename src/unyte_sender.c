@@ -35,11 +35,10 @@ struct unyte_sender_socket *unyte_start_sender_dtls(unyte_sender_options_t *opti
 
   struct dtls_params *dtls = (struct dtls_params *)malloc(sizeof(struct dtls_params));
 
-
 //start dtls -----------------------
   WOLFSSL * ssl = NULL;
   WOLFSSL_CTX * ctx = NULL;
-  int sockfd = INVALID_SOCKET;
+  int sockfd = -1;
 
   if (wolfSSL_Init() != WOLFSSL_SUCCESS) {
       fprintf(stderr, "wolfSSL_CTX_new error.\n");
@@ -53,8 +52,8 @@ struct unyte_sender_socket *unyte_start_sender_dtls(unyte_sender_options_t *opti
       cleanup_main(ssl, sockfd, ctx);
   }
 
-  if (wolfSSL_CTX_load_verify_locations(ctx, caCertLoc, 0) != SSL_SUCCESS) {
-      fprintf(stderr, "Error loading %s, please check the file.\n", caCertLoc);
+  if (wolfSSL_CTX_load_verify_locations(ctx, options->caCertLoc, 0) != SSL_SUCCESS) {
+      fprintf(stderr, "Error loading %s, please check the file.\n", options->caCertLoc);
       cleanup_main(ssl, sockfd, ctx);
   }
 
@@ -89,7 +88,7 @@ struct unyte_sender_socket *unyte_start_sender_dtls(unyte_sender_options_t *opti
   //end dtls -----------------------
 
 
-  sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+  sockfd = socket(AF_INET, SOCK_DGRAM, 0); //ipv4 support only for the moment 
 
   if (sockfd < 0)
   {
@@ -112,6 +111,7 @@ struct unyte_sender_socket *unyte_start_sender_dtls(unyte_sender_options_t *opti
       cleanup_main(ssl, sockfd, ctx);
   }
 
+
   if (wolfSSL_connect(ssl) != SSL_SUCCESS) {
       int err = wolfSSL_get_error(ssl, 0);
       fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
@@ -130,6 +130,9 @@ struct unyte_sender_socket *unyte_start_sender_dtls(unyte_sender_options_t *opti
     exit(EXIT_FAILURE);
   }
 
+  //start dtls -----------------------
+  printf("New connection established using %s %s\n\n", wolfSSL_get_version(ssl), wolfSSL_get_cipher(ssl));
+  //end dtls -----------------------
 
   sender_sk->sock_in = &address;
   sender_sk->sockfd = sockfd;
@@ -255,7 +258,7 @@ int unyte_send(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
 
 int unyte_send_dtls(struct unyte_sender_socket *sender_sk, unyte_message_t *message)
 {
-  char recvLine[MAXLINE - 1]; //just to check if we have a response
+  char recvLine[DEFAULT_MTU - 1]; //just to check if we have a response
   int err, n;
   uint mtu = message->used_mtu;
   if (mtu <= 0)
@@ -266,10 +269,6 @@ int unyte_send_dtls(struct unyte_sender_socket *sender_sk, unyte_message_t *mess
       mtu = DEFAULT_MTU;
   }
 
-  //start dtls -----------------------
-  //showConnInfo(sender_sk->dtls->ssl);
-  //end dtls -----------------------
-
 
   struct unyte_segmented_msg *packets = build_message(message, mtu);
   unyte_seg_met_t *current_seg = packets->segments;
@@ -277,15 +276,15 @@ int unyte_send_dtls(struct unyte_sender_socket *sender_sk, unyte_message_t *mess
   for (uint i = 0; i < packets->segments_len; i++)
   {
     unsigned char *parsed_packet = serialize_message(current_seg);
+    //printf("parsed paquet = %d\n", current_seg->header->message_length);
 
     //start dtls -----------------------
-    if (wolfSSL_write(sender_sk->dtls->ssl, parsed_packet, strlen(parsed_packet)) != strlen(parsed_packet)) {
+    if (n = wolfSSL_write(sender_sk->dtls->ssl, parsed_packet, current_seg->header->message_length + current_seg->header->header_length) != current_seg->header->message_length + current_seg->header->header_length) {
         err = wolfSSL_get_error(sender_sk->dtls->ssl, 0);
         fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
         fprintf(stderr, "wolfSSL_write failed\n");
         cleanup_main(sender_sk->dtls->ssl, sender_sk->sockfd, sender_sk->dtls->ctx);
     }
-
     n = wolfSSL_read(sender_sk->dtls->ssl, recvLine, sizeof(recvLine)-1);
 
     if (n > 0) {

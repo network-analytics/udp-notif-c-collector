@@ -7,11 +7,11 @@
 //dtls header, add macro here
 #include <wolfssl/options.h>
 #include <wolfssl/ssl.h>
-#include "dtls-common.h"
-
 
 #define DEFAULT_MTU 1500
 #define DEFAULT_SK_SND_BUFF_SIZE 20971520 // 20MB of socket buffer size
+#define INVALID_SOCKET -1
+
 
 typedef struct
 {
@@ -20,6 +20,7 @@ typedef struct
   uint default_mtu;
   char *interface;
   uint64_t socket_buff_size;  // socket buffer size in bytes
+  char * caCertLoc;
 } unyte_sender_options_t;
 
 

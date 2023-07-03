@@ -7,7 +7,65 @@
 #include <string.h>
 #include <net/if.h>
 #include <netdb.h>
+#include <errno.h>
 #include "unyte_sender.h"
+
+static void set_ipv4_freebind(int sockfd)
+{
+#ifdef IP_FREEBIND
+  int opt = 1;
+  if (setsockopt(sockfd, IPPROTO_IP, IP_FREEBIND, (void *)&opt, sizeof(opt)) == -1) {
+    printf("couldn't set IP_FREEBIND: %d %s\n", errno, strerror(errno));
+  }
+#endif
+}
+
+static void set_ipv6_freebind(int sockfd)
+{
+#ifdef IPV6_FREEBIND
+  int opt = 1;
+  if (setsockopt(sockfd, IPPROTO_IPV6, IPV6_FREEBIND, (void *)&opt, sizeof(opt)) == -1) {
+    printf("couldn't set IPV6_FREEBIND: %d %s\n", errno, strerror(errno));
+  }
+#endif
+}
+
+static int set_local_address(int sockfd, const char *local_address)
+{
+  struct addrinfo *local_addr_info = NULL;
+  struct addrinfo hints;
+  int rc;
+
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_socktype = SOCK_DGRAM;
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_flags = AI_PASSIVE | AI_NUMERICSERV | AI_NUMERICHOST;
+
+  rc = getaddrinfo(local_address, NULL, &hints, &local_addr_info);
+  if (rc != 0) {
+    printf("getaddrinfo error: %s\n", gai_strerror(rc));
+    return -1;
+  }
+
+  if (local_addr_info->ai_family == AF_INET) {
+    set_ipv4_freebind(sockfd);
+  } else if (local_addr_info->ai_family == AF_INET6) {
+    set_ipv6_freebind(sockfd);
+  } else {
+    printf("%s is an is unknown address format %d\n", local_address, local_addr_info->ai_family);
+    freeaddrinfo(local_addr_info);
+    return -1;
+  }
+
+  if (bind(sockfd, local_addr_info->ai_addr, local_addr_info->ai_addrlen)) {
+    perror("bind socket error");
+    freeaddrinfo(local_addr_info);
+    return -1;
+  }
+
+  freeaddrinfo(local_addr_info);
+  return rc;
+}
 
 struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
 {
@@ -62,6 +120,14 @@ struct unyte_sender_socket *unyte_start_sender(unyte_sender_options_t *options)
     if (setsockopt(sockfd, SOL_SOCKET, SO_BINDTODEVICE, interface, len) < 0)
     {
       perror("Bind socket to interface failed");
+      exit(EXIT_FAILURE);
+    }
+  }
+
+  const char *local_address = options->local_address;
+  if (local_address && strlen(local_address) > 0) {
+    if (set_local_address(sockfd, local_address)) {
+      perror("Bind socket to address failed");
       exit(EXIT_FAILURE);
     }
   }

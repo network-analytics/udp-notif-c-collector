@@ -13,6 +13,7 @@ typedef struct
   char *port;
   uint default_mtu;
   char *interface;
+  char *local_address;
   uint64_t socket_buff_size;  // socket buffer size in bytes
 } unyte_sender_options_t;
 

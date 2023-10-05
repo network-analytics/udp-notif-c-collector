@@ -16,7 +16,7 @@ client_monitoring_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D
 client_monitoring_LDADD = $(srcdir)/../src/libunyte-udp-notif.la
 
 client_sample_SOURCES = client_sample.c
-client_sample_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC -pthread -levent -levent_core
+client_sample_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC -pthread -levent -levent_core -lwolfssl
 client_sample_LDADD = $(srcdir)/../src/libunyte-udp-notif.la
 
 client_socket_SOURCES = client_socket.c
@@ -28,7 +28,7 @@ sender_json_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_S
 sender_json_LDADD = $(srcdir)/../src/libunyte-udp-notif.la
 
 sender_sample_SOURCES = sender_sample.c
-sender_sample_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC -pthread
+sender_sample_CFLAGS = -I$(srcdir)/../src -Wextra -Wall -ansi -g -std=c11 -D_GNU_SOURCE -fPIC -pthread -lwolfssl
 sender_sample_LDADD = $(srcdir)/../src/libunyte-udp-notif.la
 
 sender_custom_encoding_SOURCES = sender_custom_encoding.c

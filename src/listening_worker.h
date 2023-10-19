@@ -46,6 +46,9 @@ struct monitoring_worker
   bool running;
 };
 
+// Launcher of the DTLS server 
+int dtls_server_launcher(char * ip_address, int port, char * cacert, char * servercert, char * serverkey);
+
 /**
  * Threadified app function listening using listener_thread_input struct parameters.
  */

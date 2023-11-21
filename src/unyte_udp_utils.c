@@ -124,6 +124,8 @@ unyte_seg_met_t *parse_with_metadata(char *segment, unyte_min_t *um)
       unyte_option_t *custom_option = malloc(sizeof(unyte_option_t));
       printf("LENGTH = %d\n", (length - 2));
       char *options_data = malloc(length - 2); // 1 byte for type and 1 byte for length
+      if (custom_option == NULL) printf("malloc failed custom\n");
+      if (options_data == NULL) printf("malloc failed data\n");
       if (custom_option == NULL || options_data == NULL)
       {
         printf("Malloc failed option\n");
@@ -549,6 +551,7 @@ int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size)
 
   struct addrinfo *addr_info;
   struct addrinfo hints;
+  int on = 1;
 
   memset(&hints, 0, sizeof(hints));
 
@@ -586,10 +589,26 @@ int unyte_udp_create_socket(char *address, char *port, uint64_t buffer_size)
 
   // uint64_t receive_buf_size = buffer_size;
   // if (setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &receive_buf_size, sizeof(receive_buf_size)) < 0)
-  // {
-  //   perror("Cannot set buffer size");
-  //   exit(EXIT_FAILURE);
+  // { 
   // }
+
+  if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (char*)&on, sizeof(on)) != 0) {
+    perror("setsockopt() with SO_REUSEADDR");
+    if (sockfd != INVALID_SOCKET) {
+        close(sockfd);
+        sockfd = INVALID_SOCKET;
+    }
+    return INVALID_SOCKET;
+  }
+
+  if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, (char*)&on, sizeof(on)) != 0) {
+    perror("setsockopt() with SO_REUSEPORT");
+    if (sockfd != INVALID_SOCKET) {
+        close(sockfd);
+        sockfd = INVALID_SOCKET;
+    }
+    return INVALID_SOCKET;
+  }
 
   if (bind(sockfd, addr_info->ai_addr, (int)addr_info->ai_addrlen) == -1)
   {

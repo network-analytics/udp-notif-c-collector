@@ -12,6 +12,7 @@
 #define LAST_MASK 0b00000001
 #define HEADER_BYTES 12
 #define UNYTE_SEGMENTATION_OPTION_LEN 4
+#define INVALID_SOCKET -1
 
 typedef struct unyte_option
 {

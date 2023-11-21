@@ -92,7 +92,13 @@ unyte_udp_collector_t *unyte_udp_create_listener(
     uint parsers_q_size,
     uint monitoring_delay,
     bool msg_dst_ip,
-    bool legacy)
+    bool legacy,
+    int sockfd,
+    char * cacert,
+    char * servercert,
+    char * serverkey,
+    char * ip,
+    int port)
 {
   pthread_t *udpListener = (pthread_t *)malloc(sizeof(pthread_t));
   struct listener_thread_input *listener_input = (struct listener_thread_input *)malloc(sizeof(struct listener_thread_input));
@@ -113,6 +119,12 @@ unyte_udp_collector_t *unyte_udp_create_listener(
   listener_input->monitoring_delay = monitoring_delay;
   listener_input->msg_dst_ip = msg_dst_ip;
   listener_input->legacy_proto = legacy;
+  listener_input->sockfd = sockfd;
+  listener_input->cacert = cacert;
+  listener_input->servercert = servercert;
+  listener_input->serverkey = serverkey;
+  listener_input->ip = ip;
+  listener_input->port = port;
 
   /*Threaded UDP listener*/
   pthread_create(udpListener, NULL, t_listener, (void *)listener_input);
@@ -121,6 +133,8 @@ unyte_udp_collector_t *unyte_udp_create_listener(
   collector->monitoring_queue = monitoring_queue;
   collector->sockfd = conn->sockfd;
   collector->main_thread = udpListener;
+
+  printf("end of create listener\n");
 
   return collector;
 }
@@ -143,7 +157,8 @@ unyte_udp_collector_t *unyte_udp_start_collector(unyte_udp_options_t *options)
   /* Return struct */
   unyte_udp_collector_t *collector = unyte_udp_create_listener(
       output_queue, monitoring_queue, conn, options->recvmmsg_vlen, options->nb_parsers,
-      options->parsers_queue_size, options->monitoring_delay, options->msg_dst_ip, options->legacy);
+      options->parsers_queue_size, options->monitoring_delay, options->msg_dst_ip, options->legacy, 
+      options->sockfd, options->cacert, options->servercert, options->serverkey, options->ip, options->port);
 
   if (collector == NULL)
   {

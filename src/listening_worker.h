@@ -23,6 +23,12 @@ struct listener_thread_input
   uint monitoring_delay;               /* Monitoring frequence in seconds */
   bool msg_dst_ip;                     /* IP packet dst IP parsed */
   bool legacy_proto;                   /* Legacy UDP-notif protocol */
+  int sockfd;
+  char * ip;
+  int port;
+  char * cacert;
+  char * servercert;
+  char * serverkey;
 };
 
 struct parse_worker
@@ -45,9 +51,6 @@ struct monitoring_worker
   struct monitoring_thread_input *monitoring_in;
   bool running;
 };
-
-// Launcher of the DTLS server 
-int dtls_server_launcher(char * ip_address, int port, char * cacert, char * servercert, char * serverkey);
 
 /**
  * Threadified app function listening using listener_thread_input struct parameters.

@@ -32,6 +32,12 @@ typedef struct
   uint monitoring_queue_size; // monitoring queue size
   uint monitoring_delay;      // monitoring queue frequence in seconds
   bool legacy;                // legacy udp-notif: draft-ietf-netconf-udp-pub-channel-05
+  int sockfd;                 // Socket ID for DTLS server
+  char * ip;
+  int port;
+  char * cacert;
+  char * servercert;
+  char * serverkey;
 } unyte_udp_options_t;
 
 /**

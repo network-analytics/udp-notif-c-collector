@@ -25,7 +25,7 @@
 
 #define QUICK_MULT  4
 #define CHGOODCB_E  (-1000)
-#define CONN_TIMEOUT 100 
+#define CONN_TIMEOUT 1000 
 #define MAXLINE   4096
 #define INVALID_SOCKET -1
 #define MAX_TO_RECEIVE 10
@@ -254,6 +254,9 @@ typedef struct conn_ctx {
     struct event* writeEv; //An event can have some underlying condition it represents: a socket becoming readable or writeable (or both), or a signal becoming raised. (An event that represents no underlying condition is still useful: you can use one to implement a timer, or to communicate between threads.)
     char waitingOnData:1;
     int client_number; //print the number of the client connected who is currently talking on the connection, always incremented
+    struct parse_worker * parsers;
+    struct monitoring_worker * monitoring;
+    struct listener_thread_input *in;
 } conn_ctx;
 
 WOLFSSL_CTX*  ctx = NULL; //contexte dtls
@@ -268,6 +271,9 @@ struct thread_arguments{
     int client_number;
     int port_number;
     char * ip_address;
+    struct parse_worker * parsers;
+    struct monitoring_worker * monitoring;
+    struct listener_thread_input *in;
 };
 
 static void sig_handler(const int sig); //gestion des signaux
@@ -281,7 +287,7 @@ static int newFD(int port_number, char * ip_address); //création d'une nouvelle
 static void conn_ctx_free(conn_ctx* connCtx); //free des ressources de la connexion conn_ctx
 
 
-int dtls_server_launcher(char * ip_address, int port, char * cacert, char * servercert, char * serverkey)
+int dtls_server_launcher(int fd, char * ip_address, int port, char * cacert, char * servercert, char * serverkey, struct parse_worker * parsers, struct monitoring_worker * monitoring, struct listener_thread_input *in)
 {
     int exitVal = 1;
     int port_number_main = port;
@@ -344,8 +350,11 @@ int dtls_server_launcher(char * ip_address, int port, char * cacert, char * serv
     args.client_number = 1;
     args.port_number = port;
     args.ip_address = ip_address;
+    args.parsers = parsers;
+    args.monitoring = monitoring;
+    args.in = in;
 
-    listenfd = newFD(port, ip_address);
+    listenfd = fd;
     if (listenfd == INVALID_SOCKET)
         exit(EXIT_FAILURE);
 
@@ -353,8 +362,6 @@ int dtls_server_launcher(char * ip_address, int port, char * cacert, char * serv
         exit(EXIT_FAILURE);
 
     signal(SIGINT, sig_handler);
-
-
 
     base = event_base_new();
     if (base == NULL) {
@@ -378,8 +385,8 @@ int dtls_server_launcher(char * ip_address, int port, char * cacert, char * serv
         fprintf(stderr, "event_base_dispatch failed\n");
         exit(EXIT_FAILURE);
     }
-    
-    return listenfd;
+
+    return 0;
 }
 
 static int newFD(int port_number, char * ip_address)
@@ -443,6 +450,12 @@ static int newPendingSSL(struct thread_arguments * arguments)
 {
     WOLFSSL* ssl;
 
+    struct parse_worker * parsers = arguments->parsers;
+    struct monitoring_worker * monitoring = arguments->monitoring;
+    struct listener_thread_input *in = arguments->in;
+
+    printf("%p, %p, %p\n", parsers, monitoring, in);
+
     /* Create the pending WOLFSSL Object */
     if ((ssl = wolfSSL_new(ctx)) == NULL) {
         fprintf(stderr, "wolfSSL_new error.\n");
@@ -488,7 +501,7 @@ static int newPendingSSL(struct thread_arguments * arguments)
     return 1;
 }
 
-static void newConn(evutil_socket_t fd, short events, void* arg) //no usage of the socket parameter
+static void newConn(evutil_socket_t fd, short events, void* arg) //no usage of the socket parameter / do the wolfss_accept on the connection
 {
     int                ret;
     int                err;
@@ -538,6 +551,9 @@ static int chGoodCb(WOLFSSL* ssl, void* arg) //gestion de connexions clients
 
     struct thread_arguments * arguments = arg;
     connCtx->client_number = arguments->client_number;
+    connCtx->parsers = arguments->parsers;
+    connCtx->monitoring = arguments->monitoring;
+    connCtx->in = arguments->in;
     int port = arguments->port_number;
     char * ip_address = arguments->ip_address;
 
@@ -705,6 +721,39 @@ static void dataReady(evutil_socket_t fd, short events, void* arg) //lecture et 
     int msgSz;
     const char* ack = "I hear you fashizzle!\n";
 
+    struct parse_worker * parsers = connCtx->parsers;
+    struct monitoring_worker * monitoring = connCtx->monitoring;
+    struct listener_thread_input *in = connCtx->in;
+
+    struct mmsghdr *messages = (struct mmsghdr *)malloc(in->recvmmsg_vlen * sizeof(struct mmsghdr));
+    if (messages == NULL)
+    {
+        printf("Malloc failed \n");
+        return -1;
+    }
+    int cmbuf_len = 1024;
+    // Init msg_iov first to reduce mallocs every iteration of while
+    for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+    {
+        messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
+        messages[i].msg_hdr.msg_iovlen = 1;
+        if (in->msg_dst_ip)
+        {
+        messages[i].msg_hdr.msg_control = (char *)malloc(cmbuf_len);
+        messages[i].msg_hdr.msg_controllen = cmbuf_len;
+        }
+        else
+        {
+        messages[i].msg_hdr.msg_control = NULL;
+        messages[i].msg_hdr.msg_controllen = 0;
+        }
+    }
+
+    unyte_seg_counters_t *listener_counter = monitoring->monitoring_in->counters + in->nb_parsers;
+    listener_counter->thread_id = pthread_self();
+    listener_counter->type = LISTENER_WORKER;
+
+
     memset(&tv, 0, sizeof(tv));
     if (events & EV_TIMEOUT) {
         /* A timeout occurred */
@@ -742,6 +791,17 @@ static void dataReady(evutil_socket_t fd, short events, void* arg) //lecture et 
         }
     }
     else if (events & (EV_READ|EV_WRITE)) {
+
+        for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+        {
+        messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(UDP_SIZE * sizeof(char));
+        messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
+        if (in->msg_dst_ip)
+            memset(messages[i].msg_hdr.msg_control, 0, cmbuf_len);
+        messages[i].msg_hdr.msg_name = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+        messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_storage);
+        }
+
         ret = wolfSSL_read(connCtx->ssl, msg, sizeof(msg) - 1);
         if (ret > 0) {
             msgSz = ret;
@@ -827,6 +887,8 @@ static void conn_ctx_free(conn_ctx* connCtx) //libération des ressources de la 
         }
         free(connCtx);
     }
+    free_monitoring_worker(connCtx->monitoring);
+    // TODO : ajouter le free des parsers
 }
 
 static void sig_handler(const int sig) //gestion du ctrl+c
@@ -879,8 +941,7 @@ static void free_resources(void) //libération des ressources
  */
 int listener(struct listener_thread_input *in)
 {
-  /* errno used to handle socket read errors */
-  errno = 0;
+    printf("listener\n");
 
   // Create parsing workers and monitoring worker
   struct parse_worker *parsers = malloc(sizeof(struct parse_worker) * in->nb_parsers);
@@ -911,108 +972,114 @@ int listener(struct listener_thread_input *in)
       return created;
   }
 
-
-
-
-
-
-
-
-
-  struct mmsghdr *messages = (struct mmsghdr *)malloc(in->recvmmsg_vlen * sizeof(struct mmsghdr));
-  if (messages == NULL)
-  {
-    printf("Malloc failed \n");
-    return -1;
-  }
-  int cmbuf_len = 1024;
-  // Init msg_iov first to reduce mallocs every iteration of while
-  for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
-  {
-    messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
-    messages[i].msg_hdr.msg_iovlen = 1;
-    if (in->msg_dst_ip)
-    {
-      messages[i].msg_hdr.msg_control = (char *)malloc(cmbuf_len);
-      messages[i].msg_hdr.msg_controllen = cmbuf_len;
+    int res_dtls = dtls_server_launcher(in->sockfd, in->ip, in->port, in->cacert, in->servercert, in->serverkey, parsers, monitoring, in);
+    if (res_dtls < 0){ 
+        return res_dtls;
     }
-    else
-    {
-      messages[i].msg_hdr.msg_control = NULL;
-      messages[i].msg_hdr.msg_controllen = 0;
-    }
-  }
-  // FIXME: malloc failed
-  // TODO: malloc array of msg_hdr.msg_name and assign addresss to every messages[i]
-  unyte_seg_counters_t *listener_counter = monitoring->monitoring_in->counters + in->nb_parsers;
-  listener_counter->thread_id = pthread_self();
-  listener_counter->type = LISTENER_WORKER;
-  while (1)
-  {
-    for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
-    {
-      messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(UDP_SIZE * sizeof(char));
-      messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
-      if (in->msg_dst_ip)
-        memset(messages[i].msg_hdr.msg_control, 0, cmbuf_len);
-      messages[i].msg_hdr.msg_name = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
-      messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_storage);
-    }
-    int read_count = recvmmsg(*in->conn->sockfd, messages, in->recvmmsg_vlen, 0, NULL);
-    if (read_count == -1)
-    {
-      perror("recvmmsg failed");
-      close(*in->conn->sockfd);
-      stop_parsers_and_monitoring(parsers, in, monitoring);
-      free_parsers(parsers, in, messages);
-      free_monitoring_worker(monitoring);
-      return -1;
-    }
-    struct sockaddr_storage *dest_addr;
-    for (int i = 0; i < read_count; i++)
-    {
-      // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
-      if (messages[i].msg_len > 0)
-      {
-        if (in->msg_dst_ip)
-          dest_addr = get_dest_addr(&(messages[i].msg_hdr), in->conn);
-        else
-          dest_addr = NULL;
 
-        unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_storage *)messages[i].msg_hdr.msg_name), dest_addr);
-        //msg_iov est une liste de buffer, iov_base est le pointeur sur le premier buffer
-        if (seg == NULL) // j'ai juste besoin de passer mon buffer de wolfssl
-        {
-          printf("minimal_parse error\n");
-          return -1;
-        }
-        /* Dispatching by modulo on threads */
-        uint32_t seg_odid = seg->observation_domain_id;
-        uint32_t seg_mid = seg->message_id;
-        int ret = unyte_udp_queue_write((parsers + (seg->observation_domain_id % in->nb_parsers))->queue, seg);
-        // if ret == -1 --> queue is full, we discard message
-        if (ret < 0)
-        {
-          // printf("1.losing message on parser queue\n");
-          if (monitoring->running)
-            unyte_udp_update_dropped_segment(listener_counter, seg_odid, seg_mid);
-          free(seg->buffer);
-          free(seg);
-        }
-        else if (monitoring->running)
-          unyte_udp_update_received_segment(listener_counter, seg_odid, seg_mid);
-      }
-      else
-        free(messages[i].msg_hdr.msg_iov->iov_base);
-    }
-  }
 
-  // Never called cause while(1)
-  for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
-  {
-    free(messages[i].msg_hdr.msg_iov);
-  }
-  free(messages);
+
+
+
+//   struct mmsghdr *messages = (struct mmsghdr *)malloc(in->recvmmsg_vlen * sizeof(struct mmsghdr));
+//   if (messages == NULL)
+//   {
+//     printf("Malloc failed \n");
+//     return -1;
+//   }
+//   int cmbuf_len = 1024;
+//   // Init msg_iov first to reduce mallocs every iteration of while
+//   for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+//   {
+//     messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
+//     messages[i].msg_hdr.msg_iovlen = 1;
+//     if (in->msg_dst_ip)
+//     {
+//       messages[i].msg_hdr.msg_control = (char *)malloc(cmbuf_len);
+//       messages[i].msg_hdr.msg_controllen = cmbuf_len;
+//     }
+//     else
+//     {
+//       messages[i].msg_hdr.msg_control = NULL;
+//       messages[i].msg_hdr.msg_controllen = 0;
+//     }
+//   }
+//   // FIXME: malloc failed
+//   // TODO: malloc array of msg_hdr.msg_name and assign addresss to every messages[i]
+
+//   unyte_seg_counters_t *listener_counter = monitoring->monitoring_in->counters + in->nb_parsers;
+//   listener_counter->thread_id = pthread_self();
+//   listener_counter->type = LISTENER_WORKER;
+
+//   while (1)
+//   {
+//     for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+//     {
+//       messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(UDP_SIZE * sizeof(char));
+//       messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
+//       if (in->msg_dst_ip)
+//         memset(messages[i].msg_hdr.msg_control, 0, cmbuf_len);
+//       messages[i].msg_hdr.msg_name = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
+//       messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_storage);
+//     }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//     int read_count = recvmmsg(*in->conn->sockfd, messages, in->recvmmsg_vlen, 0, NULL);
+//     if (read_count == -1)
+//     {
+//       perror("recvmmsg failed");
+//       close(*in->conn->sockfd);
+//       stop_parsers_and_monitoring(parsers, in, monitoring);
+//       free_parsers(parsers, in, messages);
+//       free_monitoring_worker(monitoring);
+//       return -1;
+//     }
+//     struct sockaddr_storage *dest_addr;
+//     for (int i = 0; i < read_count; i++)
+//     {
+//       // If msg_len == 0 -> message has 0 bytes -> we discard message and free the buffer
+//       if (messages[i].msg_len > 0)
+//       {
+//         if (in->msg_dst_ip)
+//           dest_addr = get_dest_addr(&(messages[i].msg_hdr), in->conn);
+//         else
+//           dest_addr = NULL;
+
+//         unyte_min_t *seg = minimal_parse(messages[i].msg_hdr.msg_iov->iov_base, ((struct sockaddr_storage *)messages[i].msg_hdr.msg_name), dest_addr);
+//         //msg_iov est une liste de buffer, iov_base est le pointeur sur le premier buffer
+//         if (seg == NULL) // j'ai juste besoin de passer mon buffer de wolfssl
+//         {
+//           printf("minimal_parse error\n");
+//           return -1;
+//         }
+//         /* Dispatching by modulo on threads */
+//         uint32_t seg_odid = seg->observation_domain_id;
+//         uint32_t seg_mid = seg->message_id;
+//         int ret = unyte_udp_queue_write((parsers + (seg->observation_domain_id % in->nb_parsers))->queue, seg);
+//         // if ret == -1 --> queue is full, we discard message
+//         if (ret < 0)
+//         {
+//           // printf("1.losing message on parser queue\n");
+//           if (monitoring->running)
+//             unyte_udp_update_dropped_segment(listener_counter, seg_odid, seg_mid);
+//           free(seg->buffer);
+//           free(seg);
+//         }
+//         else if (monitoring->running)
+//           unyte_udp_update_received_segment(listener_counter, seg_odid, seg_mid);
+//       }
+//       else
+//         free(messages[i].msg_hdr.msg_iov->iov_base);
+//     }
+//   }
+
+//   // Never called cause while(1)
+//   for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+//   {
+//     free(messages[i].msg_hdr.msg_iov);
+//   }
+//   free(messages);
 
   return 0;
 }
@@ -1023,6 +1090,7 @@ int listener(struct listener_thread_input *in)
 void *t_listener(void *in)
 {
   listener((struct listener_thread_input *)in);
+  printf("t_listener\n");
   free(in);
   pthread_exit(NULL);
 }

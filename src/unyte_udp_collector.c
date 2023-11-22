@@ -134,8 +134,6 @@ unyte_udp_collector_t *unyte_udp_create_listener(
   collector->sockfd = conn->sockfd;
   collector->main_thread = udpListener;
 
-  printf("end of create listener\n");
-
   return collector;
 }
 

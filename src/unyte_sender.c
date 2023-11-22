@@ -285,18 +285,6 @@ int unyte_send_dtls(struct unyte_sender_socket *sender_sk, unyte_message_t *mess
         fprintf(stderr, "wolfSSL_write failed\n");
         cleanup_main(sender_sk->dtls->ssl, sender_sk->sockfd, sender_sk->dtls->ctx);
     }
-    n = wolfSSL_read(sender_sk->dtls->ssl, recvLine, sizeof(recvLine)-1);
-
-    if (n > 0) {
-        recvLine[n] = '\0';
-        printf("%s\n", recvLine);
-    }
-    else {
-        err = wolfSSL_get_error(sender_sk->dtls->ssl, 0);
-        fprintf(stderr, "err = %d, %s\n", err, wolfSSL_ERR_reason_error_string(err));
-        fprintf(stderr, "wolfSSL_read failed\n");
-        cleanup_main(sender_sk->dtls->ssl, sender_sk->sockfd, sender_sk->dtls->ctx);
-    }
     //end dtls -----------------------
 
     free(parsed_packet);

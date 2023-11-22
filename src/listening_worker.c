@@ -43,7 +43,7 @@ void stop_parsers_and_monitoring(struct parse_worker *parsers, struct listener_t
 /**
  * Frees all parsers mallocs and thread input memory.
  */
-void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in, struct mmsghdr *messages)
+void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in)
 {
   /* Kill every workers here */
   for (uint i = 0; i < in->nb_parsers; i++)
@@ -69,14 +69,14 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
   free(in->conn->addr);
   free(in->conn);
 
-  for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
-  {
-    free(messages[i].msg_hdr.msg_iov->iov_base);
-    free(messages[i].msg_hdr.msg_iov);
-    free(messages[i].msg_hdr.msg_name);
-    free(messages[i].msg_hdr.msg_control);
-  }
-  free(messages);
+//   for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
+//   {
+//     free(messages[i].msg_hdr.msg_iov->iov_base);
+//     free(messages[i].msg_hdr.msg_iov);
+//     free(messages[i].msg_hdr.msg_name);
+//     free(messages[i].msg_hdr.msg_control);
+//   }
+//   free(messages);
 }
 
 void free_monitoring_worker(struct monitoring_worker *monitoring)
@@ -290,7 +290,6 @@ static void conn_ctx_free(conn_ctx* connCtx); //free des ressources de la connex
 int dtls_server_launcher(int fd, char * ip_address, int port, char * cacert, char * servercert, char * serverkey, struct parse_worker * parsers, struct monitoring_worker * monitoring, struct listener_thread_input *in)
 {
     int exitVal = 1;
-    int port_number_main = port;
 
     char * temp_certificats = "../certs/";
 
@@ -717,37 +716,11 @@ static void dataReady(evutil_socket_t fd, short events, void* arg) //lecture et 
     int ret;
     int err;
     struct timeval tv;
-    char msg[MAXLINE];
     int msgSz;
-    const char* ack = "I hear you fashizzle!\n";
 
     struct parse_worker * parsers = connCtx->parsers;
     struct monitoring_worker * monitoring = connCtx->monitoring;
     struct listener_thread_input *in = connCtx->in;
-
-    struct mmsghdr *messages = (struct mmsghdr *)malloc(in->recvmmsg_vlen * sizeof(struct mmsghdr));
-    if (messages == NULL)
-    {
-        printf("Malloc failed \n");
-        return -1;
-    }
-    int cmbuf_len = 1024;
-    // Init msg_iov first to reduce mallocs every iteration of while
-    for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
-    {
-        messages[i].msg_hdr.msg_iov = (struct iovec *)malloc(sizeof(struct iovec));
-        messages[i].msg_hdr.msg_iovlen = 1;
-        if (in->msg_dst_ip)
-        {
-        messages[i].msg_hdr.msg_control = (char *)malloc(cmbuf_len);
-        messages[i].msg_hdr.msg_controllen = cmbuf_len;
-        }
-        else
-        {
-        messages[i].msg_hdr.msg_control = NULL;
-        messages[i].msg_hdr.msg_controllen = 0;
-        }
-    }
 
     unyte_seg_counters_t *listener_counter = monitoring->monitoring_in->counters + in->nb_parsers;
     listener_counter->thread_id = pthread_self();
@@ -790,28 +763,26 @@ static void dataReady(evutil_socket_t fd, short events, void* arg) //lecture et 
             }
         }
     }
-    else if (events & (EV_READ|EV_WRITE)) {
+    else if (events & EV_READ) {
 
-        for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
-        {
-        messages[i].msg_hdr.msg_iov->iov_base = (char *)malloc(UDP_SIZE * sizeof(char));
-        messages[i].msg_hdr.msg_iov->iov_len = UDP_SIZE;
-        if (in->msg_dst_ip)
-            memset(messages[i].msg_hdr.msg_control, 0, cmbuf_len);
-        messages[i].msg_hdr.msg_name = (struct sockaddr_storage *)malloc(sizeof(struct sockaddr_storage));
-        messages[i].msg_hdr.msg_namelen = sizeof(struct sockaddr_storage);
-        }
+        char * msg = malloc(UDP_SIZE * sizeof(char));
+        ret = wolfSSL_read(connCtx->ssl, msg, UDP_SIZE);
 
-        ret = wolfSSL_read(connCtx->ssl, msg, sizeof(msg) - 1);
         if (ret > 0) {
             msgSz = ret;
-            msg[msgSz] = '\0';
             printf("Received message from client %d :\n", client_number);
             hexdump(msg, msgSz); //pas d'affichage correct avec la taille spécifiée
-            ret = wolfSSL_write(connCtx->ssl, ack, strlen(ack));
-        }
 
-        if (ret <= 0) {
+            tv.tv_sec = CONN_TIMEOUT;
+            connCtx->waitingOnData = 1;
+            if (event_add(connCtx->readEv, &tv) != 0) {
+                fprintf(stderr, "event_add failed\n");
+                conn_ctx_free(connCtx);
+                close(fd);
+            }
+            free(msg);
+
+        } else {
             err = wolfSSL_get_error(connCtx->ssl, 0);
             if (err == WOLFSSL_ERROR_WANT_READ ||
                     err == WOLFSSL_ERROR_WANT_WRITE) {
@@ -837,15 +808,6 @@ static void dataReady(evutil_socket_t fd, short events, void* arg) //lecture et 
                 fprintf(stderr, "error = %d, %s\n", err,
                         wolfSSL_ERR_reason_error_string(err));
                 fprintf(stderr, "wolfSSL_read or wolfSSL_write failed\n");
-                conn_ctx_free(connCtx);
-                close(fd);
-            }
-        }
-        else {
-            tv.tv_sec = CONN_TIMEOUT;
-            connCtx->waitingOnData = 1;
-            if (event_add(connCtx->readEv, &tv) != 0) {
-                fprintf(stderr, "event_add failed\n");
                 conn_ctx_free(connCtx);
                 close(fd);
             }
@@ -885,10 +847,12 @@ static void conn_ctx_free(conn_ctx* connCtx) //libération des ressources de la 
             (void)event_del(connCtx->writeEv);
             event_free(connCtx->writeEv);
         }
+        stop_parsers_and_monitoring(connCtx->parsers, connCtx->in, connCtx->monitoring);
+        free_parsers(connCtx->parsers, connCtx->in);
+        free_monitoring_worker(connCtx->monitoring);
+        close(*(connCtx->in->conn->sockfd));
         free(connCtx);
     }
-    free_monitoring_worker(connCtx->monitoring);
-    // TODO : ajouter le free des parsers
 }
 
 static void sig_handler(const int sig) //gestion du ctrl+c

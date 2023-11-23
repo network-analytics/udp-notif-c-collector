@@ -103,13 +103,11 @@ int parser(struct parser_thread_input *in)
     bool is_segmented = parsed_segment->header->header_length > (HEADER_BYTES + options_length);
 
     // Not segmented message
-    printf("precoucou\n");
     if (!is_segmented)
     {
       uint32_t odid = parsed_segment->header->observation_domain_id;
       uint32_t mid = parsed_segment->header->message_id;
       int ret = unyte_udp_queue_write(in->output, parsed_segment);
-      printf("coucou\n");
       // ret == -1 queue already full, segment discarded
       if (ret < 0)
       {

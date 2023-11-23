@@ -68,15 +68,6 @@ void free_parsers(struct parse_worker *parsers, struct listener_thread_input *in
   free(in->conn->sockfd);
   free(in->conn->addr);
   free(in->conn);
-
-//   for (uint16_t i = 0; i < in->recvmmsg_vlen; i++)
-//   {
-//     free(messages[i].msg_hdr.msg_iov->iov_base);
-//     free(messages[i].msg_hdr.msg_iov);
-//     free(messages[i].msg_hdr.msg_name);
-//     free(messages[i].msg_hdr.msg_control);
-//   }
-//   free(messages);
 }
 
 void free_monitoring_worker(struct monitoring_worker *monitoring)
@@ -257,7 +248,9 @@ typedef struct conn_ctx {
     struct parse_worker * parsers;
     struct monitoring_worker * monitoring;
     struct listener_thread_input *in;
-    char * ip_source_address;
+    char * ip_dest_address;
+    struct sockaddr_in cliaddr;
+    int port;
 } conn_ctx;
 
 WOLFSSL_CTX*  ctx = NULL; //contexte dtls
@@ -448,10 +441,6 @@ static int newPendingSSL(struct thread_arguments * arguments)
 {
     WOLFSSL* ssl;
 
-    struct parse_worker * parsers = arguments->parsers;
-    struct monitoring_worker * monitoring = arguments->monitoring;
-    struct listener_thread_input *in = arguments->in;
-
     /* Create the pending WOLFSSL Object */
     if ((ssl = wolfSSL_new(ctx)) == NULL) {
         fprintf(stderr, "wolfSSL_new error.\n");
@@ -550,7 +539,8 @@ static int chGoodCb(WOLFSSL* ssl, void* arg) //gestion de connexions clients
     connCtx->parsers = arguments->parsers;
     connCtx->monitoring = arguments->monitoring;
     connCtx->in = arguments->in;
-    connCtx->ip_source_address = arguments->ip_address;
+    connCtx->ip_dest_address = arguments->ip_address;
+    connCtx->port = arguments->port_number;
     int port = arguments->port_number;
     char * ip_address = arguments->ip_address;
 
@@ -604,6 +594,8 @@ static int chGoodCb(WOLFSSL* ssl, void* arg) //gestion de connexions clients
         (void)wolfSSL_set_fd(ssl, INVALID_SOCKET);
         return CHGOODCB_E;
     }
+
+    connCtx->cliaddr = cliaddr;
 
     /* Limit new SFD to only this connection */
     if (connect(fd, (const struct sockaddr*)&cliaddr, cliLen) != 0) { //connect de la socket
@@ -724,6 +716,20 @@ static void dataReady(evutil_socket_t fd, short events, void* arg) //lecture et 
     listener_counter->thread_id = pthread_self();
     listener_counter->type = LISTENER_WORKER;
 
+    // char ip_source[200];
+    // inet_ntop(AF_INET, &(connCtx->cliaddr.sin_addr), ip_source, INET_ADDRSTRLEN);
+    // printf("ip client %s\n", ip_source);
+
+    struct sockaddr_storage source;
+    memcpy(&source, &(connCtx->cliaddr), sizeof(struct sockaddr_in));
+
+    struct sockaddr_storage destination;
+    struct sockaddr_in * ip_temp = (struct sockaddr_in *)&destination;
+
+    ip_temp->sin_family = AF_INET;
+    inet_pton(AF_INET, connCtx->ip_dest_address, &(ip_temp->sin_addr));
+    ip_temp->sin_port = connCtx->port;
+
 
     memset(&tv, 0, sizeof(tv));
     if (events & EV_TIMEOUT) {
@@ -768,35 +774,36 @@ static void dataReady(evutil_socket_t fd, short events, void* arg) //lecture et 
 
         if (ret > 0) {
             msgSz = ret;
-            printf("Received message from client %d :\n", client_number);
-            hexdump(msg, msgSz); //pas d'affichage correct avec la taille spécifiée
+            // printf("\nReceived message from client %d :\n", client_number);
+            // hexdump(msg, msgSz); //pas d'affichage correct avec la taille spécifiée
 
-            printf("version = %s\n", wolfSSL_get_version(connCtx->ssl));
+            // printf("version = %s\n", wolfSSL_get_version(connCtx->ssl));
+            // printf("ip dest address = %s\n", connCtx->ip_dest_address);
+            // printf("ip source address = %s\n", connCtx->ip_source_address); 
 
-            // struct sockaddr_storage *dest_addr;
-            // // get ip address dst
-            // unyte_min_t *seg = minimal_parse(msg, connCtx->ip_source_address, dest_addr);
 
-            // if (seg == NULL)
-            // {
-            //     printf("minimal_parse error\n");
-            //     return -1;
-            // }
+            unyte_min_t *seg = minimal_parse(msg, &source, &destination);
 
-            // uint32_t seg_odid = seg->observation_domain_id;
-            // uint32_t seg_mid = seg->message_id;
-            // int ret = unyte_udp_queue_write((parsers + (seg->observation_domain_id % in->nb_parsers))->queue, seg);
-            // // if ret == -1 --> queue is full, we discard message
-            // if (ret < 0)
-            // {
-            //   // printf("1.losing message on parser queue\n");
-            //   if (monitoring->running)
-            //     unyte_udp_update_dropped_segment(listener_counter, seg_odid, seg_mid);
-            //   free(seg->buffer);
-            //   free(seg);
-            // }
-            // else if (monitoring->running)
-            //   unyte_udp_update_received_segment(listener_counter, seg_odid, seg_mid);
+            if (seg == NULL)
+            {
+                printf("minimal_parse error\n");
+                return;
+            }
+
+            uint32_t seg_odid = seg->observation_domain_id;
+            uint32_t seg_mid = seg->message_id;
+            int ret = unyte_udp_queue_write((parsers + (seg->observation_domain_id % in->nb_parsers))->queue, seg);
+            // if ret == -1 --> queue is full, we discard message
+            if (ret < 0)
+            {
+              // printf("1.losing message on parser queue\n");
+              if (monitoring->running)
+                unyte_udp_update_dropped_segment(listener_counter, seg_odid, seg_mid);
+              free(seg->buffer);
+              free(seg);
+            }
+            else if (monitoring->running)
+              unyte_udp_update_received_segment(listener_counter, seg_odid, seg_mid);
 
             tv.tv_sec = CONN_TIMEOUT;
             connCtx->waitingOnData = 1;
@@ -836,7 +843,6 @@ static void dataReady(evutil_socket_t fd, short events, void* arg) //lecture et 
                 close(fd);
             }
         }
-        free(msg);
     }
     else {
         fprintf(stderr, "Unexpected events %d\n", events);

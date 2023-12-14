@@ -125,16 +125,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include <sys/time.h>
 
 #include "../src/unyte_sender.h"
 
 
 #define MTU 1500
+#define SIZE 500
 
 
 
-int main(int argc, char *argv[])
+long launcher(int argc, char *argv[])
 {
   printf("\n");
   if (argc != 4)
@@ -143,6 +144,10 @@ int main(int argc, char *argv[])
     printf("Usage: ./sender_sample <ip> <port> <ca_cert_name>\n"); //on oublie le SERV_PORT dans le dtls-common
     exit(1);
   }
+
+  struct timeval start;
+  gettimeofday(&start, NULL);
+
   char * temp_certificats = "../certs/";
 
   // Initialize collector options
@@ -161,33 +166,48 @@ int main(int argc, char *argv[])
 
   //struct unyte_sender_socket *sender_sk = unyte_start_sender(&options);
   struct unyte_sender_socket *sender_sk = unyte_start_sender_dtls(&options);
-  for(int i = 0; i < 5; i++){
 
-      char string_to_send[50];
-      sprintf((char *) string_to_send, "%s %d", "Message", i);
-      printf("message to send = %s, len = %ld\n", string_to_send, strlen(string_to_send));
+  char * string_to_send = "Clngfsmjncsdmlkr,gùfbnlfdvnkfgùbnvùlkbnùfnbkùdbnksdv,kùfpognemvofnsùofnidbflkdbvnfmdngùpfvonùlgjvngfùsv,fopb,flkbngùdb,glmkbnglmbknùfo,vlkmf,dgerinberinrghtybvyvbbqùbqùveri,vcq,:dxvnkmlinvkgjbfmdvnhgbgnfkjvnidunv,f,:;xc:;dsùvgerjgaeôiterôtaêpotaernmrlkgnfdkvn:;cvnflmdknermlgifdvnfvbxcbnfb!ldfknbqemigherùqlgkflkgbfncxknblfknbmqdlfighmreoihgmqfdgnfn:b:dfjgndlkfgnfldkbg!dfkbgmfldbn!fldkb!dflhbetgclrmkngsgjmbbnmflsngsbgrjnhmfdlkvnsmgtlnnhmblnmrtnihbkdmvtonigbndlgjknùlnrmnbkgjnùgnkeriùnveroùivnfnkemo";
+  unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
+  message->buffer = string_to_send;
+  message->buffer_len = SIZE;
 
-      unyte_message_t *message = (unyte_message_t *)malloc(sizeof(unyte_message_t));
+  // UDP-notif
+  message->version = 0;
+  message->space = 0;
+  message->media_type = 1; // json but sending string
+  message->observation_domain_id = 1000;
+  message->message_id = 2147483669;
+  message->used_mtu = 200; // use other than default configured
+  message->options = NULL;
+  message->options_len = 0; // should be initialized to 0 if no options are wanted
 
-      message->buffer = string_to_send;
-      message->buffer_len = strlen(string_to_send);
+  //int res = unyte_send(sender_sk, message);
+  unyte_send_dtls(sender_sk, message);
 
-      // UDP-notif
-      message->version = 0;
-      message->space = 0;
-      message->media_type = 1; // json but sending string
-      message->observation_domain_id = 1000;
-      message->message_id = 2147483669;
-      message->used_mtu = MTU; // use other than default configured
-      message->options = NULL;
-      message->options_len = 0; // should be initialized to 0 if no options are wanted
-
-      //int res = unyte_send(sender_sk, message);
-      unyte_send_dtls(sender_sk, message);
-
-      free(message);
-  }
+  free(message);
   free_sender_socket(sender_sk);
-  printf("\n");
+  
+  struct timeval end;
+  gettimeofday(&end, NULL);
+
+  long elapsedTime = (end.tv_sec - start.tv_sec) * 1000000L + (end.tv_usec - start.tv_usec);
+  // printf("temps de %ld microsecondes\n", elapsedTime);
+
+  return elapsedTime;
+}
+
+int main(int argc, char *argv[]) {
+  long total_time = 0;
+
+  int launch_number = 1;
+
+  for (int i = 0; i < launch_number; i++){
+    total_time += launcher(argc, argv);
+  }
+
+  long debit = ((SIZE + 12) * launch_number) / (total_time * 0.000001);
+  printf("debit pour %d users = %ld o/s\n", launch_number, debit);
+
   return 0;
 }

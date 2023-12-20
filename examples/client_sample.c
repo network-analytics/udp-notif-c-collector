@@ -40,7 +40,9 @@ int main(int argc, char *argv[])
   unyte_udp_collector_t *collector = unyte_udp_start_collector(&options);
   int recv_count = 0;
   int max = MAX_TO_RECEIVE;
-  
+
+  int compteur = 0;
+
   while (1)
   {
     /* Read queue */
@@ -70,7 +72,6 @@ int main(int argc, char *argv[])
     //   printf("src port: %u\n", ntohs(((struct sockaddr_in6*)unyte_udp_get_src(seg))->sin6_port));
     // }
     // Only if options.msg_dst_ip is set to true
-    // printf("ok client sample\n");
     if (unyte_udp_get_dest_addr(seg) != NULL) {
       char ip_dest_canonical[100];
       if (unyte_udp_get_dest_addr(seg)->ss_family == AF_INET) {
